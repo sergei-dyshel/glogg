@@ -243,6 +243,34 @@ CrawlerWidget::doGetViewContext() const
     return static_cast<std::shared_ptr<const ViewContextInterface>>( context );
 }
 
+void CrawlerWidget::keyPressEvent( QKeyEvent* keyEvent )
+{
+  bool controlModifier =
+      (keyEvent->modifiers() & Qt::ControlModifier) == Qt::ControlModifier;
+  bool shiftModifier = 
+      (keyEvent->modifiers() & Qt::ShiftModifier) == Qt::ShiftModifier;
+
+  if (keyEvent->key() == Qt::Key_J && controlModifier) {
+    // if (logMainView->hasFocus())
+      filteredView->setFocus();
+  }
+  else if (keyEvent->key() == Qt::Key_K && controlModifier) {
+    // if (filteredView->hasFocus())
+      logMainView->setFocus();
+  }
+  else if (keyEvent->key() == Qt::Key_Equal) {
+    auto sizes_ = sizes();
+    if (logMainView->hasFocus() && sizes_[2] > 100) {
+      sizes_[0] += 100;
+      sizes_[2] -= 100;
+      setSizes(sizes_);
+    }
+
+  }
+  else
+    keyEvent->ignore();
+}
+
 //
 // Slots
 //
@@ -650,8 +678,8 @@ void CrawlerWidget::setup()
     searchInfoLine->setLineWidth( 1 );
     searchInfoLineDefaultPalette = searchInfoLine->palette();
 
-    ignoreCaseCheck = new QCheckBox( "Ignore &case" );
-    searchRefreshCheck = new QCheckBox( "Auto-&refresh" );
+    ignoreCaseCheck = new QCheckBox( "I-&Case" );
+    searchRefreshCheck = new QCheckBox( "A-&Refresh" );
 
     // Construct the Search line
     searchLabel = new QLabel(tr("&Text: "));
@@ -674,24 +702,24 @@ void CrawlerWidget::setup()
     stopButton->setEnabled( false );
 
     QHBoxLayout* searchLineLayout = new QHBoxLayout;
+    searchLineLayout->addWidget( visibilityBox );
     searchLineLayout->addWidget(searchLabel);
-    searchLineLayout->addWidget(searchLineEdit);
+    searchLineLayout->addWidget(searchLineEdit, 5);
     searchLineLayout->addWidget(searchButton);
-    searchLineLayout->addWidget(stopButton);
     searchLineLayout->setContentsMargins(6, 0, 6, 0);
     stopButton->setSizePolicy( QSizePolicy( QSizePolicy::Maximum, QSizePolicy::Maximum ) );
     searchButton->setSizePolicy( QSizePolicy( QSizePolicy::Maximum, QSizePolicy::Maximum ) );
 
-    QHBoxLayout* searchInfoLineLayout = new QHBoxLayout;
-    searchInfoLineLayout->addWidget( visibilityBox );
-    searchInfoLineLayout->addWidget( searchInfoLine );
-    searchInfoLineLayout->addWidget( ignoreCaseCheck );
-    searchInfoLineLayout->addWidget( searchRefreshCheck );
+    // QHBoxLayout* searchInfoLineLayout = new QHBoxLayout;
+    searchLineLayout->addWidget( searchInfoLine, 1 );
+    searchLineLayout->addWidget(stopButton);
+    searchLineLayout->addWidget( ignoreCaseCheck );
+    searchLineLayout->addWidget( searchRefreshCheck );
 
     // Construct the bottom window
     QVBoxLayout* bottomMainLayout = new QVBoxLayout;
     bottomMainLayout->addLayout(searchLineLayout);
-    bottomMainLayout->addLayout(searchInfoLineLayout);
+    // bottomMainLayout->addLayout(searchInfoLineLayout);
     bottomMainLayout->addWidget(filteredView);
     bottomMainLayout->setContentsMargins(2, 1, 2, 1);
     bottomWindow->setLayout(bottomMainLayout);
