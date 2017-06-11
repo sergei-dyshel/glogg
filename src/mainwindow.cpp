@@ -353,7 +353,7 @@ void MainWindow::createActions()
 
 void MainWindow::createMenus()
 {
-    fileMenu = menuBar()->addMenu( tr("&File") );
+    fileMenu = menuBar()->addMenu( tr("File") );
     fileMenu->addAction( openAction );
     fileMenu->addAction( closeAction );
     fileMenu->addAction( closeAllAction );
@@ -366,13 +366,13 @@ void MainWindow::createMenus()
     fileMenu->addSeparator();
     fileMenu->addAction( exitAction );
 
-    editMenu = menuBar()->addMenu( tr("&Edit") );
+    editMenu = menuBar()->addMenu( tr("Edit") );
     editMenu->addAction( copyAction );
     editMenu->addAction( selectAllAction );
     editMenu->addSeparator();
     editMenu->addAction( findAction );
 
-    viewMenu = menuBar()->addMenu( tr("&View") );
+    viewMenu = menuBar()->addMenu( tr("View") );
     viewMenu->addAction( overviewVisibleAction );
     viewMenu->addSeparator();
     viewMenu->addAction( lineNumbersVisibleInMainAction );
@@ -382,12 +382,12 @@ void MainWindow::createMenus()
     viewMenu->addSeparator();
     viewMenu->addAction( reloadAction );
 
-    toolsMenu = menuBar()->addMenu( tr("&Tools") );
+    toolsMenu = menuBar()->addMenu( tr("Tools") );
     toolsMenu->addAction( filtersAction );
     toolsMenu->addSeparator();
     toolsMenu->addAction( optionsAction );
 
-    encodingMenu = menuBar()->addMenu( tr("En&coding") );
+    encodingMenu = menuBar()->addMenu( tr("Encoding") );
     encodingMenu->addAction( encodingAction[0] );
     encodingMenu->addSeparator();
     for ( int i = 1; i < CrawlerWidget::ENCODING_MAX; ++i ) {
@@ -396,7 +396,7 @@ void MainWindow::createMenus()
 
     menuBar()->addSeparator();
 
-    helpMenu = menuBar()->addMenu( tr("&Help") );
+    helpMenu = menuBar()->addMenu( tr("Help") );
     helpMenu->addAction( aboutAction );
 }
 
@@ -412,7 +412,7 @@ void MainWindow::createToolBars()
     lineNbField->setMinimumSize(
             lineNbField->fontMetrics().size( 0, "Line 0000000") );
 
-    toolBar = addToolBar( tr("&Toolbar") );
+    toolBar = addToolBar( tr("Toolbar") );
     toolBar->setIconSize( QSize( 14, 14 ) );
     toolBar->setMovable( false );
     toolBar->addAction( openAction );

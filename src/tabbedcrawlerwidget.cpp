@@ -45,11 +45,11 @@ TabbedCrawlerWidget::TabbedCrawlerWidget() : QTabWidget(),
     // On GTK style, it looks better with a smaller font
     myTabBar_.setStyleSheet(
             "QTabBar::tab {"
-            " height: 20px; "
-            " font-size: 9pt; "
+            // " height: 30px; "
+            // " font-size: 12pt; "
             "} "
             "QTabBar::close-button {\
-              height: 6px; width: 6px;\
+              height: 12px; width: 12px;\
               subcontrol-origin: padding;\
               subcontrol-position: left;\
              }" );
@@ -79,7 +79,7 @@ int TabbedCrawlerWidget::addTab( QWidget* page, const QString& label )
 
     // Display the icon
     QLabel* icon_label = new QLabel();
-    icon_label->setPixmap( olddata_icon_.pixmap( 11, 12 ) );
+    // icon_label->setPixmap( olddata_icon_.pixmap( 11, 12 ) );
     icon_label->setAlignment( Qt::AlignCenter );
     myTabBar_.setTabButton( index, QTabBar::RightSide, icon_label );
 
@@ -123,12 +123,14 @@ void TabbedCrawlerWidget::keyPressEvent( QKeyEvent* event )
 
     // Ctrl + tab
     if ( ( mod == Qt::ControlModifier && key == Qt::Key_Tab ) ||
-         ( mod == ( Qt::ControlModifier | Qt::AltModifier | Qt::KeypadModifier ) && key == Qt::Key_Right ) ) {
+         ( mod == ( Qt::ControlModifier | Qt::AltModifier | Qt::KeypadModifier ) && key == Qt::Key_Right ) ||
+         ( mod == Qt::ControlModifier && key == Qt::Key_PageDown ) ) {
         setCurrentIndex( ( currentIndex() + 1 ) % count() );
     }
     // Ctrl + shift + tab
     else if ( ( mod == ( Qt::ControlModifier | Qt::ShiftModifier ) && key == Qt::Key_Tab ) ||
-              ( mod == ( Qt::ControlModifier | Qt::AltModifier | Qt::KeypadModifier ) && key == Qt::Key_Left ) ) {
+              ( mod == ( Qt::ControlModifier | Qt::AltModifier | Qt::KeypadModifier ) && key == Qt::Key_Left ) ||
+              ( mod == Qt::ControlModifier && key == Qt::Key_PageUp ) ) {
         setCurrentIndex( ( currentIndex() - 1 >= 0 ) ? currentIndex() - 1 : count() - 1 );
     }
     // Ctrl + numbers

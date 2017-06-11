@@ -189,6 +189,9 @@ class AbstractLogView :
     virtual void wheelEvent( QWheelEvent* wheelEvent );
     virtual bool event( QEvent * e );
 
+    virtual void focusInEvent( QFocusEvent* event );
+    virtual void focusOutEvent( QFocusEvent* event );
+
     // Must be implemented to return wether the line number is
     // a match, a mark or just a normal line (used for coloured bullets)
     enum LineType { Normal, Marked, Match };

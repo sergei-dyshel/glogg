@@ -303,6 +303,27 @@ AbstractLogView::~AbstractLogView()
 // Received events
 //
 
+void AbstractLogView::focusInEvent( QFocusEvent* event )
+{
+    // setFrameShape(Panel);
+    // setFrameStyle(Panel | Sunken);
+    // this->setLineWidth(5);
+    setObjectName("LogView");
+    this->setStyleSheet("#LogView {border: 4px solid red; }");
+}
+
+void AbstractLogView::focusOutEvent( QFocusEvent* event )
+{
+    // setFrameShape(Box);
+    // this->setLineWidth(1);
+    // setFrameStyle(Panel | Raised);
+    // this->setLineWidth(5);
+    // setFrameStyle(NoFrame);
+    setObjectName("LogView");
+    this->setStyleSheet("#LogView {border: 4px solid gray; }");
+}
+
+
 void AbstractLogView::changeEvent( QEvent* changeEvent )
 {
     QAbstractScrollArea::changeEvent( changeEvent );
@@ -530,16 +551,14 @@ void AbstractLogView::keyPressEvent( QKeyEvent* keyEvent )
         jumpToStartOfLine();
     else if ( keyEvent->key() == Qt::Key_End  && !controlModifier)
         jumpToRightOfScreen();
-    else if ( (keyEvent->key() == Qt::Key_PageDown && controlModifier)
-           || (keyEvent->key() == Qt::Key_End && controlModifier) )
+    else if ( (keyEvent->key() == Qt::Key_End && controlModifier) )
     {
         disableFollow(); // duplicate of 'G' action.
         selection_.selectLine( logData->getNbLine() - 1 );
         emit updateLineNumber( logData->getNbLine() - 1 );
         jumpToBottom();
     }
-    else if ( (keyEvent->key() == Qt::Key_PageUp && controlModifier)
-           || (keyEvent->key() == Qt::Key_Home && controlModifier) )
+    else if ( (keyEvent->key() == Qt::Key_Home && controlModifier) )
     {
         disableFollow(); // like 'g' but 0 input first line action.
         selectAndDisplayLine( 0 );
@@ -1425,7 +1444,7 @@ void AbstractLogView::drawTextArea( QPaintDevice* paint_device, int32_t )
     static const QBrush markBrush = QBrush( "dodgerblue" );
 
     static const int SEPARATOR_WIDTH = 1;
-    static const qreal BULLET_AREA_WIDTH = 11;
+    static const qreal BULLET_AREA_WIDTH = 15;
     static const int CONTENT_MARGIN_WIDTH = 1;
     static const int LINE_NUMBER_PADDING = 3;
 
@@ -1612,8 +1631,8 @@ void AbstractLogView::drawTextArea( QPaintDevice* paint_device, int32_t )
 
         // Then draw the bullet
         painter.setPen( palette.color( QPalette::Text ) );
-        const qreal circleSize = 3;
-        const qreal arrowHeight = 4;
+        const qreal circleSize = 5;
+        const qreal arrowHeight = 6;
         const qreal middleXLine = BULLET_AREA_WIDTH / 2;
         const qreal middleYLine = yPos + (fontHeight / 2);
 
