@@ -921,7 +921,7 @@ void CrawlerWidget::updateEncoding()
     static const char* latin1_encoding = "iso-8859-1";
     static const char* utf8_encoding   = "utf-8";
 
-    const char* encoding;
+    const char* encoding = latin1_encoding;
 
     switch ( encodingSetting_ ) {
         case ENCODING_AUTO:

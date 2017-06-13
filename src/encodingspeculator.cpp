@@ -71,6 +71,8 @@ void EncodingSpeculator::inject_byte( uint8_t byte )
                     state_ = State::Unknown8Bit;
                 }
                 break;
+            case State::Unknown8Bit:
+                state_ = State::Unknown8Bit;
         }
         // state_ = State::Unknown8Bit;
     }
