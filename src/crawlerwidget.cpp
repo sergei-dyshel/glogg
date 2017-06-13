@@ -569,7 +569,7 @@ void CrawlerWidget::addToSearch( const QString& string )
         text = string;
     else {
         // Escape the regexp chars from the string before adding it.
-        text += ( '|' + QRegExp::escape( string ) );
+        text += ( '|' + QRegularExpression::escape( string ) );
     }
 
     searchLineEdit->setEditText( text );
@@ -843,29 +843,34 @@ void CrawlerWidget::replaceCurrentSearch( const QString& searchText )
     overview_.updateData( logData_->getNbLine() );
 
     if ( !searchText.isEmpty() ) {
+#if 0
         // Determine the type of regexp depending on the config
-        QRegExp::PatternSyntax syntax;
+        QRegularExpression::PatternSyntax syntax;
         static std::shared_ptr<Configuration> config =
             Persistent<Configuration>( "settings" );
         switch ( config->mainRegexpType() ) {
             case Wildcard:
-                syntax = QRegExp::Wildcard;
+                syntax = QRegularExpression::Wildcard;
                 break;
             case FixedString:
-                syntax = QRegExp::FixedString;
+                syntax = QRegularExpression::FixedString;
                 break;
             default:
-                syntax = QRegExp::RegExp2;
+                syntax = QRegularExpression::RegExp2;
                 break;
         }
+#endif
 
         // Set the pattern case insensitive if needed
         Qt::CaseSensitivity case_sensitivity = Qt::CaseSensitive;
         if ( ignoreCaseCheck->checkState() == Qt::Checked )
             case_sensitivity = Qt::CaseInsensitive;
+        auto pattern_options = (ignoreCaseCheck->checkState() == Qt::Checked)
+                                   ? QRegularExpression::CaseInsensitiveOption
+                                   : QRegularExpression::NoPatternOption;
 
         // Constructs the regexp
-        QRegExp regexp( searchText, case_sensitivity, syntax );
+        QRegularExpression regexp( searchText, pattern_options );
 
         if ( regexp.isValid() ) {
             // Activate the stop button
@@ -1048,10 +1053,11 @@ void CrawlerWidget::SearchState::startSearch()
  */
 CrawlerWidgetContext::CrawlerWidgetContext( const char* string )
 {
-    QRegExp regex = QRegExp( "S(\\d+):(\\d+)" );
+    QRegularExpression regex = QRegularExpression( "S(\\d+):(\\d+)" );
 
-    if ( regex.indexIn( string ) > -1 ) {
-        sizes_ = { regex.cap(1).toInt(), regex.cap(2).toInt() };
+    auto match = regex.match(string);
+    if ( match.hasMatch()) {
+        sizes_ = { match.captured(1).toInt(), match.captured(2).toInt() };
         LOG(logDEBUG) << "sizes_: " << sizes_[0] << " " << sizes_[1];
     }
     else {
@@ -1061,11 +1067,12 @@ CrawlerWidgetContext::CrawlerWidgetContext( const char* string )
         sizes_ = { 100, 400 };
     }
 
-    QRegExp case_refresh_regex = QRegExp( "IC(\\d+):AR(\\d+)" );
+    QRegularExpression case_refresh_regex = QRegularExpression( "IC(\\d+):AR(\\d+)" );
 
-    if ( case_refresh_regex.indexIn( string ) > -1 ) {
-        ignore_case_ = ( case_refresh_regex.cap(1).toInt() == 1 );
-        auto_refresh_ = ( case_refresh_regex.cap(2).toInt() == 1 );
+    auto case_refresh_match = case_refresh_regex.match(string);
+    if ( case_refresh_match.hasMatch()) {
+        ignore_case_ = ( case_refresh_match.captured(1).toInt() == 1 );
+        auto_refresh_ = ( case_refresh_match.captured(2).toInt() == 1 );
 
         LOG(logDEBUG) << "ignore_case_: " << ignore_case_ << " auto_refresh_: "
             << auto_refresh_;

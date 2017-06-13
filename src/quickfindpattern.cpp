@@ -34,24 +34,26 @@ QuickFindPattern::QuickFindPattern() : QObject(), regexp_()
 
 void QuickFindPattern::changeSearchPattern( const QString& pattern )
 {
+#if 0
     // Determine the type of regexp depending on the config
-    QRegExp::PatternSyntax syntax;
+    QRegularExpression::PatternSyntax syntax;
     switch ( Persistent<Configuration>( "settings" )->quickfindRegexpType() ) {
         case Wildcard:
-            syntax = QRegExp::Wildcard;
+            syntax = QRegularExpression::Wildcard;
             break;
         case FixedString:
-            syntax = QRegExp::FixedString;
+            syntax = QRegularExpression::FixedString;
             break;
         default:
-            syntax = QRegExp::RegExp2;
+            syntax = QRegularExpression::RegExp2;
             break;
     }
+#endif
 
     regexp_.setPattern( pattern );
-    regexp_.setPatternSyntax( syntax );
+    // regexp_.setPatternSyntax( syntax );
 
-    if ( regexp_.isValid() && ( ! regexp_.isEmpty() ) )
+    if ( regexp_.isValid() && ( ! regexp_.pattern().isEmpty() ) )
         active_ = true;
     else
         active_ = false;
@@ -61,9 +63,10 @@ void QuickFindPattern::changeSearchPattern( const QString& pattern )
 
 void QuickFindPattern::changeSearchPattern( const QString& pattern, bool ignoreCase )
 {
-    regexp_.setCaseSensitivity(
-            ignoreCase ? Qt::CaseInsensitive : Qt::CaseSensitive );
-    changeSearchPattern( pattern );
+  regexp_.setPatternOptions(ignoreCase
+                                ? QRegularExpression::CaseInsensitiveOption
+                                : QRegularExpression::NoPatternOption);
+  changeSearchPattern(pattern);
 }
 
 bool QuickFindPattern::matchLine( const QString& line,
@@ -73,8 +76,12 @@ bool QuickFindPattern::matchLine( const QString& line,
 
     if ( active_ ) {
         int pos = 0;
-        while ( ( pos = regexp_.indexIn( line, pos ) ) != -1 ) {
-            int length = regexp_.matchedLength();
+        while ( true ) {
+            auto match = regexp_.match(line, pos);
+            if (!match.hasMatch())
+                break;
+            pos = match.capturedStart();
+            int length = match.capturedLength();
             matches << QuickFindMatch( pos, length );
             pos += length;
         }
@@ -85,13 +92,12 @@ bool QuickFindPattern::matchLine( const QString& line,
 
 bool QuickFindPattern::isLineMatching( const QString& line, int column ) const
 {
-    int pos = 0;
-
     if ( ! active_ )
         return false;
-    if ( ( pos = regexp_.indexIn( line, column ) ) != -1 ) {
-        lastMatchStart_ = pos;
-        lastMatchEnd_   = pos + regexp_.matchedLength() - 1;
+    auto match = regexp_.match( line, column );
+    if ( match.hasMatch() ) {
+        lastMatchStart_ = match.capturedStart();
+        lastMatchEnd_   = match.capturedEnd() - 1;
 
         return true;
     }
@@ -106,9 +112,10 @@ bool QuickFindPattern::isLineMatchingBackward(
 
     if ( ! active_ )
         return false;
-    if ( ( pos = regexp_.lastIndexIn( line, column ) ) != -1 ) {
+    QRegularExpressionMatch match;
+    if ( ( pos = line.lastIndexOf( regexp_, column, &match ) ) != -1 ) {
         lastMatchStart_ = pos;
-        lastMatchEnd_   = pos + regexp_.matchedLength() - 1;
+        lastMatchEnd_   = match.capturedEnd() - 1;
 
         return true;
     }

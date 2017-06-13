@@ -136,9 +136,9 @@ void VersionChecker::downloadFinished( QNetworkReply* reply )
 namespace {
     bool isVersionNewer( const QString& current, const QString& new_version )
     {
-        QRegExp version_regex( "(\\d+)\\.(\\d+)\\.(\\d+)(-(\\S+))?",
+        QRegularExpression version_regex( "(\\d+)\\.(\\d+)\\.(\\d+)(-(\\S+))?",
                 Qt::CaseSensitive,
-                QRegExp::RegExp2 );
+                QRegularExpression::RegExp2 );
 
         // Main version is the three first digits
         // Add is the part after '-' if there
