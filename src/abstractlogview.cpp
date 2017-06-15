@@ -579,11 +579,11 @@ void AbstractLogView::keyPressEvent( QKeyEvent* keyEvent )
                     }
                 case 'h':
                     horizontalScrollBar()->triggerAction(
-                            QScrollBar::SliderSingleStepSub);
+                            QScrollBar::SliderPageStepSub);
                     break;
                 case 'l':
                     horizontalScrollBar()->triggerAction(
-                            QScrollBar::SliderSingleStepAdd);
+                            QScrollBar::SliderPageStepAdd);
                     break;
                 case '0':
                     jumpToStartOfLine();
