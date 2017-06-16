@@ -625,6 +625,9 @@ void AbstractLogView::keyPressEvent( QKeyEvent* keyEvent )
                             emit markLine( line );
                         break;
                     }
+                case 't':
+                    emit activateSearchLineEdit();
+                    break;
                 default:
                     keyEvent->ignore();
             }
