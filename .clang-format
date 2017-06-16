@@ -1,0 +1,16 @@
+# Standard Qt style
+BasedOnStyle: llvm
+AccessModifierOffset: -4
+BreakBeforeBinaryOperators: true
+ColumnLimit: 80
+Standard: Cpp11
+IndentWidth: 4
+BreakBeforeBraces: Linux
+
+# Glogg-specific options
+SpacesInParentheses: true
+DerivePointerAlignment: true
+
+BreakBeforeBraces: Custom
+BraceWrapping:
+    BeforeElse: true
