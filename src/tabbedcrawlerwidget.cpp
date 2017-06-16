@@ -45,11 +45,8 @@ TabbedCrawlerWidget::TabbedCrawlerWidget() : QTabWidget(),
     // On GTK style, it looks better with a smaller font
     myTabBar_.setStyleSheet(
             "QTabBar::tab {"
-            " height: 20px; "
-            " font-size: 9pt; "
             "} "
             "QTabBar::close-button {\
-              height: 6px; width: 6px;\
               subcontrol-origin: padding;\
               subcontrol-position: left;\
              }" );
