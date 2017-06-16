@@ -621,6 +621,9 @@ void AbstractLogView::keyPressEvent( QKeyEvent* keyEvent )
                     // Use the selected 'word' and search backward
                     findPreviousSelected();
                     break;
+                case 't':
+                    emit activateSearchLineEdit();
+                    break;
                 default:
                     keyEvent->ignore();
             }

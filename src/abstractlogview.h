@@ -206,6 +206,7 @@ class AbstractLogView :
     void setOverview( Overview* overview, OverviewWidget* overview_widget );
 
   signals:
+    void activateSearchLineEdit();
     // Sent when a new line has been selected by the user.
     void newSelection(int line);
     // Sent up to the MainWindow to enable/disable the follow mode

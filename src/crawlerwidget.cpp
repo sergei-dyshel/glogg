@@ -589,6 +589,12 @@ void CrawlerWidget::activityDetected()
 // Private functions
 //
 
+void disableTabFocus(QWidget *widget)
+{
+  widget->setFocusPolicy(
+      static_cast<Qt::FocusPolicy>(widget->focusPolicy() & ~Qt::TabFocus));
+}
+
 // Build the widget and connect all the signals, this must be done once
 // the data are attached.
 void CrawlerWidget::setup()
@@ -641,6 +647,7 @@ void CrawlerWidget::setup()
     visibilityView->setMinimumWidth( 170 ); // Only needed with custom style-sheet
 
     visibilityBox = new QComboBox();
+    disableTabFocus(visibilityBox);
     visibilityBox->setModel( visibilityModel_ );
     visibilityBox->setView( visibilityView );
 
@@ -669,16 +676,22 @@ void CrawlerWidget::setup()
 
     // Construct the Search Info line
     searchInfoLine = new InfoLine();
+    disableTabFocus(searchInfoLine);
+
     searchInfoLine->setFrameStyle( QFrame::WinPanel | QFrame::Sunken );
     searchInfoLine->setLineWidth( 1 );
     searchInfoLineDefaultPalette = searchInfoLine->palette();
 
     ignoreCaseCheck = new QCheckBox( "Ignore &case" );
+    disableTabFocus(ignoreCaseCheck);
     searchRefreshCheck = new QCheckBox( "Auto-&refresh" );
+    disableTabFocus(searchRefreshCheck);
 
     // Construct the Search line
     searchLabel = new QLabel(tr("&Text: "));
+    disableTabFocus(searchLabel);
     searchLineEdit = new QComboBox;
+    disableTabFocus(searchLineEdit);
     searchLineEdit->setEditable( true );
     searchLineEdit->setCompleter( 0 );
     searchLineEdit->addItems( savedSearches_->recentSearches() );
@@ -687,34 +700,28 @@ void CrawlerWidget::setup()
 
     searchLabel->setBuddy( searchLineEdit );
 
-    searchButton = new QToolButton();
-    searchButton->setText( tr("&Search") );
-    searchButton->setAutoRaise( true );
 
     stopButton = new QToolButton();
+    disableTabFocus(stopButton);
     stopButton->setIcon( QIcon(":/images/stop14.png") );
     stopButton->setAutoRaise( true );
     stopButton->setEnabled( false );
 
     QHBoxLayout* searchLineLayout = new QHBoxLayout;
+    searchLineLayout->addWidget( visibilityBox );
     searchLineLayout->addWidget(searchLabel);
-    searchLineLayout->addWidget(searchLineEdit);
-    searchLineLayout->addWidget(searchButton);
-    searchLineLayout->addWidget(stopButton);
+    searchLineLayout->addWidget(searchLineEdit, 5);
     searchLineLayout->setContentsMargins(6, 0, 6, 0);
     stopButton->setSizePolicy( QSizePolicy( QSizePolicy::Maximum, QSizePolicy::Maximum ) );
-    searchButton->setSizePolicy( QSizePolicy( QSizePolicy::Maximum, QSizePolicy::Maximum ) );
 
-    QHBoxLayout* searchInfoLineLayout = new QHBoxLayout;
-    searchInfoLineLayout->addWidget( visibilityBox );
-    searchInfoLineLayout->addWidget( searchInfoLine );
-    searchInfoLineLayout->addWidget( ignoreCaseCheck );
-    searchInfoLineLayout->addWidget( searchRefreshCheck );
+    searchLineLayout->addWidget( searchInfoLine, 1 );
+    searchLineLayout->addWidget(stopButton);
+    searchLineLayout->addWidget( ignoreCaseCheck );
+    searchLineLayout->addWidget( searchRefreshCheck );
 
     // Construct the bottom window
     QVBoxLayout* bottomMainLayout = new QVBoxLayout;
     bottomMainLayout->addLayout(searchLineLayout);
-    bottomMainLayout->addLayout(searchInfoLineLayout);
     bottomMainLayout->addWidget(filteredView);
     bottomMainLayout->setContentsMargins(2, 1, 2, 1);
     bottomWindow->setLayout(bottomMainLayout);
@@ -738,12 +745,15 @@ void CrawlerWidget::setup()
             Qt::Checked : Qt::Unchecked );
 
     // Connect the signals
+    connect(filteredView, SIGNAL(activateSearchLineEdit()),
+            searchLineEdit->lineEdit(), SLOT(setFocus()));
+    connect(logMainView, SIGNAL(activateSearchLineEdit()),
+            searchLineEdit->lineEdit(), SLOT(setFocus()));
+
     connect(searchLineEdit->lineEdit(), SIGNAL( returnPressed() ),
-            searchButton, SIGNAL( clicked() ));
+            this, SLOT( startNewSearch() ) );
     connect(searchLineEdit->lineEdit(), SIGNAL( textEdited( const QString& ) ),
             this, SLOT( searchTextChangeHandler() ));
-    connect(searchButton, SIGNAL( clicked() ),
-            this, SLOT( startNewSearch() ) );
     connect(stopButton, SIGNAL( clicked() ),
             this, SLOT( stopSearch() ) );
 
