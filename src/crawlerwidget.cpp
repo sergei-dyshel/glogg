@@ -44,6 +44,7 @@
 #include "quickfindwidget.h"
 #include "persistentinfo.h"
 #include "configuration.h"
+#include "utils.h"
 
 // Palette for error signaling (yellow background)
 const QPalette CrawlerWidget::errorPalette( QColor( "yellow" ) );
@@ -563,7 +564,7 @@ void CrawlerWidget::addToSearch( const QString& string )
         text = string;
     else {
         // Escape the regexp chars from the string before adding it.
-        text += ( '|' + QRegExp::escape( string ) );
+        text += ( '|' + QRegularExpression::escape( string ) );
     }
 
     searchLineEdit->setEditText( text );
@@ -837,29 +838,10 @@ void CrawlerWidget::replaceCurrentSearch( const QString& searchText )
     overview_.updateData( logData_->getNbLine() );
 
     if ( !searchText.isEmpty() ) {
-        // Determine the type of regexp depending on the config
-        QRegExp::PatternSyntax syntax;
-        static std::shared_ptr<Configuration> config =
-            Persistent<Configuration>( "settings" );
-        switch ( config->mainRegexpType() ) {
-            case Wildcard:
-                syntax = QRegExp::Wildcard;
-                break;
-            case FixedString:
-                syntax = QRegExp::FixedString;
-                break;
-            default:
-                syntax = QRegExp::RegExp2;
-                break;
-        }
-
-        // Set the pattern case insensitive if needed
-        Qt::CaseSensitivity case_sensitivity = Qt::CaseSensitive;
-        if ( ignoreCaseCheck->checkState() == Qt::Checked )
-            case_sensitivity = Qt::CaseInsensitive;
-
         // Constructs the regexp
-        QRegExp regexp( searchText, case_sensitivity, syntax );
+        QRegularExpression regexp(
+            searchText, patternOptions( ignoreCaseCheck->checkState()
+                                              == Qt::Checked ) );
 
         if ( regexp.isValid() ) {
             // Activate the stop button

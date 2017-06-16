@@ -21,6 +21,7 @@
 #define UTILS_H
 
 #include <QtGlobal>
+#include <QRegularExpression>
 
 #include "config.h"
 
@@ -129,5 +130,18 @@ inline uint16_t glogg_htons( uint16_t hostshort )
     }
 }
 #endif
+
+inline QRegularExpression::PatternOptions patternOptions( bool ignoreCase )
+{
+    return ( ignoreCase ) ? QRegularExpression::CaseInsensitiveOption
+                          : QRegularExpression::NoPatternOption;
+}
+
+inline bool isCaseInsenstivePattern(const QRegularExpression &regexp)
+{
+    return ( regexp.patternOptions()
+             & QRegularExpression::CaseInsensitiveOption )
+           == QRegularExpression::CaseInsensitiveOption;
+}
 
 #endif
