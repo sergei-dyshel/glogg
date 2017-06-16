@@ -532,16 +532,14 @@ void AbstractLogView::keyPressEvent( QKeyEvent* keyEvent )
         jumpToStartOfLine();
     else if ( keyEvent->key() == Qt::Key_End  && !controlModifier)
         jumpToRightOfScreen();
-    else if ( (keyEvent->key() == Qt::Key_PageDown && controlModifier)
-           || (keyEvent->key() == Qt::Key_End && controlModifier) )
+    else if ( (keyEvent->key() == Qt::Key_End && controlModifier) )
     {
         disableFollow(); // duplicate of 'G' action.
         selection_.selectLine( logData->getNbLine() - 1 );
         emit updateLineNumber( logData->getNbLine() - 1 );
         jumpToBottom();
     }
-    else if ( (keyEvent->key() == Qt::Key_PageUp && controlModifier)
-           || (keyEvent->key() == Qt::Key_Home && controlModifier) )
+    else if ( (keyEvent->key() == Qt::Key_Home && controlModifier) )
     {
         disableFollow(); // like 'g' but 0 input first line action.
         selectAndDisplayLine( 0 );
