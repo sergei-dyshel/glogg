@@ -281,6 +281,8 @@ AbstractLogView::AbstractLogView(const AbstractLogData* newLogData,
     // Init the popup menu
     createMenu();
 
+    setBorderColorFromFocus();
+
     // Signals
     connect( quickFindPattern_, SIGNAL( patternUpdated() ),
             this, SLOT ( handlePatternUpdated() ) );
@@ -691,6 +693,16 @@ void AbstractLogView::resizeEvent( QResizeEvent* )
     LOG(logDEBUG) << "resizeEvent received";
 
     updateDisplaySize();
+}
+
+void AbstractLogView::focusInEvent( QFocusEvent* )
+{
+    setBorderColorFromFocus();
+}
+
+void AbstractLogView::focusOutEvent( QFocusEvent* )
+{
+    setBorderColorFromFocus();
 }
 
 bool AbstractLogView::event( QEvent* e )
@@ -1716,6 +1728,13 @@ void AbstractLogView::disableFollow()
 {
     emit followModeChanged( false );
     followElasticHook_.hook( false );
+}
+
+void AbstractLogView::setBorderColorFromFocus()
+{
+    setObjectName( "AbstractLogView" );
+    setStyleSheet( QString( "#AbstractLogView {border: 4px solid %1; }" )
+                       .arg( hasFocus() ? "red" : "grey" ) );
 }
 
 namespace {

@@ -187,6 +187,8 @@ class AbstractLogView :
     virtual void scrollContentsBy( int dx, int dy );
     virtual void keyPressEvent( QKeyEvent* keyEvent );
     virtual void wheelEvent( QWheelEvent* wheelEvent );
+    virtual void focusInEvent( QFocusEvent* event );
+    virtual void focusOutEvent( QFocusEvent* event );
     virtual bool event( QEvent * e );
 
     // Must be implemented to return wether the line number is
@@ -413,6 +415,8 @@ class AbstractLogView :
     // Utils functions
     bool isCharWord( char c );
     void updateGlobalSelection();
+
+    void setBorderColorFromFocus();
 };
 
 #endif
