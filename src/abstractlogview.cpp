@@ -1454,7 +1454,7 @@ void AbstractLogView::drawTextArea( QPaintDevice* paint_device, int32_t )
     static const QBrush markBrush = QBrush( "dodgerblue" );
 
     static const int SEPARATOR_WIDTH = 1;
-    static const qreal BULLET_AREA_WIDTH = 11;
+    static const qreal BULLET_AREA_WIDTH = 14;
     static const int CONTENT_MARGIN_WIDTH = 1;
     static const int LINE_NUMBER_PADDING = 3;
 
@@ -1641,8 +1641,8 @@ void AbstractLogView::drawTextArea( QPaintDevice* paint_device, int32_t )
 
         // Then draw the bullet
         painter.setPen( palette.color( QPalette::Text ) );
-        const qreal circleSize = 3;
-        const qreal arrowHeight = 4;
+        const qreal circleSize = 5;
+        const qreal arrowHeight = 6;
         const qreal middleXLine = BULLET_AREA_WIDTH / 2;
         const qreal middleYLine = yPos + (fontHeight / 2);
 
