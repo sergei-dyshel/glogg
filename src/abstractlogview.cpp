@@ -1709,6 +1709,13 @@ void AbstractLogView::disableFollow()
     followElasticHook_.hook( false );
 }
 
+void AbstractLogView::setBorderColorFromFocus()
+{
+    setObjectName( "AbstractLogView" );
+    setStyleSheet( QString( "#AbstractLogView {border: 4px solid %1; }" )
+                       .arg( hasFocus() ? "red" : "grey" ) );
+}
+
 namespace {
 
 // Convert the length of the pull to follow bar to pixels
