@@ -29,6 +29,7 @@
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QLabel>
+#include <QKeyEvent>
 
 #include "logmainview.h"
 #include "filteredview.h"
@@ -114,6 +115,8 @@ class CrawlerWidget : public QSplitter,
 
     // Implementation of the MuxableDocumentInterface
     virtual void doSendAllStateSignals();
+
+    void keyPressEvent( QKeyEvent* keyEvent );
 
   signals:
     // Sent to signal the client load has progressed,

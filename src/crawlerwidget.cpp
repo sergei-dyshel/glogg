@@ -243,6 +243,28 @@ CrawlerWidget::doGetViewContext() const
     return static_cast<std::shared_ptr<const ViewContextInterface>>( context );
 }
 
+void CrawlerWidget::keyPressEvent( QKeyEvent* keyEvent )
+{
+    if ( keyEvent->key() == Qt::Key_Equal ) {
+        auto sizes_ = sizes();
+        if ( sizes_[2] > 200 ) {
+            sizes_[0] += 200;
+            sizes_[2] -= 200;
+            setSizes( sizes_ );
+        }
+    }
+    else if ( keyEvent->key() == Qt::Key_Minus ) {
+        auto sizes_ = sizes();
+        if ( sizes_[0] > 200 ) {
+            sizes_[0] -= 200;
+            sizes_[2] += 200;
+            setSizes( sizes_ );
+        }
+    }
+    else
+        keyEvent->ignore();
+}
+
 //
 // Slots
 //
