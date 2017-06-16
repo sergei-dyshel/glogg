@@ -210,6 +210,7 @@ class AbstractLogView :
     LineNumber getViewPosition() const;
 
   signals:
+    void activateSearchLineEdit();
     // Sent when a new line has been selected by the user.
     void newSelection(int line);
     // Sent up to the MainWindow to enable/disable the follow mode
