@@ -281,6 +281,8 @@ AbstractLogView::AbstractLogView(const AbstractLogData* newLogData,
     // Init the popup menu
     createMenu();
 
+    setBorderColorFromFocus();
+
     // Signals
     connect( quickFindPattern_, SIGNAL( patternUpdated() ),
             this, SLOT ( handlePatternUpdated() ) );
@@ -687,6 +689,16 @@ void AbstractLogView::resizeEvent( QResizeEvent* )
     LOG(logDEBUG) << "resizeEvent received";
 
     updateDisplaySize();
+}
+
+void AbstractLogView::focusInEvent( QFocusEvent* )
+{
+    setBorderColorFromFocus();
+}
+
+void AbstractLogView::focusOutEvent( QFocusEvent* )
+{
+    setBorderColorFromFocus();
 }
 
 bool AbstractLogView::event( QEvent* e )
