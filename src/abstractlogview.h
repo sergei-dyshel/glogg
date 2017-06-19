@@ -235,6 +235,8 @@ class AbstractLogView :
     // Sent up when the user has moved within the view
     void activity();
 
+    void gotFocus();
+
   public slots:
     // Makes the widget select and display the passed line.
     // Scrolling as necessary

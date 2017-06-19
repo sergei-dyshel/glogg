@@ -278,6 +278,8 @@ class CrawlerWidget : public QSplitter,
 
     QWidget*        qfSavedFocus_;
 
+    AbstractLogView* lastFocusedLogView;
+
     // Search state (for auto-refresh and truncation)
     SearchState     searchState_;
 
