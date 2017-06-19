@@ -238,20 +238,22 @@ class CrawlerWidget : public QSplitter,
     void printSearchInfoMessage( int nbMatches = 0 );
     void changeDataStatus( DataStatus status );
     void updateEncoding();
+    void onSearchTextChanged( const QString& text );
+    bool isSearchLineEditTextValid();
 
     // Palette for error notification (yellow background)
     static const QPalette errorPalette;
 
     LogMainView*    logMainView;
     QWidget*        bottomWindow;
-    QLabel*         searchLabel;
     QComboBox*      searchLineEdit;
+    QToolButton*    startButton;
     QToolButton*    stopButton;
     FilteredView*   filteredView;
     QComboBox*      visibilityBox;
     InfoLine*       searchInfoLine;
-    QCheckBox*      ignoreCaseCheck;
-    QCheckBox*      searchRefreshCheck;
+    QPushButton*    ignoreCaseCheck;
+    QPushButton*    searchRefreshCheck;
     OverviewWidget* overviewWidget_;
 
     QVBoxLayout*    bottomMainLayout;
@@ -260,6 +262,9 @@ class CrawlerWidget : public QSplitter,
 
     // Default palette to be remembered
     QPalette        searchInfoLineDefaultPalette;
+
+    QPalette searchLineEditDefaultPalette;
+    QPalette searchLineEditErrorPalette;
 
     std::shared_ptr<SavedSearches> savedSearches_;
 

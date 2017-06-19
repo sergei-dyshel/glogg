@@ -225,11 +225,12 @@ void CrawlerWidget::doSetViewContext(
     CrawlerWidgetContext context = { view_context };
 
     setSizes( context.sizes() );
-    ignoreCaseCheck->setCheckState( context.ignoreCase() ? Qt::Checked : Qt::Unchecked );
+    ignoreCaseCheck->setChecked( context.ignoreCase() );
 
-    auto auto_refresh_check_state = context.autoRefresh() ? Qt::Checked : Qt::Unchecked;
-    searchRefreshCheck->setCheckState( auto_refresh_check_state );
+    searchRefreshCheck->setChecked( context.autoRefresh() );
     // Manually call the handler as it is not called when changing the state programmatically
+    auto auto_refresh_check_state
+        = context.autoRefresh() ? Qt::Checked : Qt::Unchecked;
     searchRefreshChangedHandler( auto_refresh_check_state );
 }
 
@@ -238,8 +239,8 @@ CrawlerWidget::doGetViewContext() const
 {
     auto context = std::make_shared<const CrawlerWidgetContext>(
             sizes(),
-            ( ignoreCaseCheck->checkState() == Qt::Checked ),
-            ( searchRefreshCheck->checkState() == Qt::Checked ) );
+            ( ignoreCaseCheck->isChecked() ),
+            ( searchRefreshCheck->isChecked() ) );
 
     return static_cast<std::shared_ptr<const ViewContextInterface>>( context );
 }
@@ -682,14 +683,23 @@ void CrawlerWidget::setup()
     searchInfoLine->setLineWidth( 1 );
     searchInfoLineDefaultPalette = searchInfoLine->palette();
 
-    ignoreCaseCheck = new QCheckBox( "Ignore &case" );
-    disableTabFocus(ignoreCaseCheck);
-    searchRefreshCheck = new QCheckBox( "Auto-&refresh" );
-    disableTabFocus(searchRefreshCheck);
+    ignoreCaseCheck = new QPushButton();
+    ignoreCaseCheck->setCheckable( true );
+    ignoreCaseCheck->setFlat( true );
+    ignoreCaseCheck->setToolTip( "Ignore case (Alt+I)" );
+    ignoreCaseCheck->setShortcut( QKeySequence( Qt::ALT + Qt::Key_I ) );
+    ignoreCaseCheck->setIcon( QIcon( ":/images/ignore_case.png" ) );
+    disableTabFocus( ignoreCaseCheck );
+
+    searchRefreshCheck = new QPushButton();
+    searchRefreshCheck->setCheckable( true );
+    searchRefreshCheck->setFlat( true );
+    searchRefreshCheck->setToolTip( "Auto refresh (Ctrl+F)" );
+    searchRefreshCheck->setShortcut( QKeySequence( Qt::ALT + Qt::Key_R ) );
+    searchRefreshCheck->setIcon( QIcon( ":/images/auto_refresh.png" ) );
+    disableTabFocus( searchRefreshCheck );
 
     // Construct the Search line
-    searchLabel = new QLabel(tr("&Text: "));
-    disableTabFocus(searchLabel);
     searchLineEdit = new QComboBox;
     disableTabFocus(searchLineEdit);
     searchLineEdit->setEditable( true );
@@ -697,9 +707,14 @@ void CrawlerWidget::setup()
     searchLineEdit->addItems( savedSearches_->recentSearches() );
     searchLineEdit->setSizePolicy( QSizePolicy::Expanding, QSizePolicy::Minimum );
     searchLineEdit->setSizeAdjustPolicy( QComboBox::AdjustToMinimumContentsLengthWithIcon );
+    searchLineEditDefaultPalette = searchLineEdit->lineEdit()->palette();
+    searchLineEditErrorPalette.setColor(QPalette::Base, Qt::yellow);
 
-    searchLabel->setBuddy( searchLineEdit );
-
+    startButton = new QToolButton();
+    disableTabFocus(startButton);
+    startButton->setIcon( QIcon(":/images/search.png") );
+    startButton->setAutoRaise( true );
+    startButton->setEnabled( false );
 
     stopButton = new QToolButton();
     disableTabFocus(stopButton);
@@ -709,15 +724,15 @@ void CrawlerWidget::setup()
 
     QHBoxLayout* searchLineLayout = new QHBoxLayout;
     searchLineLayout->addWidget( visibilityBox );
-    searchLineLayout->addWidget(searchLabel);
     searchLineLayout->addWidget(searchLineEdit, 5);
     searchLineLayout->setContentsMargins(6, 0, 6, 0);
     stopButton->setSizePolicy( QSizePolicy( QSizePolicy::Maximum, QSizePolicy::Maximum ) );
 
-    searchLineLayout->addWidget( searchInfoLine, 1 );
+    searchLineLayout->addWidget( startButton );
     searchLineLayout->addWidget(stopButton);
     searchLineLayout->addWidget( ignoreCaseCheck );
     searchLineLayout->addWidget( searchRefreshCheck );
+    searchLineLayout->addWidget( searchInfoLine, 1 );
 
     // Construct the bottom window
     QVBoxLayout* bottomMainLayout = new QVBoxLayout;
@@ -737,12 +752,11 @@ void CrawlerWidget::setup()
 
     // Default search checkboxes
     auto config = Persistent<Configuration>( "settings" );
-    searchRefreshCheck->setCheckState( config->isSearchAutoRefreshDefault() ?
-            Qt::Checked : Qt::Unchecked );
+    searchRefreshCheck->setChecked( config->isSearchAutoRefreshDefault() );
     // Manually call the handler as it is not called when changing the state programmatically
-    searchRefreshChangedHandler( searchRefreshCheck->checkState() );
-    ignoreCaseCheck->setCheckState( config->isSearchIgnoreCaseDefault() ?
-            Qt::Checked : Qt::Unchecked );
+    searchRefreshChangedHandler(
+        config->isSearchAutoRefreshDefault() ? Qt::Checked : Qt::Unchecked );
+    ignoreCaseCheck->setChecked( config->isSearchIgnoreCaseDefault() );
 
     // Connect the signals
     connect(filteredView, SIGNAL(activateSearchLineEdit()),
@@ -754,8 +768,12 @@ void CrawlerWidget::setup()
             this, SLOT( startNewSearch() ) );
     connect(searchLineEdit->lineEdit(), SIGNAL( textEdited( const QString& ) ),
             this, SLOT( searchTextChangeHandler() ));
+    connect( searchLineEdit->lineEdit(), &QLineEdit::textChanged, this,
+             &CrawlerWidget::onSearchTextChanged );
     connect(stopButton, SIGNAL( clicked() ),
             this, SLOT( stopSearch() ) );
+    connect( startButton, &QToolButton::clicked, this,
+             &CrawlerWidget::startNewSearch );
 
     connect(visibilityBox, SIGNAL( currentIndexChanged( int ) ),
             this, SLOT( changeFilteredViewVisibility( int ) ) );
@@ -810,16 +828,15 @@ void CrawlerWidget::setup()
     connect( logData_, SIGNAL( fileChanged( LogData::MonitoredFileStatus ) ),
             this, SLOT( fileChangedHandler( LogData::MonitoredFileStatus ) ) );
 
-    // Search auto-refresh
-    connect( searchRefreshCheck, SIGNAL( stateChanged( int ) ),
-            this, SLOT( searchRefreshChangedHandler( int ) ) );
+    connect( searchRefreshCheck, &QPushButton::toggled, [=]( bool checked ) {
+        auto new_state = checked ? Qt::Checked : Qt::Unchecked;
+        searchRefreshChangedHandler( new_state );
+        emit searchRefreshChanged( new_state );
+    } );
 
-    // Advise the parent the checkboxes have been changed
-    // (for maintaining default config)
-    connect( searchRefreshCheck, SIGNAL( stateChanged( int ) ),
-            this, SIGNAL( searchRefreshChanged( int ) ) );
-    connect( ignoreCaseCheck, SIGNAL( stateChanged( int ) ),
-            this, SIGNAL( ignoreCaseChanged( int ) ) );
+    connect( ignoreCaseCheck, &QPushButton::toggled, [=]( bool checked ) {
+        emit ignoreCaseChanged( checked ? Qt::Checked : Qt::Unchecked );
+    } );
 }
 
 // Create a new search using the text passed, replace the currently
@@ -850,8 +867,7 @@ void CrawlerWidget::replaceCurrentSearch( const QString& searchText )
     if ( !searchText.isEmpty() ) {
         // Constructs the regexp
         QRegularExpression regexp(
-            searchText, patternOptions( ignoreCaseCheck->checkState()
-                                              == Qt::Checked ) );
+            searchText, patternOptions( ignoreCaseCheck->isChecked() ) );
 
         if ( regexp.isValid() ) {
             // Activate the stop button
@@ -969,6 +985,26 @@ void CrawlerWidget::updateEncoding()
     logMainView->forceRefresh();
     logFilteredData_->setDisplayEncoding( encoding );
     filteredView->forceRefresh();
+}
+
+bool CrawlerWidget::isSearchLineEditTextValid()
+{
+  auto text = searchLineEdit->lineEdit()->text();
+  return !QRegularExpression(
+              text, QRegularExpression::DontAutomaticallyOptimizeOption )
+              .isValid();
+}
+
+void CrawlerWidget::onSearchTextChanged( const QString& )
+{
+    if ( isSearchLineEditTextValid() ) {
+        startButton->setEnabled( false );
+        searchLineEdit->lineEdit()->setPalette( searchLineEditErrorPalette );
+    }
+    else {
+        startButton->setEnabled( true );
+        searchLineEdit->lineEdit()->setPalette( searchLineEditDefaultPalette );
+    }
 }
 
 //
