@@ -590,10 +590,9 @@ void CrawlerWidget::activityDetected()
 // Private functions
 //
 
-void disableTabFocus(QWidget *widget)
+void adjustFocusPolicy( QWidget* widget, bool clickFocus = false )
 {
-  widget->setFocusPolicy(
-      static_cast<Qt::FocusPolicy>(widget->focusPolicy() & ~Qt::TabFocus));
+    widget->setFocusPolicy( clickFocus ? Qt::ClickFocus : Qt::NoFocus );
 }
 
 // Build the widget and connect all the signals, this must be done once
@@ -648,7 +647,7 @@ void CrawlerWidget::setup()
     visibilityView->setMinimumWidth( 170 ); // Only needed with custom style-sheet
 
     visibilityBox = new QComboBox();
-    disableTabFocus(visibilityBox);
+    adjustFocusPolicy( visibilityBox );
     visibilityBox->setModel( visibilityModel_ );
     visibilityBox->setView( visibilityView );
 
@@ -677,7 +676,7 @@ void CrawlerWidget::setup()
 
     // Construct the Search Info line
     searchInfoLine = new InfoLine();
-    disableTabFocus(searchInfoLine);
+    adjustFocusPolicy( searchInfoLine );
 
     searchInfoLine->setFrameStyle( QFrame::WinPanel | QFrame::Sunken );
     searchInfoLine->setLineWidth( 1 );
@@ -689,7 +688,7 @@ void CrawlerWidget::setup()
     ignoreCaseCheck->setToolTip( "Ignore case (Alt+I)" );
     ignoreCaseCheck->setShortcut( QKeySequence( Qt::ALT + Qt::Key_I ) );
     ignoreCaseCheck->setIcon( QIcon( ":/images/ignore_case.png" ) );
-    disableTabFocus( ignoreCaseCheck );
+    adjustFocusPolicy( ignoreCaseCheck );
 
     searchRefreshCheck = new QPushButton();
     searchRefreshCheck->setCheckable( true );
@@ -697,11 +696,11 @@ void CrawlerWidget::setup()
     searchRefreshCheck->setToolTip( "Auto refresh (Ctrl+F)" );
     searchRefreshCheck->setShortcut( QKeySequence( Qt::ALT + Qt::Key_R ) );
     searchRefreshCheck->setIcon( QIcon( ":/images/auto_refresh.png" ) );
-    disableTabFocus( searchRefreshCheck );
+    adjustFocusPolicy( searchRefreshCheck );
 
     // Construct the Search line
     searchLineEdit = new QComboBox;
-    disableTabFocus(searchLineEdit);
+    adjustFocusPolicy( searchLineEdit, true /* click focus */ );
     searchLineEdit->setEditable( true );
     searchLineEdit->setCompleter( 0 );
     searchLineEdit->addItems( savedSearches_->recentSearches() );
@@ -711,13 +710,13 @@ void CrawlerWidget::setup()
     searchLineEditErrorPalette.setColor(QPalette::Base, Qt::yellow);
 
     startButton = new QToolButton();
-    disableTabFocus(startButton);
+    adjustFocusPolicy(startButton);
     startButton->setIcon( QIcon(":/images/search.png") );
     startButton->setAutoRaise( true );
     startButton->setEnabled( false );
 
     stopButton = new QToolButton();
-    disableTabFocus(stopButton);
+    adjustFocusPolicy(stopButton);
     stopButton->setIcon( QIcon(":/images/stop14.png") );
     stopButton->setAutoRaise( true );
     stopButton->setEnabled( false );
