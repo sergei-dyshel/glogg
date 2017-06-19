@@ -9,8 +9,11 @@ BreakBeforeBraces: Linux
 
 # Glogg-specific options
 SpacesInParentheses: true
+SpacesInSquareBrackets: true
 DerivePointerAlignment: true
+AccessModifierOffset: -2
 
 BreakBeforeBraces: Custom
 BraceWrapping:
     BeforeElse: true
+    AfterFunction: true
