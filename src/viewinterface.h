@@ -22,6 +22,8 @@
 
 #include <memory>
 
+#include <QJsonValue>
+
 class LogData;
 class LogFilteredData;
 class SavedSearches;
@@ -35,6 +37,8 @@ class ViewContextInterface {
     virtual ~ViewContextInterface() {}
 
     virtual std::string toString() const = 0;
+
+    virtual QJsonValue toJson() const = 0;
 };
 
 // ViewInterface represents a high-level view on a log file.

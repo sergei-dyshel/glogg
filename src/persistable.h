@@ -21,6 +21,7 @@
 #define PERSISTABLE_H
 
 class QSettings;
+#include <QJsonValue>
 
 // Must be implemented by classes which could be saved to persistent
 // storage by PersistentInfo.
@@ -31,6 +32,12 @@ class Persistable {
     // Must be implemented to save/retrieve from Qt Settings
     virtual void saveToStorage( QSettings& settings ) const = 0;
     virtual void retrieveFromStorage( QSettings& settings ) = 0;
+
+    virtual QJsonValue saveToJson() const
+    {
+        return QJsonValue( QJsonValue::Null );
+    }
+    virtual void retrieveFromJson( const QJsonValue& ) {  }
 };
 
 #endif

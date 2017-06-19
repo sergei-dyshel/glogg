@@ -45,6 +45,8 @@ class PersistentInfo {
     // Retrieve a persistable from permanent storage
     void retrieve( const QString& name );
 
+    void saveJson();
+
   private:
     // Can't be constructed or copied (singleton)
     PersistentInfo();

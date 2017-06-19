@@ -26,6 +26,9 @@
 #include "filterset.h"
 #include "utils.h"
 
+#include <QJsonObject>
+#include <QJsonArray>
+
 const int FilterSet::FILTERSET_VERSION = 1;
 
 Filter::Filter()
@@ -169,6 +172,16 @@ void Filter::saveToStorage( QSettings& settings ) const
     settings.setValue( "back_colour", backColorName_ );
 }
 
+QJsonValue Filter::saveToJson() const
+{
+    QJsonObject obj;
+    obj[ "regexp" ] = regexp_.pattern();
+    obj[ "ignore_case" ] = isCaseInsenstivePattern( regexp_ );
+    obj[ "fore_colour" ] = foreColorName_;
+    obj[ "back_colour" ] = backColorName_;
+    return obj;
+}
+
 void Filter::retrieveFromStorage( QSettings& settings )
 {
     LOG(logDEBUG) << "Filter::retrieveFromStorage";
@@ -196,6 +209,14 @@ void FilterSet::saveToStorage( QSettings& settings ) const
     }
     settings.endArray();
     settings.endGroup();
+}
+
+QJsonValue FilterSet::saveToJson() const
+{
+  QJsonArray array;
+  for (const auto& filter : filterList)
+      array.append( filter.saveToJson() );
+  return array;
 }
 
 void FilterSet::retrieveFromStorage( QSettings& settings )

@@ -25,6 +25,8 @@
 #include "log.h"
 #include "savedsearches.h"
 
+#include <QJsonArray>
+
 const int SavedSearches::SAVEDSEARCHES_VERSION = 1;
 const int SavedSearches::maxNumberOfRecentSearches = 50;
 
@@ -96,6 +98,11 @@ void SavedSearches::saveToStorage( QSettings& settings ) const
     }
     settings.endArray();
     settings.endGroup();
+}
+
+QJsonValue SavedSearches::saveToJson() const
+{
+    return QJsonArray::fromStringList(savedSearches_);
 }
 
 void SavedSearches::retrieveFromStorage( QSettings& settings )

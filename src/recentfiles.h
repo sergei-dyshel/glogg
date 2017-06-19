@@ -42,6 +42,8 @@ class RecentFiles : public Persistable
     virtual void saveToStorage( QSettings& settings ) const;
     virtual void retrieveFromStorage( QSettings& settings );
 
+    QJsonValue saveToJson() const override;
+
   private:
     static const int RECENTFILES_VERSION;
     static const int MAX_NUMBER_OF_FILES;

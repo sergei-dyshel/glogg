@@ -57,6 +57,8 @@ class Filter
     void saveToStorage( QSettings& settings ) const;
     void retrieveFromStorage( QSettings& settings );
 
+    QJsonValue saveToJson() const;
+
   private:
     QRegularExpression regexp_;
     QString foreColorName_;
@@ -80,6 +82,8 @@ class FilterSet : public Persistable
     // Reads/writes the current config in the QSettings object passed
     virtual void saveToStorage( QSettings& settings ) const;
     virtual void retrieveFromStorage( QSettings& settings );
+
+    QJsonValue saveToJson() const override;
 
     // Should be private really, but I don't know how to have 
     // it recognised by QVariant then.

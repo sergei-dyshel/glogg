@@ -25,6 +25,8 @@
 #include "log.h"
 #include "recentfiles.h"
 
+#include <QJsonArray>
+
 const int RecentFiles::RECENTFILES_VERSION = 1;
 const int RecentFiles::MAX_NUMBER_OF_FILES = 10;
 
@@ -74,6 +76,11 @@ void RecentFiles::saveToStorage( QSettings& settings ) const
     }
     settings.endArray();
     settings.endGroup();
+}
+
+QJsonValue RecentFiles::saveToJson() const
+{
+    return QJsonArray::fromStringList( recentFiles_ );
 }
 
 void RecentFiles::retrieveFromStorage( QSettings& settings )

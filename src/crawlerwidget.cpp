@@ -34,6 +34,7 @@
 #include <QStandardItemModel>
 #include <QHeaderView>
 #include <QListView>
+#include <QJsonObject>
 
 #include "crawlerwidget.h"
 
@@ -64,6 +65,8 @@ class CrawlerWidgetContext : public ViewContextInterface {
 
     // Implementation of the ViewContextInterface function
     std::string toString() const;
+
+    QJsonValue toJson() const override;
 
     // Access the Qt sizes array for the QSplitter
     QList<int> sizes() const { return sizes_; }
@@ -1122,4 +1125,14 @@ std::string CrawlerWidgetContext::toString() const
             ignore_case_, auto_refresh_ );
 
     return { string };
+}
+
+QJsonValue CrawlerWidgetContext::toJson() const
+{
+    QJsonObject obj;
+    obj[ "main_size" ] = sizes_[ 0 ];
+    obj[ "filtered_size" ] = sizes_[ 1 ];
+    obj[ "ignore_case" ] = ignore_case_;
+    obj[ "auto_refresh" ] = auto_refresh_;
+    return obj;
 }

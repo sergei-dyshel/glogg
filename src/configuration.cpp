@@ -18,6 +18,7 @@
  */
 
 #include <QFontInfo>
+#include <QJsonObject>
 
 #include "log.h"
 
@@ -136,4 +137,24 @@ void Configuration::saveToStorage( QSettings& settings ) const
     settings.setValue( "view.lineNumbersVisibleInFiltered", lineNumbersVisibleInFiltered_ );
     settings.setValue( "defaultView.searchAutoRefresh", searchAutoRefresh_ );
     settings.setValue( "defaultView.searchIgnoreCase", searchIgnoreCase_ );
+}
+
+QJsonValue Configuration::saveToJson() const
+{
+    QJsonObject obj;
+
+    obj[ "mainFont.family" ] = mainFont_.family();
+    obj[ "mainFont.size" ] = mainFont_.pointSize();
+    obj[ "quickfind.incremental" ] = quickfindIncremental_;
+    obj[ "polling.enabled" ] = pollingEnabled_;
+    obj[ "polling.intervalMs" ] = static_cast<qint64>( pollIntervalMs_ );
+    obj[ "session.loadLast" ] = loadLastSession_;
+
+    obj[ "view.overviewVisible" ] = overviewVisible_;
+    obj[ "view.lineNumbersVisibleInMain" ] = lineNumbersVisibleInMain_;
+    obj[ "view.lineNumbersVisibleInFiltered" ] = lineNumbersVisibleInFiltered_;
+    obj[ "defaultView.searchAutoRefresh" ] = searchAutoRefresh_;
+    obj[ "defaultView.searchIgnoreCase" ] = searchIgnoreCase_;
+
+    return obj;
 }

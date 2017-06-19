@@ -28,6 +28,12 @@
 #include "log.h"
 #include "persistable.h"
 
+#include <QFile>
+#include <QDir>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QStandardPaths>
+
 PersistentInfo::PersistentInfo()
 {
     settings_    = NULL;
@@ -93,6 +99,26 @@ void PersistentInfo::save( const QString& name )
 
     // Sync to ensure it is propagated to other processes
     settings_->sync();
+
+    saveJson();
+}
+
+void PersistentInfo::saveJson()
+{
+    QJsonObject root;
+    for ( auto obj_iter = objectList_.constBegin();
+          obj_iter != objectList_.constEnd(); obj_iter++ ) {
+        root[ obj_iter.key() ] = obj_iter.value()->saveToJson();
+    }
+
+    QDir app_dir(
+        QStandardPaths::writableLocation( QStandardPaths::AppConfigLocation ) );
+    if (!app_dir.exists())
+        app_dir.mkpath( app_dir.path() );
+    QFile json_file( app_dir.filePath( "glogg.json" ) );
+    json_file.open( QIODevice::WriteOnly| QIODevice::Text );
+    QJsonDocument json_doc( root );
+    json_file.write( json_doc.toJson() );
 }
 
 void PersistentInfo::retrieve( const QString& name )

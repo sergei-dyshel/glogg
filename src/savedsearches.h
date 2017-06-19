@@ -49,6 +49,8 @@ class SavedSearches : public Persistable
     void saveToStorage( QSettings& settings ) const;
     void retrieveFromStorage( QSettings& settings );
 
+    QJsonValue saveToJson() const override;
+
   private:
     static const int SAVEDSEARCHES_VERSION;
     static const int maxNumberOfRecentSearches;
