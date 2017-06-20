@@ -147,6 +147,9 @@ void QuickFindMux::cancelSearch()
         if ( auto searchable = getSearchableWidget() )
             searchable->incrementalSearchAbort();
     }
+    else {
+        changeQuickFind( "", QFDirection::Forward );
+    }
 }
 
 //
