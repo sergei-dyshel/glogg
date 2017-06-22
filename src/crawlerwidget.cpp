@@ -171,10 +171,10 @@ void CrawlerWidget::keyPressEvent( QKeyEvent* keyEvent )
     else {
         const char character = (keyEvent->text())[0].toLatin1();
 
-        if ( character == '+' )
-            changeTopViewSize( 1 );
+        if ( character == '=' )
+            changeTopViewSize( 10 );
         else if ( character == '-' )
-            changeTopViewSize( -1 );
+            changeTopViewSize( -10 );
         else
             QSplitter::keyPressEvent( keyEvent );
     }
