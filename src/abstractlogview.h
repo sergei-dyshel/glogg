@@ -241,6 +241,8 @@ class AbstractLogView :
     // (switch to the next one)
     void exitView();
 
+    void gotFocus();
+
   public slots:
     // Makes the widget select and display the passed line.
     // Scrolling as necessary
