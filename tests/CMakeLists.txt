@@ -9,6 +9,7 @@ project(glogg_tests)
 
 find_program(QT_QMAKE_EXECUTABLE NAMES qmake PATHS $ENV{QT_DIR}/bin)
 find_package(Qt5Widgets REQUIRED)
+find_package(Qt5Core REQUIRED)
 find_package(Qt5Test REQUIRED)
 
 set(CMAKE_AUTOMOC ON)
@@ -119,6 +120,7 @@ set(glogg_SOURCES
     ../src/viewtools.cpp
     ../src/encodingspeculator.cpp
     # ../src/platformfilewatcher.cpp
+    ../src/cfg_file.cpp
 )
 
 set(glogg_HEADERS
@@ -167,6 +169,12 @@ add_executable(glogg_tests
 
 # Link test executable against gtest & gtest_main
 target_link_libraries(glogg_tests ${LIBS} gtest_main pthread Qt5::Widgets)
+
+add_executable(cfg_test
+    cfgTest.cpp
+    ../src/cfg_file.cpp
+)
+target_link_libraries(cfg_test pthread Qt5::Core)
 
 add_executable(glogg_itests
     ${glogg_SOURCES}
