@@ -696,6 +696,7 @@ void AbstractLogView::resizeEvent( QResizeEvent* )
 void AbstractLogView::focusInEvent( QFocusEvent* )
 {
     setBorderColorFromFocus();
+    emit gotFocus();
 }
 
 void AbstractLogView::focusOutEvent( QFocusEvent* )
