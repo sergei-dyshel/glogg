@@ -29,6 +29,7 @@
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QLabel>
+#include <QKeyEvent>
 
 #include "logmainview.h"
 #include "filteredview.h"
@@ -266,6 +267,8 @@ class CrawlerWidget : public QSplitter,
     qint64          logFileSize_;
 
     QWidget*        qfSavedFocus_;
+
+    AbstractLogView* lastFocusedLogView;
 
     // Search state (for auto-refresh and truncation)
     SearchState     searchState_;

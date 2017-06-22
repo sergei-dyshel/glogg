@@ -88,6 +88,7 @@ CrawlerWidget::CrawlerWidget( QWidget *parent )
     quickFindPattern_ = nullptr;
     savedSearches_   = nullptr;
     qfSavedFocus_    = nullptr;
+    lastFocusedLogView = nullptr;
 
     // Until we have received confirmation loading is finished, we
     // should consider we are loading something.
@@ -164,6 +165,10 @@ void CrawlerWidget::keyPressEvent( QKeyEvent* keyEvent )
     if ( keyEvent->key() == Qt::Key_V && noModifier )
         visibilityBox->setCurrentIndex(
                 ( visibilityBox->currentIndex() + 1 ) % visibilityBox->count() );
+    else if ( keyEvent->key() == Qt::Key_Escape && searchLineEdit->hasFocus()
+              && lastFocusedLogView != nullptr ) {
+        lastFocusedLogView->setFocus();
+    }
     else {
         const char character = (keyEvent->text())[0].toLatin1();
 
@@ -781,6 +786,12 @@ void CrawlerWidget::setup()
             this, SLOT( mouseHoveredOverMatch( qint64 ) ) );
     connect(filteredView, SIGNAL( mouseLeftHoveringZone() ),
             overviewWidget_, SLOT( removeHighlight() ) );
+
+    // Save last focused log view
+    connect( logMainView, &AbstractLogView::gotFocus,
+             [=]() { lastFocusedLogView = logMainView; } );
+    connect( filteredView, &AbstractLogView::gotFocus,
+             [=]() { lastFocusedLogView = filteredView; } );
 
     // Follow option (up and down)
     connect(this, SIGNAL( followSet( bool ) ),
