@@ -598,6 +598,15 @@ void adjustFocusPolicy( QWidget* widget, bool clickFocus = false )
     widget->setFocusPolicy( clickFocus ? Qt::ClickFocus : Qt::NoFocus );
 }
 
+static void setButtonToolTipWithShortcut( QAbstractButton& button,
+                                          const QString& toolTip )
+{
+    button.setToolTip(
+        QString( "%1 (%2)" )
+            .arg( toolTip )
+            .arg( button.shortcut().toString( QKeySequence::NativeText ) ) );
+}
+
 // Build the widget and connect all the signals, this must be done once
 // the data are attached.
 void CrawlerWidget::setup()
@@ -688,16 +697,16 @@ void CrawlerWidget::setup()
     ignoreCaseCheck = new QPushButton();
     ignoreCaseCheck->setCheckable( true );
     ignoreCaseCheck->setFlat( true );
-    ignoreCaseCheck->setToolTip( "Ignore case (Alt+I)" );
-    ignoreCaseCheck->setShortcut( QKeySequence( Qt::ALT + Qt::Key_I ) );
+    ignoreCaseCheck->setShortcut( QKeySequence( "Alt+I" ) );
+    setButtonToolTipWithShortcut( *ignoreCaseCheck, "Ignore case" );
     ignoreCaseCheck->setIcon( QIcon( ":/images/ignore_case.png" ) );
     adjustFocusPolicy( ignoreCaseCheck );
 
     searchRefreshCheck = new QPushButton();
     searchRefreshCheck->setCheckable( true );
     searchRefreshCheck->setFlat( true );
-    searchRefreshCheck->setToolTip( "Auto refresh (Ctrl+F)" );
-    searchRefreshCheck->setShortcut( QKeySequence( Qt::ALT + Qt::Key_R ) );
+    searchRefreshCheck->setShortcut( QKeySequence( "Alt+R" ) );
+    setButtonToolTipWithShortcut(*searchRefreshCheck, "Auto refresh");
     searchRefreshCheck->setIcon( QIcon( ":/images/auto_refresh.png" ) );
     adjustFocusPolicy( searchRefreshCheck );
 
@@ -706,7 +715,7 @@ void CrawlerWidget::setup()
     adjustFocusPolicy( searchLineEdit, true /* click focus */ );
     searchLineEdit->setEditable( true );
     searchLineEdit->setCompleter( 0 );
-    searchLineEdit->addItems( savedSearches_->recentSearches() );
+    updateSearchCombo();
     searchLineEdit->setSizePolicy( QSizePolicy::Expanding, QSizePolicy::Minimum );
     searchLineEdit->setSizeAdjustPolicy( QComboBox::AdjustToMinimumContentsLengthWithIcon );
     searchLineEditDefaultPalette = searchLineEdit->lineEdit()->palette();
@@ -724,8 +733,15 @@ void CrawlerWidget::setup()
     stopButton->setAutoRaise( true );
     stopButton->setEnabled( false );
 
+    pinButton = new QToolButton();
+    adjustFocusPolicy( pinButton );
+    pinButton->setShortcut( QKeySequence( "Alt+P" ) );
+    setPinButtonMode();
+    pinButton->setAutoRaise( true );
+
     QHBoxLayout* searchLineLayout = new QHBoxLayout;
     searchLineLayout->addWidget( visibilityBox );
+    searchLineLayout->QLayout::addWidget( pinButton );
     searchLineLayout->addWidget(searchLineEdit, 5);
     searchLineLayout->setContentsMargins(6, 0, 6, 0);
     stopButton->setSizePolicy( QSizePolicy( QSizePolicy::Maximum, QSizePolicy::Maximum ) );
@@ -777,8 +793,17 @@ void CrawlerWidget::setup()
     connect( startButton, &QToolButton::clicked, this,
              &CrawlerWidget::startNewSearch );
 
-    connect(visibilityBox, SIGNAL( currentIndexChanged( int ) ),
-            this, SLOT( changeFilteredViewVisibility( int ) ) );
+    connect( pinButton, &QToolButton::clicked, [=]() {
+        GetPersistentInfo().retrieve( "savedSearches" );
+        savedSearches_->pinOrUnpinSearch( searchLineEdit->lineEdit()->text() );
+        GetPersistentInfo().save( "savedSearches" );
+
+        updateSearchCombo();
+        setPinButtonMode();
+    } );
+
+    connect( visibilityBox, SIGNAL( currentIndexChanged( int ) ), this,
+             SLOT( changeFilteredViewVisibility( int ) ) );
 
     connect(logMainView, SIGNAL( newSelection( int ) ),
             logMainView, SLOT( update() ) );
@@ -945,6 +970,8 @@ void CrawlerWidget::updateSearchCombo()
     const QString text = searchLineEdit->lineEdit()->text();
     searchLineEdit->clear();
     searchLineEdit->addItems( savedSearches_->recentSearches() );
+    searchLineEdit->insertSeparator( 0 );
+    searchLineEdit->insertItems( 0, savedSearches_->pinnedSearches() );
     // In case we had something that wasn't added to the list (blank...):
     searchLineEdit->lineEdit()->setText( text );
 }
@@ -1085,24 +1112,31 @@ void CrawlerWidget::changeTopViewSize( int32_t delta )
     LOG(logDEBUG) << "CrawlerWidget::changeTopViewSize " << sizes()[0];
 }
 
-bool CrawlerWidget::isSearchLineEditTextValid()
+void CrawlerWidget::onSearchTextChanged( const QString& text)
 {
-  auto text = searchLineEdit->lineEdit()->text();
-  return !QRegularExpression(
+    if ( !QRegularExpression(
               text, QRegularExpression::DontAutomaticallyOptimizeOption )
-              .isValid();
-}
-
-void CrawlerWidget::onSearchTextChanged( const QString& )
-{
-    if ( isSearchLineEditTextValid() ) {
+              .isValid() ) {
         startButton->setEnabled( false );
         searchLineEdit->lineEdit()->setPalette( searchLineEditErrorPalette );
+        pinButton->setEnabled( false );
+        return;
     }
-    else {
-        startButton->setEnabled( true );
-        searchLineEdit->lineEdit()->setPalette( searchLineEditDefaultPalette );
-    }
+
+    startButton->setEnabled( true );
+    searchLineEdit->lineEdit()->setPalette( searchLineEditDefaultPalette );
+    pinButton->setEnabled( text != "" );
+
+    setPinButtonMode();
+}
+
+void CrawlerWidget::setPinButtonMode()
+{
+    bool pin = !savedSearches_->pinnedSearches().contains(
+        searchLineEdit->lineEdit()->text() );
+    pinButton->setIcon(
+        QIcon( pin ? ":/images/pin.png" : ":/images/unpin.png" ) );
+    setButtonToolTipWithShortcut( *pinButton, pin ? "Pin" : "Unpin" );
 }
 
 //
