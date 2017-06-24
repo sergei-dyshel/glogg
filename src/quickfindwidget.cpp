@@ -161,7 +161,8 @@ void QuickFindWidget::returnHandler()
     emit patternConfirmed( editQuickFind_->text(), isIgnoreCase() );
     // Close the widget
     userRequested_ = false;
-    this->hide();
+    if (editQuickFind_->text() == "")
+        this->hide();
     emit close();
 }
 
