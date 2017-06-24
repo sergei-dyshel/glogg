@@ -54,12 +54,12 @@ class QuickFindWidget : public QWidget
     void notify( const QFNotification& message );
     // Clear the notification
     void clearNotification();
+    void closeHandler();
 
   private slots:
     void doSearchForward();
     void doSearchBackward();
     void returnHandler();
-    void closeHandler();
     void notificationTimeout();
     void textChanged();
 
