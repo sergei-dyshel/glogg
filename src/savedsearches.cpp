@@ -39,6 +39,12 @@ void SavedSearches::addRecent( const QString& text )
     if ( text.isEmpty() )
         return;
 
+    if ( pinnedSearches_.contains( text ) ) {
+        pinnedSearches_.removeAll( text );
+        pinnedSearches_.push_front( text );
+        return;
+    }
+
     // Remove any copy of the about to be added text
     savedSearches_.removeAll( text );
 
@@ -48,6 +54,25 @@ void SavedSearches::addRecent( const QString& text )
     // Trim the list if it's too long
     while (savedSearches_.size() > maxNumberOfRecentSearches)
         savedSearches_.pop_back();
+}
+
+void SavedSearches::pinOrUnpinSearch( const QString& text )
+{
+    if ( pinnedSearches_.contains( text ) ) {
+        // Unpin
+        pinnedSearches_.removeAll( text );
+        savedSearches_.push_front( text );
+        return;
+    }
+
+    savedSearches_.removeAll( text );
+    pinnedSearches_.push_front( text );
+}
+
+QStringList SavedSearches::pinnedSearches() const
+{
+    return pinnedSearches_;
+
 }
 
 QStringList SavedSearches::recentSearches() const
@@ -89,12 +114,21 @@ void SavedSearches::saveToStorage( QSettings& settings ) const
     // Remove everything in case the array is shorter than the previous one
     settings.remove("");
     settings.setValue( "version", SAVEDSEARCHES_VERSION );
+
     settings.beginWriteArray( "searchHistory" );
     for (int i = 0; i < savedSearches_.size(); ++i) {
         settings.setArrayIndex( i );
         settings.setValue( "string", savedSearches_.at( i ) );
     }
     settings.endArray();
+
+    settings.beginWriteArray( PINNED_SEARCHES_KEY );
+    for (int i = 0; i < pinnedSearches_.size(); ++i) {
+        settings.setArrayIndex( i );
+        settings.setValue( "string", pinnedSearches_.at( i ) );
+    }
+    settings.endArray();
+
     settings.endGroup();
 }
 
@@ -103,6 +137,7 @@ void SavedSearches::retrieveFromStorage( QSettings& settings )
     LOG(logDEBUG) << "SavedSearches::retrieveFromStorage";
 
     savedSearches_.clear();
+    pinnedSearches_.clear();
 
     if ( settings.contains( "SavedSearches/version" ) ) {
         // Unserialise the "new style" stored history
@@ -113,6 +148,14 @@ void SavedSearches::retrieveFromStorage( QSettings& settings )
                 settings.setArrayIndex(i);
                 QString search = settings.value( "string" ).toString();
                 savedSearches_.append( search );
+            }
+            settings.endArray();
+
+            size = settings.beginReadArray( PINNED_SEARCHES_KEY );
+            for (int i = 0; i < size; ++i) {
+                settings.setArrayIndex(i);
+                QString search = settings.value( "string" ).toString();
+                pinnedSearches_.append( search );
             }
             settings.endArray();
         }
