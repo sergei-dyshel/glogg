@@ -797,6 +797,9 @@ void MainWindow::keyPressEvent( QKeyEvent* keyEvent )
 {
     LOG(logDEBUG4) << "keyPressEvent received";
 
+    if ( keyEvent->key() == Qt::Key_Escape && !quickFindWidget_.isHidden() ) {
+        quickFindWidget_.closeHandler();
+    }
     switch ( (keyEvent->text())[0].toLatin1() ) {
         case '/':
             displayQuickFindBar( QuickFindMux::Forward );
