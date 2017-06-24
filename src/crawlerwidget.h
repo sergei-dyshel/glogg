@@ -233,7 +233,7 @@ class CrawlerWidget : public QSplitter,
     void updateEncoding();
     void changeTopViewSize( int32_t delta );
     void onSearchTextChanged( const QString& text );
-    bool isSearchLineEditTextValid();
+    void setPinButtonMode();
 
     // Palette for error notification (yellow background)
     static const QPalette errorPalette;
@@ -249,6 +249,7 @@ class CrawlerWidget : public QSplitter,
     QPushButton*    ignoreCaseCheck;
     QPushButton*    searchRefreshCheck;
     OverviewWidget* overviewWidget_;
+    QToolButton*    pinButton;
 
     QVBoxLayout*    bottomMainLayout;
     QHBoxLayout*    searchLineLayout;
