@@ -40,6 +40,9 @@ class SavedSearches : public Persistable
     // Returns a list of recent searches (newer first)
     QStringList recentSearches() const;
 
+    void pinOrUnpinSearch( const QString& text );
+    QStringList pinnedSearches() const;
+
     // Operators for serialization
     // (only for migrating pre 0.8.2 settings, will be removed)
     friend QDataStream& operator<<( QDataStream& out, const SavedSearches& object );
@@ -52,8 +55,10 @@ class SavedSearches : public Persistable
   private:
     static const int SAVEDSEARCHES_VERSION;
     static const int maxNumberOfRecentSearches;
+    static constexpr auto PINNED_SEARCHES_KEY = "pinnedSearches";
 
     QStringList savedSearches_;
+    QStringList pinnedSearches_;
 };
 
 Q_DECLARE_METATYPE(SavedSearches)
