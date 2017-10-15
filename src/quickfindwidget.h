@@ -24,6 +24,7 @@
 #include <QTimer>
 
 class QHBoxLayout;
+class QComboBox;
 class QLineEdit;
 class QToolButton;
 class QLabel;
@@ -85,7 +86,7 @@ class QuickFindWidget : public QWidget
     QToolButton* closeButton_;
     QToolButton* nextButton_;
     QToolButton* previousButton_;
-    QLineEdit*   editQuickFind_;
+    QComboBox*   editQuickFind_;
     QCheckBox*   ignoreCaseCheck_;
     QLabel*      notificationText_;
 
