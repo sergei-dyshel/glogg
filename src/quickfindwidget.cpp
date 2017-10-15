@@ -22,6 +22,7 @@
 #include <QToolButton>
 #include <QLabel>
 #include <QCheckBox>
+#include <QComboBox>
 #include <QLineEdit>
 #include <QHBoxLayout>
 
@@ -49,9 +50,11 @@ QuickFindWidget::QuickFindWidget( QWidget* parent ) : QWidget( parent )
             QLatin1String(""), QLatin1String( ":/images/darkclosebutton.png" ) );
     layout->addWidget( closeButton_ );
 
-    editQuickFind_ = new QLineEdit( this );
+    editQuickFind_ = new QComboBox( this );
+    editQuickFind_->setEditable( true );
     // FIXME: set MinimumSize might be to constraining
     editQuickFind_->setMinimumSize( QSize( 150, 0 ) );
+    editQuickFind_->setMaxCount( 100 );
     layout->addWidget( editQuickFind_ );
 
     ignoreCaseCheck_ = new QCheckBox( "Ignore &case" );
@@ -75,16 +78,16 @@ QuickFindWidget::QuickFindWidget( QWidget* parent ) : QWidget( parent )
 
     // Behaviour
     connect( closeButton_, SIGNAL( clicked() ), SLOT( closeHandler() ) );
-    connect( editQuickFind_, SIGNAL( textEdited( QString ) ),
-             this, SLOT( textChanged() ) );
+    connect( editQuickFind_->lineEdit(), &QLineEdit::textEdited, this,
+             &QuickFindWidget::textChanged );
     connect( ignoreCaseCheck_, SIGNAL( stateChanged( int ) ),
              this, SLOT( textChanged() ) );
     /*
     connect( editQuickFind_. SIGNAL( textChanged( QString ) ), this,
             SLOT( updateButtons() ) );
     */
-    connect( editQuickFind_, SIGNAL( returnPressed() ),
-             this, SLOT( returnHandler() ) );
+    connect( editQuickFind_->lineEdit(), &QLineEdit::returnPressed, this,
+             &QuickFindWidget::returnHandler );
     connect( previousButton_, SIGNAL( clicked() ),
             this, SLOT( doSearchBackward() ) );
     connect( nextButton_, SIGNAL( clicked() ),
@@ -110,7 +113,7 @@ void QuickFindWidget::userActivate()
 
 void QuickFindWidget::changeDisplayedPattern( const QString& newPattern )
 {
-    editQuickFind_->setText( newPattern );
+    editQuickFind_->lineEdit()->setText( newPattern );
 }
 
 void QuickFindWidget::notify( const QFNotification& message )
@@ -138,7 +141,7 @@ void QuickFindWidget::doSearchForward()
     // the widget to stay visible.
     userRequested_ = true;
 
-    emit patternConfirmed( editQuickFind_->text(), isIgnoreCase() );
+    emit patternConfirmed( editQuickFind_->currentText(), isIgnoreCase() );
     emit searchForward();
 }
 
@@ -151,18 +154,21 @@ void QuickFindWidget::doSearchBackward()
     // the widget to stay visible.
     userRequested_ = true;
 
-    emit patternConfirmed( editQuickFind_->text(), isIgnoreCase() );
+    emit patternConfirmed( editQuickFind_->currentText(), isIgnoreCase() );
     emit searchBackward();
 }
 
 // Close and search when the user presses Return
 void QuickFindWidget::returnHandler()
 {
-    emit patternConfirmed( editQuickFind_->text(), isIgnoreCase() );
+    auto text = editQuickFind_->currentText();
+    emit patternConfirmed( text, isIgnoreCase() );
     // Close the widget
     userRequested_ = false;
-    if (editQuickFind_->text() == "")
+    if ( text == "" )
         this->hide();
+    else
+        editQuickFind_->insertItem( 0, text );
     emit close();
 }
 
@@ -184,7 +190,7 @@ void QuickFindWidget::notificationTimeout()
 
 void QuickFindWidget::textChanged()
 {
-    emit patternUpdated( editQuickFind_->text(), isIgnoreCase() );
+    emit patternUpdated( editQuickFind_->currentText(), isIgnoreCase() );
 }
 
 //
