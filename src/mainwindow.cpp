@@ -730,22 +730,10 @@ void MainWindow::loadFileNonInteractive( const QString& file_name )
             0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
     ::SetWindowPos((HWND) effectiveWinId(), HWND_NOTOPMOST,
             0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
-#else
-    Qt::WindowFlags window_flags = windowFlags();
-    window_flags |= Qt::WindowStaysOnTopHint;
-    setWindowFlags( window_flags );
 #endif
 
     activateWindow();
     raise();
-
-#ifndef _WIN32
-    window_flags = windowFlags();
-    window_flags &= ~Qt::WindowStaysOnTopHint;
-    setWindowFlags( window_flags );
-#endif
-
-    showNormal();
 }
 
 void MainWindow::newVersionNotification( const QString& new_version )
