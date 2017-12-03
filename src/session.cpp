@@ -83,6 +83,7 @@ void Session::close( const ViewInterface* view )
 
 void Session::save( std::vector<
         std::tuple<const ViewInterface*,
+            QString,
             uint64_t,
             std::shared_ptr<const ViewContextInterface>>
         > view_list,
@@ -93,16 +94,19 @@ void Session::save( std::vector<
     std::vector<SessionInfo::OpenFile> session_files;
     for ( auto view: view_list ) {
         const ViewInterface* view_object;
+        QString tab_name;
         uint64_t top_line;
         std::shared_ptr<const ViewContextInterface> view_context;
 
-        std::tie( view_object, top_line, view_context ) = view;
+        std::tie( view_object, tab_name, top_line, view_context ) = view;
 
         const OpenFile* file = findOpenFileFromView( view_object );
         assert( file );
 
         LOG(logDEBUG) << "Saving " << file->fileName << " in session.";
-        session_files.push_back( { file->fileName, top_line, view_context->toString() } );
+        session_files.push_back( {file->fileName, top_line,
+                                  tab_name,
+                                  view_context->toString()} );
     }
 
     std::shared_ptr<SessionInfo> session =
@@ -112,7 +116,7 @@ void Session::save( std::vector<
     GetPersistentInfo().save( QString( "session" ) );
 }
 
-std::vector<std::pair<std::string, ViewInterface*>> Session::restore(
+std::vector<std::tuple<std::string, QString, ViewInterface*>> Session::restore(
         std::function<ViewInterface*()> view_factory,
         int *current_file_index )
 {
@@ -122,13 +126,13 @@ std::vector<std::pair<std::string, ViewInterface*>> Session::restore(
 
     std::vector<SessionInfo::OpenFile> session_files = session->openFiles();
     LOG(logDEBUG) << "Session returned " << session_files.size();
-    std::vector<std::pair<std::string, ViewInterface*>> result;
+    std::vector<std::tuple<std::string, QString, ViewInterface*>> result;
 
     for ( auto file: session_files )
     {
         LOG(logDEBUG) << "Create view for " << file.fileName;
         ViewInterface* view = openAlways( file.fileName, view_factory, file.viewContext.c_str() );
-        result.push_back( { file.fileName, view } );
+        result.push_back( { file.fileName, file.tabName, view } );
     }
 
     *current_file_index = -1;
