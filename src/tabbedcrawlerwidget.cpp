@@ -21,6 +21,8 @@
 
 #include <QKeyEvent>
 #include <QLabel>
+#include <QMenu>
+#include <QInputDialog>
 
 #include "crawlerwidget.h"
 
@@ -107,12 +109,27 @@ void TabbedCrawlerWidget::mouseReleaseEvent( QMouseEvent *event)
 {
     LOG(logDEBUG) << "TabbedCrawlerWidget::mouseReleaseEvent";
 
+    int tab = this->myTabBar_.tabAt( event->pos() );
+    if (-1 == tab)
+        return;
+
     if (event->button() == Qt::MidButton)
     {
-        int tab = this->myTabBar_.tabAt( event->pos() );
-        if (-1 != tab)
-        {
-            emit tabCloseRequested( tab );
+        emit tabCloseRequested( tab );
+    }
+    else if (event->button() == Qt::RightButton)
+    {
+        QMenu menu(this);
+        auto rename_action = menu.addAction("Rename");
+        auto action = menu.exec(mapToGlobal(event->pos()));
+        if (action == rename_action) {
+            auto old_name = myTabBar_.tabText(tab);
+            bool ok;
+            auto new_name
+                = QInputDialog::getText( this, "Rename tab", "Enter new name",
+                                         QLineEdit::Normal, old_name, &ok );
+            if ( ok )
+                myTabBar_.setTabText( tab, new_name );
         }
     }
 }
