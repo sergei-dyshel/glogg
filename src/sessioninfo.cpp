@@ -43,9 +43,10 @@ void SessionInfo::retrieveFromStorage( QSettings& settings )
                 std::string file_name =
                     settings.value( "fileName" ).toString().toStdString();
                 uint64_t top_line = settings.value( "topLine" ).toInt();
+                QString tab_name = settings.value("tabName", "").toString();
                 std::string view_context =
                     settings.value( "viewContext" ).toString().toStdString();
-                openFiles_.push_back( { file_name, top_line, view_context } );
+                openFiles_.push_back( { file_name, top_line, tab_name, view_context } );
             }
             settings.endArray();
         }
@@ -68,6 +69,7 @@ void SessionInfo::saveToStorage( QSettings& settings ) const
         settings.setArrayIndex( i );
         const OpenFile* open_file = &(openFiles_.at( i ));
         settings.setValue( "fileName", QString( open_file->fileName.c_str() ) );
+        settings.setValue( "tabName", open_file->tabName );
         settings.setValue( "topLine", qint64( open_file->topLine ) );
         settings.setValue( "viewContext", QString( open_file->viewContext.c_str() ) );
     }

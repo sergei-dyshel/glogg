@@ -194,13 +194,20 @@ void MainWindow::reloadSession()
                []() { return new CrawlerWidget(); },
                &current_file_index ) )
     {
-        QString file_name = { open_file.first.c_str() };
+        std::string file_name;
+        QString tab_name;
+        ViewInterface *view;
+        std::tie(file_name, tab_name, view) = open_file;
+
         CrawlerWidget* crawler_widget = dynamic_cast<CrawlerWidget*>(
-                open_file.second );
+                view );
+        if (tab_name == "")
+            tab_name = strippedName( QString(file_name.c_str()) );
+
 
         assert( crawler_widget );
 
-        mainTabWidget_.addTab( crawler_widget, strippedName( file_name ) );
+        mainTabWidget_.addTab( crawler_widget, tab_name );
     }
 
     if ( current_file_index >= 0 )
@@ -963,13 +970,14 @@ void MainWindow::writeSettings()
     // Save the session
     // Generate the ordered list of widgets and their topLine
     std::vector<
-            std::tuple<const ViewInterface*, uint64_t, std::shared_ptr<const ViewContextInterface>>
+            std::tuple<const ViewInterface*, QString, uint64_t, std::shared_ptr<const ViewContextInterface>>
         > widget_list;
     for ( int i = 0; i < mainTabWidget_.count(); ++i )
     {
         auto view = dynamic_cast<const ViewInterface*>( mainTabWidget_.widget( i ) );
         widget_list.push_back( std::make_tuple(
                 view,
+                mainTabWidget_.tabText(i),
                 0UL,
                 view->context() ) );
     }
