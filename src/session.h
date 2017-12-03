@@ -72,7 +72,7 @@ class Session {
     // (see ::open)
     // returns a vector of pairs (file_name, view) and the index of the
     // current file (or -1 if none).
-    std::vector<std::pair<std::string, ViewInterface*>> restore(
+    std::vector<std::tuple<std::string, QString, ViewInterface*>> restore(
             std::function<ViewInterface*()> view_factory,
             int *current_file_index );
     // Save the session to persistent storage. An ordered list of
@@ -81,7 +81,7 @@ class Session {
     // the user (it might have changed since file were opened).
     // Also, the geometry information is passed as an opaque string.
     void save( std::vector<
-                   std::tuple<const ViewInterface*, uint64_t, std::shared_ptr<const ViewContextInterface>>
+                   std::tuple<const ViewInterface*, QString, uint64_t, std::shared_ptr<const ViewContextInterface>>
                > view_list,
            const QByteArray& geometry );
 

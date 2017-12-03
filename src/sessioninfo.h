@@ -46,6 +46,7 @@ class SessionInfo : public Persistable {
     {
         std::string fileName;
         uint64_t    topLine;
+        QString tabName;
         // The view context contains parameter specific to the view's
         // implementation (such as geometry...)
         std::string viewContext;
