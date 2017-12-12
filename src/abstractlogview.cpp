@@ -1358,9 +1358,11 @@ void AbstractLogView::updateGlobalSelection()
     static QClipboard* const clipboard = QApplication::clipboard();
 
     // Updating it only for "non-trivial" (range or portion) selections
-    if ( ! selection_.isSingleLine() )
+    if ( ! selection_.isSingleLine() ) {
+        clipboard->setText( selection_.getSelectedText( logData ) );
         clipboard->setText( selection_.getSelectedText( logData ),
-                QClipboard::Selection );
+                            QClipboard::Selection );
+    }
 }
 
 // Create the pop-up menu
