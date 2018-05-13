@@ -27,6 +27,8 @@
 #include <QRegularExpression>
 #include <QList>
 
+#include "regexp_filter.h"
+
 class LogData;
 
 // Line number are unsigned 32 bits for now.
@@ -89,7 +91,7 @@ class SearchOperation : public QObject
   Q_OBJECT
   public:
     SearchOperation(const LogData* sourceLogData,
-            const QRegularExpression &regExp, bool* interruptRequest );
+            const RegExpFilter &regExp, bool* interruptRequest );
 
     virtual ~SearchOperation() { }
 
@@ -108,14 +110,14 @@ class SearchOperation : public QObject
     void doSearch( SearchData& result, qint64 initialLine );
 
     bool* interruptRequested_;
-    const QRegularExpression regexp_;
+    const RegExpFilter regexp_;
     const LogData* sourceLogData_;
 };
 
 class FullSearchOperation : public SearchOperation
 {
   public:
-    FullSearchOperation( const LogData* sourceLogData, const QRegularExpression& regExp,
+    FullSearchOperation( const LogData* sourceLogData, const RegExpFilter& regExp,
             bool* interruptRequest )
         : SearchOperation( sourceLogData, regExp, interruptRequest ) {}
     virtual void start( SearchData& result );
@@ -124,7 +126,7 @@ class FullSearchOperation : public SearchOperation
 class UpdateSearchOperation : public SearchOperation
 {
   public:
-    UpdateSearchOperation( const LogData* sourceLogData, const QRegularExpression& regExp,
+    UpdateSearchOperation( const LogData* sourceLogData, const RegExpFilter& regExp,
             bool* interruptRequest, qint64 position )
         : SearchOperation( sourceLogData, regExp, interruptRequest ),
         initialPosition_( position ) {}
@@ -148,10 +150,10 @@ class LogFilteredDataWorkerThread : public QThread
     ~LogFilteredDataWorkerThread();
 
     // Start the search with the passed regexp
-    void search(const QRegularExpression &regExp );
+    void search(const RegExpFilter &regExp );
     // Continue the previous search starting at the passed position
     // in the source file (line number)
-    void updateSearch( const QRegularExpression& regExp, qint64 position );
+    void updateSearch( const RegExpFilter& regExp, qint64 position );
     // Interrupts the search if one is in progress
     void interrupt();
 
