@@ -79,7 +79,7 @@ TEST_F( PerfLogFilteredData, allMatchingSearch ) {
 TEST_F( PerfLogFilteredData, someMatchingSearch ) {
     {
         TestTimer t;
-        filtered_data_->runSearch( QRegularExpression( "1?3|34" ) );
+        filtered_data_->runSearch( RegExpFilter( "1?3|34" ) );
         search();
     }
     ASSERT_THAT( filtered_data_->getNbLine(), 2874236 );
@@ -88,14 +88,14 @@ TEST_F( PerfLogFilteredData, someMatchingSearch ) {
 TEST_F( PerfLogFilteredData, noneMatchingSearch ) {
     {
         TestTimer t;
-        filtered_data_->runSearch( QRegularExpression( "a1?3|(w|f)f34|blah" ) );
+        filtered_data_->runSearch( RegExpFilter( "a1?3|(w|f)f34|blah" ) );
         search();
     }
     ASSERT_THAT( filtered_data_->getNbLine(), 0 );
 }
 
 TEST_F( PerfLogFilteredData, browsingSearchResults ) {
-    filtered_data_->runSearch( QRegularExpression( "1?3|34" ) );
+    filtered_data_->runSearch( RegExpFilter( "1?3|34" ) );
     search();
     ASSERT_THAT( filtered_data_->getNbLine(), 2874236 );
 
