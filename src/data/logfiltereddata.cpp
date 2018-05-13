@@ -31,6 +31,7 @@
 #include "logdata.h"
 #include "marks.h"
 #include "logfiltereddata.h"
+#include "regexp_filter.h"
 
 // Creates an empty set. It must be possible to display it without error.
 // FIXME
@@ -93,7 +94,7 @@ LogFilteredData::~LogFilteredData()
 //
 
 // Run the search and send newDataAvailable() signals.
-void LogFilteredData::runSearch( const QRegularExpression& regExp )
+void LogFilteredData::runSearch( const RegExpFilter& regExp )
 {
     LOG(logDEBUG) << "Entering runSearch";
 
@@ -119,7 +120,7 @@ void LogFilteredData::interruptSearch()
 
 void LogFilteredData::clearSearch()
 {
-    currentRegExp_ = QRegularExpression();
+    currentRegExp_ = RegExpFilter();
     matching_lines_.clear();
     maxLength_        = 0;
     nbLinesProcessed_ = 0;
