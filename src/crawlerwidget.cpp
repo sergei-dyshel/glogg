@@ -44,6 +44,7 @@
 #include "quickfindwidget.h"
 #include "persistentinfo.h"
 #include "configuration.h"
+#include "regexp_filter.h"
 
 // Palette for error signaling (yellow background)
 const QPalette CrawlerWidget::errorPalette( QColor( "yellow" ) );
@@ -804,10 +805,12 @@ void CrawlerWidget::setup()
     connect(logMainView, SIGNAL(activateSearchLineEdit()),
             searchLineEdit->lineEdit(), SLOT(setFocus()));
 
-    connect(searchLineEdit->lineEdit(), SIGNAL( returnPressed() ),
-            this, SLOT( startNewSearch() ) );
-    connect(searchLineEdit->lineEdit(), SIGNAL( textEdited( const QString& ) ),
-            this, SLOT( searchTextChangeHandler() ));
+    connect( searchLineEdit->lineEdit(), &QLineEdit::returnPressed, [=]() {
+        if ( startButton->isEnabled() )
+            startNewSearch();
+    });
+    connect( searchLineEdit->lineEdit(), SIGNAL( textEdited( const QString& ) ),
+             this, SLOT( searchTextChangeHandler() ) );
     connect( searchLineEdit->lineEdit(), &QLineEdit::textChanged, this,
              &CrawlerWidget::onSearchTextChanged );
     connect(stopButton, SIGNAL( clicked() ),
@@ -927,30 +930,12 @@ void CrawlerWidget::replaceCurrentSearch( const QString& searchText )
 
     if ( !searchText.isEmpty() ) {
 
-        QString pattern;
-
-        // Determine the type of regexp depending on the config
         static std::shared_ptr<Configuration> config =
             Persistent<Configuration>( "settings" );
-        switch ( config->mainRegexpType() ) {
-            case FixedString:
-                pattern = QRegularExpression::escape(searchText);
-                break;
-            default:
-                pattern = searchText;
-                break;
-        }
-
-        // Set the pattern case insensitive if needed
-        QRegularExpression::PatternOptions patternOptions =
-                QRegularExpression::UseUnicodePropertiesOption
-                | QRegularExpression::OptimizeOnFirstUsageOption;
-
-        if ( ignoreCaseCheck->isChecked() )
-            patternOptions |= QRegularExpression::CaseInsensitiveOption;
 
         // Constructs the regexp
-        QRegularExpression regexp( pattern, patternOptions );
+        RegExpFilter regexp( searchText, config->mainRegexpType(),
+                             ignoreCaseCheck->isChecked() );
 
         if ( regexp.isValid() ) {
             // Activate the stop button
@@ -967,16 +952,8 @@ void CrawlerWidget::replaceCurrentSearch( const QString& searchText )
             searchState_.resetState();
 
             // Inform the user
-            QString errorMessage = tr("Error in expression");
-            const int offset = regexp.patternErrorOffset();
-            if (offset != -1) {
-                errorMessage += " at position ";
-                errorMessage += QString::number(offset);
-            }
-            errorMessage += ": ";
-            errorMessage += regexp.errorString();
             searchInfoLine->setPalette( errorPalette );
-            searchInfoLine->setText( errorMessage );
+            searchInfoLine->setText( regexp.errorMessage() );
         }
     }
     else {
@@ -1111,17 +1088,22 @@ void CrawlerWidget::changeTopViewSize( int32_t delta )
 
 void CrawlerWidget::onSearchTextChanged( const QString& text)
 {
-    if ( !QRegularExpression(
-              text, QRegularExpression::DontAutomaticallyOptimizeOption )
-              .isValid() ) {
+    static std::shared_ptr<Configuration> config
+        = Persistent<Configuration>( "settings" );
+
+    RegExpFilter regExp( text, config->mainRegexpType(),
+                         false /* case_insensitive */ );
+    if ( !regExp.isValid() ) {
         startButton->setEnabled( false );
         searchLineEdit->lineEdit()->setPalette( searchLineEditErrorPalette );
+        searchLineEdit->setToolTip(regExp.errorMessage());
         pinButton->setEnabled( false );
         return;
     }
 
     startButton->setEnabled( true );
     searchLineEdit->lineEdit()->setPalette( searchLineEditDefaultPalette );
+    searchLineEdit->setToolTip("");
     pinButton->setEnabled( text != "" );
 
     setPinButtonMode();
