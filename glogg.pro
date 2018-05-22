@@ -320,3 +320,7 @@ else {
 perf {
     QMAKE_CXXFLAGS += -DGLOGG_PERF_MEASURE_FPS
 }
+
+INCLUDEPATH += 3rdparty/yaml-cpp/include
+QMAKE_LFLAGS += -L3rdparty/build/yaml-cpp
+LIBS += -lyaml-cpp
