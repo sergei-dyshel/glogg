@@ -56,6 +56,13 @@ SOURCES += \
     src/encodingspeculator.cpp \
     src/gloggapp.cpp \
     src/regexp_filter.cpp \
+    src/color_scheme.cpp \
+    src/colorizer.cpp \
+    src/config_node.cpp \
+    src/struct_config.cpp \
+    src/syntax.cpp \
+    src/log.cpp \
+    src/exception.cpp \
 
 INCLUDEPATH += src/
 
@@ -105,6 +112,14 @@ HEADERS += \
     src/encodingspeculator.h \
     src/gloggapp.h \
     src/regexp_filter.h \
+    src/range.h \
+    src/color_scheme.h \
+    src/colorizer.h \
+    src/config_node.h \
+    src/struct_config.h \
+    src/syntax.h \
+    src/fwd.h \
+    src/qt_std_interop.h \
 
 isEmpty(BOOST_PATH) {
     message(Building using system dynamic Boost libraries)
@@ -216,14 +231,9 @@ GPROF {
 
 isEmpty(LOG_LEVEL) {
     CONFIG(debug, debug|release) {
-        DEFINES += FILELOG_MAX_LEVEL=\"logDEBUG4\"
-    } else {
-        DEFINES += FILELOG_MAX_LEVEL=\"logDEBUG\"
+        message("Traces are enabled")
+        DEFINES += ENABLE_TRACE=1
     }
-}
-else {
-    message("Using specified log level: $$LOG_LEVEL")
-    DEFINES += FILELOG_MAX_LEVEL=\"$$LOG_LEVEL\"
 }
 
 macx {
@@ -309,3 +319,7 @@ else {
 perf {
     QMAKE_CXXFLAGS += -DGLOGG_PERF_MEASURE_FPS
 }
+
+INCLUDEPATH += 3rdparty/yaml-cpp/include
+QMAKE_LFLAGS += -L3rdparty/build/yaml-cpp
+LIBS += -lyaml-cpp

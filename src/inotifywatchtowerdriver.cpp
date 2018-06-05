@@ -170,7 +170,7 @@ size_t INotifyWatchTowerDriver::processINotifyEvent(
         std::vector<INotifyObservedFile*>* files_to_notify,
         std::vector<INotifyObservedFile*>* files_needing_readding )
 {
-    LOG(logDEBUG) << "Event received: " << std::hex << event->mask;
+    LOG(logDEBUG) << "Event received: " << hex << event->mask;
 
     INotifyObservedFile* file = nullptr;
 
@@ -203,7 +203,7 @@ size_t INotifyWatchTowerDriver::processINotifyEvent(
 
     if ( file )
     {
-        LOG(logDEBUG) << "Adding file: " << std::hex << file;
+        LOG(logDEBUG) << "Adding file: " << hex << file;
         files_to_notify->push_back( file );
     }
 

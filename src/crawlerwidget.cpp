@@ -410,6 +410,31 @@ void CrawlerWidget::markLineFromFiltered( qint64 line )
     }
 }
 
+void CrawlerWidget::markLines(const Range& range, bool filtered, bool addMark)
+{
+    DEBUG << (addMark ? "Marking" : "Unmarking") << "range" << range << "in"
+          << (filtered ? "filtered" : "main") << "view";
+    FOR_RANGE(line, range)
+    {
+        auto lineInFile
+            = filtered ? logFilteredData_->getMatchingLineNumber(line) : line;
+        bool marked = (filtered
+                       && logFilteredData_->filteredLineTypeByIndex(line)
+                              == LogFilteredData::Mark)
+                      || (!filtered && logFilteredData_->isLineMarked(line));
+        if (marked && !addMark)
+            logFilteredData_->deleteMark(lineInFile);
+        else if (!marked && addMark)
+            logFilteredData_->addMark(lineInFile);
+    }
+    filteredView->updateData();
+    logMainView->updateData();
+
+    overview_.updateData(logData_->getNbLine());
+
+    update();
+}
+
 void CrawlerWidget::applyConfiguration()
 {
     std::shared_ptr<Configuration> config =
@@ -842,6 +867,14 @@ void CrawlerWidget::setup()
             this, SLOT( markLineFromMain( qint64 ) ) );
     connect(filteredView, SIGNAL( markLine( qint64 ) ),
             this, SLOT( markLineFromFiltered( qint64 ) ) );
+    connect(logMainView, &AbstractLogView::markLines,
+            [=](const Range& range, bool addMark) {
+                markLines(range, false /* data */, addMark);
+            });
+    connect(filteredView, &AbstractLogView::markLines,
+            [=](const Range& range, bool addMark) {
+                markLines(range, true /* data */, addMark);
+            });
 
     connect(logMainView, SIGNAL( addToSearch( const QString& ) ),
             this, SLOT( addToSearch( const QString& ) ) );

@@ -35,3 +35,5 @@ tests/build/
 # Qt-specific
 /.moc
 /.qmake.stash
+
+3rdparty/build

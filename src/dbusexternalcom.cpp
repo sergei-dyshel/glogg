@@ -25,6 +25,11 @@
 
 static const char* DBUS_SERVICE_NAME = "org.bonnefon.glogg";
 
+static QString dbusFullServiceName()
+{
+    return QString(DBUS_SERVICE_NAME) + ".g" + GLOGG_COMMIT;
+}
+
 DBusExternalCommunicator::DBusExternalCommunicator()
 {
     if (!QDBusConnection::sessionBus().isConnected()) {
@@ -44,7 +49,7 @@ DBusExternalCommunicator::DBusExternalCommunicator()
 // the function will fail silently and no listening will be done.
 void DBusExternalCommunicator::startListening()
 {
-    if (!QDBusConnection::sessionBus().registerService( DBUS_SERVICE_NAME )) {
+    if (!QDBusConnection::sessionBus().registerService( dbusFullServiceName() )) {
         LOG(logERROR) << qPrintable(QDBusConnection::sessionBus().lastError().message());
     }
 
@@ -85,7 +90,7 @@ void DBusInterfaceExternalCommunicator::loadFile( const QString& file_name )
 DBusExternalInstance::DBusExternalInstance()
 {
      dbusInterface_ = std::make_shared<QDBusInterface>(
-             DBUS_SERVICE_NAME, "/", "", QDBusConnection::sessionBus() );
+             dbusFullServiceName(), "/", "", QDBusConnection::sessionBus() );
 
      if ( ! dbusInterface_->isValid() ) {
         throw CantCreateExternalErr();

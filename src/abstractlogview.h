@@ -34,10 +34,13 @@
 #include "quickfindmux.h"
 #include "viewtools.h"
 
+#include "colorizer.h"
+
 class QMenu;
 class QAction;
 class AbstractLogData;
 
+// TODO: remove old line drawing code
 class LineChunk
 {
   public:
@@ -61,57 +64,6 @@ class LineChunk
     int start_;
     int end_;
     ChunkType type_;
-};
-
-// Utility class for syntax colouring.
-// It stores the chunks of line to draw
-// each chunk having a different colour
-class LineDrawer
-{
-  public:
-    LineDrawer( const QColor& back_color) :
-        list(), backColor_( back_color ) { };
-
-    // Add a chunk of line using the given colours.
-    // Both first_col and last_col are included
-    // An empty chunk will be ignored.
-    // the first column will be set to 0 if negative
-    // The column are relative to the screen
-    void addChunk( int first_col, int last_col, QColor fore, QColor back );
-    void addChunk( const LineChunk& chunk, QColor fore, QColor back );
-
-    // Draw the current line of text using the given painter,
-    // in the passed block (in pixels)
-    // The line must be cut to fit on the screen.
-    // leftExtraBackgroundPx is the an extra margin to start drawing
-    // the coloured // background, going all the way to the element
-    // left of the line looks better.
-    void draw( QPainter& painter, int xPos, int yPos,
-               int line_width, const QString& line,
-               int leftExtraBackgroundPx );
-
-  private:
-    class Chunk {
-      public:
-        // Create a new chunk
-        Chunk( int start, int length, QColor fore, QColor back )
-            : start_( start ), length_( length ),
-            foreColor_ ( fore ), backColor_ ( back ) { };
-
-        // Accessors
-        int start() const { return start_; }
-        int length() const { return length_; }
-        const QColor& foreColor() const { return foreColor_; }
-        const QColor& backColor() const { return backColor_; }
-
-      private:
-        int start_;
-        int length_;
-        QColor foreColor_;
-        QColor backColor_;
-    };
-    QList<Chunk> list;
-    QColor backColor_;
 };
 
 
@@ -244,6 +196,8 @@ class AbstractLogView :
 
     void gotFocus();
 
+    void markLines(const Range& range, bool addMark);
+
   public slots:
     // Makes the widget select and display the passed line.
     // Scrolling as necessary
@@ -358,6 +312,9 @@ class AbstractLogView :
     QAction* findNextAction_;
     QAction* findPreviousAction_;
     QAction* addToSearchAction_;
+    QAction* addMarkAction_;
+    QAction* removeMarkAction_;
+    QAction* highlightAction_;
 
     // Pointer to the CrawlerWidget's QFP object
     const QuickFindPattern* const quickFindPattern_;
@@ -411,6 +368,11 @@ class AbstractLogView :
     void updateScrollBars();
 
     void drawTextArea( QPaintDevice* paint_device, int32_t delta_y );
+    void drawColorizedText(QPainter &painter, int xPos, int yPos,
+                           int line_width, const QString &line,
+                           int leftExtraBackgroundPx,
+                           const std::list<Token> &tokens, const Range &range,
+                           const QColor &backgroundColor);
     QPixmap drawPullToFollowBar( int width, float pixel_ratio );
 
     void disableFollow();

@@ -87,6 +87,8 @@ MainWindow::MainWindow( std::unique_ptr<Session> session,
     setWindowIcon( mainIcon_ );
 
     readSettings();
+    StructConfig::loadDefault();
+    reloadStructConfig();
 
     // Connect the signals to the mux (they will be forwarded to the
     // "current" crawlerwidget
@@ -176,6 +178,23 @@ MainWindow::MainWindow( std::unique_ptr<Session> session,
     central_widget->setLayout( main_layout );
 
     setCentralWidget( central_widget );
+}
+
+void MainWindow::reloadStructConfig()
+{
+    try {
+        StructConfig::reload();
+    }
+    catch(const SyntaxRule::Error& err) {
+        QMessageBox msgBox;
+        msgBox.setText(QString("Could not load config: ") + err.message());
+        msgBox.exec();
+    }
+    if (StructConfig::instance().checkForIssues()) {
+        QMessageBox msgBox;
+        msgBox.setText("Issues were found when loading config");
+        msgBox.exec();
+    }
 }
 
 void MainWindow::reloadGeometry()
@@ -360,6 +379,13 @@ void MainWindow::createActions()
     encodingAction[0]->setStatusTip(tr("Automatically detect the file's encoding"));
     encodingAction[0]->setChecked( true );
 
+    configReloadAction = new QAction(tr("&Reload"), this);
+    connect(configReloadAction, &QAction::triggered, [=]() {
+        reloadStructConfig();
+        repaint();
+        mainTabWidget_.repaint();
+    });
+
     connect( encodingGroup, SIGNAL( triggered( QAction* ) ),
             this, SLOT( encodingChanged( QAction* ) ) );
 }
@@ -394,6 +420,9 @@ void MainWindow::createMenus()
     viewMenu->addAction( followAction );
     viewMenu->addSeparator();
     viewMenu->addAction( reloadAction );
+
+    configMenu = menuBar()->addMenu(tr("&Config"));
+    configMenu->addAction(configReloadAction);
 
     toolsMenu = menuBar()->addMenu( tr("&Tools") );
     toolsMenu->addAction( filtersAction );
@@ -750,7 +779,7 @@ void MainWindow::newVersionNotification( const QString& new_version )
 
     QMessageBox msgBox;
     msgBox.setText( QString( "A new version of glogg (%1) is available for download <p>"
-                "<a href=\"http://glogg.bonnefon.org/download.html\">http://glogg.bonnefon.org/download.html</a>" 
+                "<a href=\"http://glogg.bonnefon.org/download.html\">http://glogg.bonnefon.org/download.html</a>"
                 ).arg( new_version ) );
     msgBox.exec();
 }
@@ -789,7 +818,7 @@ void MainWindow::dropEvent( QDropEvent* event )
 
 void MainWindow::keyPressEvent( QKeyEvent* keyEvent )
 {
-    LOG(logDEBUG4) << "keyPressEvent received";
+    TRACE << "keyPressEvent received";
 
     if ( keyEvent->key() == Qt::Key_Escape && !quickFindWidget_.isHidden() ) {
         quickFindWidget_.closeHandler();

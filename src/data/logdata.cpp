@@ -203,7 +203,8 @@ void LogData::fileChangedOnDisk()
     QFileInfo info( name );
 
     // Need to open the file in case it was absent
-    attached_file_->open( QIODevice::ReadOnly );
+    if (!attached_file_->isOpen())
+        attached_file_->open( QIODevice::ReadOnly );
 
     std::shared_ptr<LogDataOperation> newOperation;
 
