@@ -879,15 +879,15 @@ LineNumber AbstractLogView::getViewPosition() const
 }
 
 void AbstractLogView::searchUsingFunction(
-        qint64 (QuickFind::*search_function)() )
+        RangeInLine (QuickFind::*search_function)() )
 {
     disableFollow();
 
-    int line = (quickFind_.*search_function)();
-    if ( line >= 0 ) {
-        LOG(logDEBUG) << "Found line " << line;
-        displayLine( line );
-        emit updateLineNumber( line );
+    auto rangeInLine = (quickFind_.*search_function)();
+    if ( rangeInLine ) {
+        DEBUG << "Found" << rangeInLine;
+        displayRangeInLine(rangeInLine);
+        emit updateLineNumber( rangeInLine.line );
     }
 }
 
@@ -1136,8 +1136,18 @@ LineNumber AbstractLogView::getNbVisibleLines() const
     return static_cast<LineNumber>( viewport()->height() / charHeight_ + 1 );
 }
 
+Range AbstractLogView::visibleLineRange() const
+{
+    return Range::WithLength(firstLine, getNbVisibleLines());
+}
+
+Range AbstractLogView::visibleColumnRange() const
+{
+    return Range::WithLength(firstCol, getNbVisibleCols());
+}
+
 // Returns the number of columns visible in the viewport
-int AbstractLogView::getNbVisibleCols() const
+unsigned AbstractLogView::getNbVisibleCols() const
 {
     return ( viewport()->width() - leftMarginPx_ ) / charWidth_ + 1;
 }
@@ -1193,6 +1203,32 @@ void AbstractLogView::displayLine( LineNumber line )
     } else {
         jumpToLine( line );
     }
+}
+
+void AbstractLogView::displayRangeInLine(const RangeInLine &rangeInLine)
+{
+    DEBUG << "Displaying" << rangeInLine;
+    auto line = rangeInLine.line;
+    auto range = rangeInLine.columns;
+    int newLine = -1;
+    if (!visibleLineRange().contains(line))
+        newLine = qMax(0U, line - (getNbVisibleLines() / 2));
+    int newCol = -1;
+    if (!visibleColumnRange().contains(range)) {
+        if (range.length() >= getNbVisibleCols())
+            newCol = range.start;
+        else if (range.end <= getNbVisibleCols())
+            newCol = 0;
+        else
+            newCol = range.middle() - (getNbVisibleCols() / 2);
+    }
+    DEBUG << "Will scroll to line" << newLine << ", column" << newCol;
+    if (newLine != -1)
+        verticalScrollBar()->setValue(newLine);
+    if (newCol != -1)
+        horizontalScrollBar()->setValue(newCol);
+    textAreaCache_.invalid_ = true;
+    update();
 }
 
 // Move the selection up and down by the passed number of lines
@@ -1419,7 +1455,7 @@ void AbstractLogView::updateScrollBars()
             logData->getNbLine() - getNbVisibleLines() + 1 ) );
 
     const int hScrollMaxValue = std::max( 0,
-            logData->getMaxLength() - getNbVisibleCols() + 1 );
+        logData->getMaxLength() - int(getNbVisibleCols()) + 1 );
     horizontalScrollBar()->setRange( 0, hScrollMaxValue );
 }
 
@@ -1467,7 +1503,7 @@ void AbstractLogView::drawTextArea( QPaintDevice* paint_device, int32_t )
     const int bottomOfTextPx = nbLines * fontHeight;
 
     LOG(logDEBUG) << "drawing lines from " << firstLine << " (" << nbLines << " lines)";
-    DEBUG << "drawing columns from " << firstCol << " (" << nbCols << " columns)";
+    DEBUG << "drawing columns from" << firstCol << " (" << nbCols << " columns)";
 
     LOG(logDEBUG) << "bottomOfTextPx: " << bottomOfTextPx;
     LOG(logDEBUG) << "Height: " << paintDeviceHeight;
@@ -1562,17 +1598,19 @@ void AbstractLogView::drawTextArea( QPaintDevice* paint_device, int32_t )
         if (isMatch) {
             std::list<Token> qfTokens;
             foreach (const QuickFindMatch match, qfMatchList) {
-                int start = match.startColumn() - firstCol;
+                int start = match.startColumn();
                 int end = start + match.length();
                 // Ignore matches that are *completely* outside view area
-                if ((start < 0 && end < 0) || start >= nbCols)
+                if (end <= firstCol || start >= firstCol + nbCols)
                     continue;
                 qfTokens.emplace_back(Range(start, end),
                                       ColorScheme::QUICK_FIND);
             }
             mergeTokens(tokens, qfTokens);
         }
-        auto syntaxTokens = StructConfig::instance().syntax().parse(line);
+        /* TODO: make this configurable */
+        auto lineForSyntax = line.left(1024);
+        auto syntaxTokens = StructConfig::instance().syntax().parse(lineForSyntax);
         TRACE << "Parsed syntax:" << syntaxTokens;
         mergeSyntaxTokens(tokens, syntaxTokens);
 

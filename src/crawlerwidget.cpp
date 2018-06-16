@@ -414,19 +414,23 @@ void CrawlerWidget::markLines(const Range& range, bool filtered, bool addMark)
 {
     DEBUG << (addMark ? "Marking" : "Unmarking") << "range" << range << "in"
           << (filtered ? "filtered" : "main") << "view";
+    bool needsMaxLenRecalc = false;
     FOR_RANGE(line, range)
     {
         auto lineInFile
             = filtered ? logFilteredData_->getMatchingLineNumber(line) : line;
-        bool marked = (filtered
-                       && logFilteredData_->filteredLineTypeByIndex(line)
-                              == LogFilteredData::Mark)
-                      || (!filtered && logFilteredData_->isLineMarked(line));
-        if (marked && !addMark)
-            logFilteredData_->deleteMark(lineInFile);
-        else if (!marked && addMark)
+        bool marked = logFilteredData_->isLineMarked(lineInFile);
+        if (marked && !addMark) {
+            needsMaxLenRecalc |= logFilteredData_->deleteMarkInBulk(lineInFile);
+        }
+        else if (!marked && addMark) {
             logFilteredData_->addMark(lineInFile);
+        }
     }
+    if (needsMaxLenRecalc)
+        logFilteredData_->recalcMaxLengthMarks();
+    logFilteredData_->invalidateCache();
+
     filteredView->updateData();
     logMainView->updateData();
 
@@ -763,6 +767,7 @@ void CrawlerWidget::setup()
     adjustFocusPolicy( searchLineEdit, true /* click focus */ );
     searchLineEdit->setEditable( true );
     searchLineEdit->setCompleter( 0 );
+    searchLineEdit->setMaxVisibleItems(30);
     updateSearchCombo();
     searchLineEdit->setSizePolicy( QSizePolicy::Expanding, QSizePolicy::Minimum );
     searchLineEdit->setSizeAdjustPolicy( QComboBox::AdjustToMinimumContentsLengthWithIcon );

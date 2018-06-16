@@ -471,6 +471,7 @@ QStringList LogData::doGetExpandedLines( qint64 first_line, int number ) const
         end = endOfLinePosition( line ) - first_byte;
         // LOG(logDEBUG) << "Getting line " << line << " beginning " << beginning << " end " << end;
         QByteArray this_line = blob.mid( beginning, end - beginning );
+        // QByteArray this_line = blob.mid( beginning, qMin(int(end - beginning), 16384 ));
         QString conv_line = codec_->toUnicode( this_line );
         // LOG(logDEBUG) << "Line is: " << conv_line.toStdString();
         list.append( untabify( conv_line ) );

@@ -67,6 +67,7 @@ int main(int argc, char *argv[])
     bool new_session = false;
     bool load_session = false;
     bool multi_instance = false;
+    QString instanceServer = "";
     QString logFile;
 
     TLogLevel logLevel = logWARNING;
@@ -78,6 +79,7 @@ int main(int argc, char *argv[])
             ("version,v", "print glogg's version information")
             ("multi,m", "allow multiple instance of glogg to run simultaneously (use together with -s)")
             ("load-session,s", "load the previous session (default when no file is passed)")
+            ("server", po::value<std::string>(), "instance server name")
             ("new-session,n", "do not load the previous session (default when a file is passed)")
             ("log,l", po::value<std::string>(), "Filename to redirect log to")
             ("debug,d", "output more debug (include multiple times for more verbosity e.g. -dddd)")
@@ -135,7 +137,11 @@ int main(int argc, char *argv[])
         if ( vm.count( "log" ) )
             logFile = QString::fromStdString(vm["log"].as<std::string>());
 
-        for ( string s = "dd"; s.length() <= 10; s.append("d") )
+        if (vm.count("server"))
+            instanceServer
+                = QString::fromStdString(vm["log"].as<std::string>());
+
+        for (string s = "dd"; s.length() <= 10; s.append("d"))
             if ( vm.count( s ) )
                 logLevel = (TLogLevel) (logWARNING + s.length());
 
@@ -170,7 +176,7 @@ int main(int argc, char *argv[])
 #ifdef GLOGG_SUPPORTS_DBUS
         externalCommunicator = make_shared<DBusExternalCommunicator>();
         externalInstance = shared_ptr<ExternalInstance>(
-                externalCommunicator->otherInstance() );
+                externalCommunicator->otherInstance(instanceServer) );
 #elif GLOGG_SUPPORTS_SOCKETIPC
         externalCommunicator = make_shared<SocketExternalCommunicator>();
         auto ptr = externalCommunicator->otherInstance();
@@ -198,7 +204,7 @@ int main(int argc, char *argv[])
         // between the declaration of externalInstance and here,
         // is it a problem?
         if ( externalCommunicator )
-            externalCommunicator->startListening();
+            externalCommunicator->startListening(instanceServer);
     }
 
     // Register types for Qt

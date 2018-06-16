@@ -85,6 +85,8 @@ Log::~Log()
         return;
     QTextStream stream(&file_);
     stream << fullMessage() << '\n';
+    stream.flush();
+    file_.flush();
 }
 
 QString ellipsize(const QString &str, int len)

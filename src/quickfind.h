@@ -66,6 +66,20 @@ class SearchingNotifier : public QObject
     int dotToDisplay_;
 };
 
+struct RangeInLine {
+    RangeInLine(unsigned line_ = 0, const Range& columns_ = Range())
+        : line(line_), columns(columns_)
+    {}
+    unsigned line;
+    Range columns;
+
+    operator bool() const {
+        return !columns.isNull();
+    }
+};
+
+QDebug &operator<<(QDebug &debug, const RangeInLine &rangeInLine);
+
 // Represents a search made with Quick Find (without its results)
 // it keeps a pointer to a set of data and to a QuickFindPattern which
 // are used for the searches. (the caller retains ownership of both).
@@ -86,8 +100,8 @@ class QuickFind : public QObject
     // point.  These searches don't use the QFP and don't change the
     // starting point.
     // TODO Update comment
-    qint64 incrementallySearchForward();
-    qint64 incrementallySearchBackward();
+    RangeInLine incrementallySearchForward();
+    RangeInLine incrementallySearchBackward();
 
     // Stop the currently ongoing incremental search, leave the selection
     // where it is if a match has been found, restore the old one
@@ -109,8 +123,8 @@ class QuickFind : public QObject
 
     // Idem but ignore the direction and always search in the
     // specified direction
-    qint64 searchForward();
-    qint64 searchBackward();
+    RangeInLine searchForward();
+    RangeInLine searchBackward();
 
     // Make the object forget the 'no more match' flag.
     void resetLimits();
@@ -197,8 +211,8 @@ class QuickFind : public QObject
     SearchState searchState_;
 
     // Private functions
-    qint64 doSearchForward( const FilePosition &start_position );
-    qint64 doSearchBackward( const FilePosition &start_position );
+    RangeInLine doSearchForward( const FilePosition &start_position );
+    RangeInLine doSearchBackward( const FilePosition &start_position );
 };
 
 #endif

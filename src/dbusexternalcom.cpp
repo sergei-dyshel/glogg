@@ -23,11 +23,14 @@
 
 #include "log.h"
 
-static const char* DBUS_SERVICE_NAME = "org.bonnefon.glogg";
+static const QString DBUS_SERVICE_NAME = "org.bonnefon.glogg";
 
-static QString dbusFullServiceName()
+static QString dbusFullServiceName(const QString& name)
 {
-    return QString(DBUS_SERVICE_NAME) + ".g" + GLOGG_COMMIT;
+    auto result = DBUS_SERVICE_NAME;
+    if (!name.isEmpty())
+        result += "." + name;
+    return result;
 }
 
 DBusExternalCommunicator::DBusExternalCommunicator()
@@ -47,9 +50,9 @@ DBusExternalCommunicator::DBusExternalCommunicator()
 
 // If listening fails (e.g. another glogg is already listening,
 // the function will fail silently and no listening will be done.
-void DBusExternalCommunicator::startListening()
+void DBusExternalCommunicator::startListening(const QString &name)
 {
-    if (!QDBusConnection::sessionBus().registerService( dbusFullServiceName() )) {
+    if (!QDBusConnection::sessionBus().registerService( dbusFullServiceName(name) )) {
         LOG(logERROR) << qPrintable(QDBusConnection::sessionBus().lastError().message());
     }
 
@@ -59,10 +62,10 @@ void DBusExternalCommunicator::startListening()
     }
 }
 
-ExternalInstance* DBusExternalCommunicator::otherInstance() const
+ExternalInstance* DBusExternalCommunicator::otherInstance(const QString &name) const
 {
     try {
-        return static_cast<ExternalInstance*>( new DBusExternalInstance() );
+        return static_cast<ExternalInstance*>( new DBusExternalInstance(name) );
     }
     catch ( CantCreateExternalErr ) {
         LOG(logINFO) << "Cannot find external D-Bus correspondant, we are the only glogg out there.";
@@ -87,10 +90,10 @@ void DBusInterfaceExternalCommunicator::loadFile( const QString& file_name )
     emit signalLoadFile( file_name );
 }
 
-DBusExternalInstance::DBusExternalInstance()
+DBusExternalInstance::DBusExternalInstance(const QString &name)
 {
      dbusInterface_ = std::make_shared<QDBusInterface>(
-             dbusFullServiceName(), "/", "", QDBusConnection::sessionBus() );
+             dbusFullServiceName(name), "/", "", QDBusConnection::sessionBus() );
 
      if ( ! dbusInterface_->isValid() ) {
         throw CantCreateExternalErr();

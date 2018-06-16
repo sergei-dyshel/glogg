@@ -339,17 +339,20 @@ class AbstractLogView :
     };
     struct PullToFollowCache {
         QPixmap pixmap_;
-        int nb_columns_;
+        unsigned nb_columns_;
     };
     TextAreaCache textAreaCache_ = { {}, true, 0, 0, 0 };
     PullToFollowCache pullToFollowCache_ = { {}, 0 };
 
     LineNumber getNbVisibleLines() const;
-    int getNbVisibleCols() const;
+    Range visibleLineRange() const;
+    Range visibleColumnRange() const;
+    unsigned getNbVisibleCols() const;
     QPoint convertCoordToFilePos( const QPoint& pos ) const;
     int convertCoordToLine( int yPos ) const;
     int convertCoordToColumn( int xPos ) const;
     void displayLine( LineNumber line );
+    void displayRangeInLine(const RangeInLine &rangeInLine);
     void moveSelection( int y );
     void jumpToStartOfLine();
     void jumpToEndOfLine();
@@ -363,7 +366,7 @@ class AbstractLogView :
     void considerMouseHovering( int x_pos, int y_pos );
 
     // Search functions (for n/N)
-    void searchUsingFunction( qint64 (QuickFind::*search_function)() );
+    void searchUsingFunction( RangeInLine (QuickFind::*search_function)() );
 
     void updateScrollBars();
 

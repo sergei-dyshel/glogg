@@ -64,7 +64,7 @@ void addLowerToken(std::list<Token> &upperTokens, const Token& lower)
         if (upper->range.start <= lower_start) {
             if (upper->range.end >= lower.range.end)
                 return;
-            lower_start = qMax(upper->range.end, lower.range.start);
+            lower_start = qMax(upper->range.end, lower_start);
             continue;
         }
 
@@ -77,6 +77,8 @@ void addLowerToken(std::list<Token> &upperTokens, const Token& lower)
         lower_start = upper->range.end;
     }
 
-    upperTokens.insert(
-        upper, Token(Range(lower_start, lower.range.end), lower.colorScope));
+    if (lower_start < lower.range.end) {
+        upperTokens.insert(
+            upper, Token(Range(lower_start, lower.range.end), lower.colorScope));
+    }
 }

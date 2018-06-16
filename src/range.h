@@ -63,8 +63,16 @@ struct Range final {
         return *this;
     }
 
-    bool contains(unsigned val) {
+    bool contains(unsigned val) const {
         return start <= val && val < end;
+    }
+
+    bool contains(const Range &range) const {
+        return contains(range.start) && contains(range.end);
+    }
+
+    unsigned middle() const {
+        return  (start + end) / 2;
     }
 
     // TODO: check if needed
