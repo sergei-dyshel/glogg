@@ -120,6 +120,7 @@ void TabbedCrawlerWidget::mouseReleaseEvent( QMouseEvent *event)
     {
         QMenu menu(this);
         auto rename_action = menu.addAction("Rename");
+        auto close_previous_action = menu.addAction("Close previous");
         auto action = menu.exec(mapToGlobal(event->pos()));
         if (action == rename_action) {
             auto old_name = myTabBar_.tabText(tab);
@@ -129,6 +130,10 @@ void TabbedCrawlerWidget::mouseReleaseEvent( QMouseEvent *event)
                                          QLineEdit::Normal, old_name, &ok );
             if ( ok )
                 myTabBar_.setTabText( tab, new_name );
+        }
+        else if (action == close_previous_action) {
+            for (int prevTab = 0; prevTab < tab; ++prevTab)
+                emit tabCloseRequested(0);
         }
     }
 }
