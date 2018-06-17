@@ -1612,6 +1612,7 @@ void AbstractLogView::drawTextArea( QPaintDevice* paint_device, int32_t )
         auto lineForSyntax = line.left(1024);
         auto syntaxTokens = StructConfig::instance().syntax().parse(lineForSyntax);
         TRACE << "Parsed syntax:" << syntaxTokens;
+        filterTokensByScheme(syntaxTokens, colorScheme);
         mergeSyntaxTokens(tokens, syntaxTokens);
 
         mergeTokens(tokens, {Token(Range(line.length()), ColorScheme::TEXT)});

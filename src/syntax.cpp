@@ -15,8 +15,9 @@ SyntaxRule::SyntaxRule(const ConfigNode &node)
     name_ = node.member("name").asString();
     matchGroup_ = node.member("group").asString();
     regExp_ = QRegularExpression(node.member("regex").asString());
-    for (const auto &colorRule : node.member("colorize").members())
-        colorize_.emplace(colorRule.first, colorRule.second.asString());
+    if (node.hasMember("colorize"))
+        for (const auto &colorRule : node.member("colorize").members())
+            colorize_.emplace(colorRule.first, colorRule.second.asString());
 
     PostInit();
 }
@@ -69,7 +70,7 @@ void SyntaxRule::apply(const QString &line, SyntaxParsingState& state) const
         if (captured.isNull() || captured.isEmpty())
             continue;
         Token token(Range::WithLength(captured.position(), captured.length()),
-                    "");
+                    group);
         state[group] = token;
     }
 
@@ -119,8 +120,7 @@ std::list<Token> Syntax::parse(const QString &line) const
     }
     for (const auto &kv : state) {
         const auto &token = kv.second;
-        if (!token.colorScope.isNull() && !token.colorScope.isEmpty())
-            result.push_back(token);
+        result.push_back(token);
     }
     result.sort([](const Token &x, const Token &y) {
         return x.range.start < y.range.start

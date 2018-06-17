@@ -82,3 +82,15 @@ void addLowerToken(std::list<Token> &upperTokens, const Token& lower)
             upper, Token(Range(lower_start, lower.range.end), lower.colorScope));
     }
 }
+
+void filterTokensByScheme(std::list<Token> &tokens,
+                          const ColorScheme &scheme)
+{
+    auto iter = tokens.begin();
+    while (iter != tokens.end()) {
+        if (!scheme.hasScope(iter->colorScope))
+            tokens.erase(iter++);
+        else
+            ++iter;
+    }
+}

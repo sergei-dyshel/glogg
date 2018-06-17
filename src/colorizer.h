@@ -2,14 +2,15 @@
 
 #pragma once
 
+#include "color_scheme.h"
 #include "range.h"
 
 #include <iostream>
 #include <list>
 #include <vector>
 
-#include <QString>
 #include <QDebug>
+#include <QString>
 
 class LogStream;
 
@@ -36,9 +37,11 @@ inline QDebug& operator<<(QDebug& debug, const Token& token) {
     return debug << token.range << ": " << token.colorScope;
 }
 
-
 void mergeTokens(std::list<Token> &upperTokens,
                     const std::list<Token> &lowerTokens);
+
+void filterTokensByScheme(std::list<Token> &tokens,
+                          const ColorScheme &scheme);
 
 void mergeSyntaxTokens(std::list<Token> &upperTokens,
                        const std::list<Token> &syntaxTokens);
