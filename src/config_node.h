@@ -8,6 +8,7 @@
 #include <vector>
 
 #include <QString>
+#include <QStringList>
 
 class ConfigError : public Exception {
   public:
@@ -29,6 +30,7 @@ public:
   size_t numElements() const;
   bool isScalar() const;
   QString asString() const;
+  QStringList asStringList() const;
 
   std::vector<std::pair<QString, ConfigNode>> members() const;
   std::vector<ConfigNode> elements() const;

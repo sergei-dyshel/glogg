@@ -68,6 +68,15 @@ QString ConfigNode::asString() const
     }
 }
 
+QStringList ConfigNode::asStringList() const
+{
+    QStringList result;
+    for (const auto &elem : elements())
+        result.push_back(elem.asString());
+    return result;
+}
+
+
 ConfigError ConfigNode::error(const LogContext &context) const
 {
     return ConfigError(path_, context);

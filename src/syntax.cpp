@@ -1,6 +1,14 @@
 #include "syntax.h"
 #include "log.h"
 
+static QString stringList2Regex(const QStringList &strings)
+{
+    QStringList escaped;
+    for (const auto &str : strings)
+        escaped.push_back(QRegularExpression::escape(str));
+    return escaped.join('|');
+}
+
 SyntaxRule::SyntaxRule(const QString &name, const QString &group,
                        const QString &regExp,
                        const std::unordered_map<QString, QString> &colorize)
@@ -14,7 +22,11 @@ SyntaxRule::SyntaxRule(const ConfigNode &node)
 {
     name_ = node.member("name").asString();
     matchGroup_ = node.member("group").asString();
-    regExp_ = QRegularExpression(node.member("regex").asString());
+    auto regexNode = node.member("regex");
+    QString regex = regexNode.isScalar()
+                        ? regexNode.asString()
+                        : stringList2Regex(regexNode.asStringList());
+    regExp_ = QRegularExpression(regex);
     if (node.hasMember("colorize"))
         for (const auto &colorRule : node.member("colorize").members())
             colorize_.emplace(colorRule.first, colorRule.second.asString());
