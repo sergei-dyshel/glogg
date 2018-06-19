@@ -32,7 +32,7 @@ SyntaxRule::Error::Error(const QString &ruleName, const LogContext &context)
 
 SyntaxRule::Error SyntaxRule::error(const LogContext &context) const
 {
-    return Error(name_, context);
+    return Error(fullName(), context);
 }
 
 void SyntaxRule::PostInit()
@@ -46,7 +46,7 @@ void SyntaxRule::PostInit()
             regExpGroups_.insert(group);
 }
 
-#define RULE_TRACE TRACE << "Rule" << name_ << ":"
+#define RULE_TRACE TRACE << "Rule" << fullName() << ":"
 
 void SyntaxRule::apply(const QString &line, SyntaxParsingState& state) const
 {
@@ -79,14 +79,17 @@ void SyntaxRule::apply(const QString &line, SyntaxParsingState& state) const
             state.at(kv.first).colorScope = kv.second;
 }
 
+QString SyntaxRule::fullName() const { return parentName_ + "/" + name_; }
+
 Syntax::Syntax() { usedGroups_.insert("line"); }
 
-Syntax::Syntax(const ConfigNode &node) : Syntax()
+Syntax::Syntax(const QString &name, const ConfigNode &node) : Syntax()
 {
-    LOG(logDEBUG) << "Loading syntax";
+    name_ = name;
+    DEBUG << "Loading syntax" << name_;
     for (const auto &elem : node.elements())
         addRule(SyntaxRule(elem));
-    LOG(logDEBUG) << "Loaded " << rules_.size() << " rules";
+    DEBUG << "Loaded " << rules_.size() << " rules";
 }
 
 Syntax &Syntax::addRule(const SyntaxRule &rule)
@@ -108,6 +111,7 @@ Syntax &Syntax::addRule(const SyntaxRule &rule)
         usedScopes_.insert(kv.second);
     }
     rules_.push_back(rule);
+    rules_.back().parentName_ = name_;
     return *this;
 }
 
@@ -126,5 +130,33 @@ std::list<Token> Syntax::parse(const QString &line) const
         return x.range.start < y.range.start
                || (x.range.start == y.range.start && x.range.end > y.range.end);
     });
+    return result;
+}
+
+SyntaxCollection::SyntaxCollection(const ConfigNode &node)
+{
+    for (const auto &kv : node.members()) {
+        auto syntax = Syntax(kv.first, kv.second);
+        addSyntax(syntax);
+    }
+}
+
+void SyntaxCollection::addSyntax(const Syntax &syntax)
+{
+    if (usedNames_.count(syntax.name_))
+        throw Exception(HERE)
+            << "Syntax" << syntax.name_ << "already loaded (duplicate?)";
+    usedNames_.insert(syntax.name_);
+    syntaxes_.push_back(syntax);
+}
+
+std::list<Token> SyntaxCollection::parse(const QString &line) const
+{
+    std::list<Token> result;
+    for (const auto &syntax : syntaxes_) {
+        result = syntax.parse(line);
+        if (result.size() > 1)
+            break;
+    }
     return result;
 }

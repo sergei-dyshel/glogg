@@ -72,16 +72,17 @@ void StructConfig::load() {
 
     ConfigNode root = ConfigNode("", yamlRoot);
     colorScheme_ = ColorScheme(root.memberNoExcept("colorScheme"));
-    syntax_ = Syntax(root.memberNoExcept("syntax"));
+    syntaxColl_ = SyntaxCollection  (root.memberNoExcept("syntax"));
 }
 
 bool StructConfig::checkForIssues() const
 {
     bool hasIssues = false;
-    for (const auto &scope : syntax_.usedScopes())
-        if (!colorScheme_.hasScope(scope)) {
-            ERROR << "Scope" << scope << "used in rule but not defined";
-            hasIssues = true;
-        }
+    for (const auto &syntax : syntaxColl_.syntaxes())
+        for (const auto &scope : syntax.usedScopes())
+            if (!colorScheme_.hasScope(scope)) {
+                ERROR << "Scope" << scope << "used in rule but not defined";
+                hasIssues = true;
+            }
     return hasIssues;
 }

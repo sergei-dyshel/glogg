@@ -10,7 +10,7 @@ public:
 
     void Load();
     const ColorScheme &colorScheme() const { return colorScheme_; }
-    const Syntax &syntax() const { return syntax_; }
+    const SyntaxCollection &syntaxColl() const { return syntaxColl_; }
     bool checkForIssues() const;
 
     static const StructConfig &instance();
@@ -21,5 +21,5 @@ private:
     void load();
 
     ColorScheme colorScheme_;
-    Syntax syntax_;
-}; // class StructConfig
+    SyntaxCollection syntaxColl_;
+};

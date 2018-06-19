@@ -15,6 +15,7 @@
 using SyntaxParsingState = std::unordered_map<QString, Token>;
 
 class Syntax;
+class SyntaxCollection;
 
 class SyntaxRule final {
 public:
@@ -34,11 +35,14 @@ public:
 
     friend class Syntax;
 
+    QString fullName() const;
+
   private:
 
     void PostInit();
 
     QString name_;
+    QString parentName_;
     QString matchGroup_;
     QRegularExpression regExp_;
 
@@ -50,7 +54,7 @@ public:
 class Syntax final {
 public:
     Syntax();
-    Syntax(const ConfigNode &node);
+    Syntax(const QString &name, const ConfigNode &node);
 
     std::list<Token> parse(const QString &line) const;
 
@@ -58,9 +62,29 @@ public:
 
     std::unordered_set<QString> usedScopes() const { return usedScopes_; }
 
+    friend class SyntaxCollection;
+
 private:
+    QString name_;
     std::unordered_set<QString> usedScopes_;
     std::unordered_set<QString> usedGroups_;
     std::unordered_set<QString> usedNames_;
     std::vector<SyntaxRule> rules_;
+};
+
+class SyntaxCollection final {
+public:
+    SyntaxCollection() = default;
+    SyntaxCollection(const ConfigNode &node);
+
+    void addSyntax(const Syntax &syntax);
+
+    std::list<Token> parse(const QString &line) const;
+
+    const std::vector<Syntax> syntaxes() const { return syntaxes_; }
+
+private:
+    std::vector<Syntax> syntaxes_;
+    std::unordered_set<QString> usedNames_;
+
 };
