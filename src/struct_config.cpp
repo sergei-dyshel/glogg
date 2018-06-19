@@ -1,12 +1,13 @@
 #include "struct_config.h"
 
 #include "log.h"
+#include "utils.h"
+
+#include <memory>
 
 #include <QFile>
 #include <QProcessEnvironment>
 #include <QStandardPaths>
-#include <memory>
-#include "utils.h"
 
 static const QString ENV_VAR_NAME = "GLOGG_JSON_CONFIG";
 static const QString CONFIG_FILE_NAME = "glogg.yaml";

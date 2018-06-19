@@ -1,9 +1,10 @@
 #pragma once
 
+#include "color_scheme.h"
 #include "colorizer.h"
 #include "config_node.h"
-#include "qt_std_interop.h"
 #include "exception.h"
+#include "qt_std_interop.h"
 
 #include <unordered_map>
 #include <unordered_set>
