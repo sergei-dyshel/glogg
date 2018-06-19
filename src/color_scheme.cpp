@@ -37,28 +37,23 @@ ColorScheme::ColorScheme(const ConfigNode &node)
 
     LOG(logDEBUG) << "Loading color scheme";
     if (node) {
-        try {
-            if (node.hasMember("defs")) {
-                for (const auto &member : node.member("defs").members())
-                    defs_.emplace(member.first,
-                                  QColor(member.second.as<int>()));
-            }
-            if (node.hasMember("base")) {
-                auto base = node.member("base");
-                if (base.hasMember(TEXT))
-                    text = readTextColor(base.member(TEXT));
-                if (base.hasMember(SELECTION))
-                    selection = readTextColor(base.member(SELECTION));
-                if (base.hasMember(QUICK_FIND))
-                    quickFind = readTextColor(base.member(QUICK_FIND));
-            }
-            if (node.hasMember("user")) {
-                for (const auto &member : node.member("user").members())
-                    user_.emplace(member.first, readColor(member.second, true));
-            }
+        if (node.hasMember("defs")) {
+            for (const auto &member : node.member("defs").members())
+                defs_.emplace(member.first,
+                                QColor(member.second.as<int>()));
         }
-        catch (const ConfigError& err) {
-            LOG(logERROR) << err;
+        if (node.hasMember("base")) {
+            auto base = node.member("base");
+            if (base.hasMember(TEXT))
+                text = readTextColor(base.member(TEXT));
+            if (base.hasMember(SELECTION))
+                selection = readTextColor(base.member(SELECTION));
+            if (base.hasMember(QUICK_FIND))
+                quickFind = readTextColor(base.member(QUICK_FIND));
+        }
+        if (node.hasMember("user")) {
+            for (const auto &member : node.member("user").members())
+                user_.emplace(member.first, readColor(member.second, true));
         }
     }
 

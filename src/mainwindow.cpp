@@ -185,7 +185,7 @@ void MainWindow::reloadStructConfig()
     try {
         StructConfig::reload();
     }
-    catch(const SyntaxRule::Error& err) {
+    catch(const Exception& err) {
         QMessageBox msgBox;
         msgBox.setText(QString("Could not load config: ") + err.message());
         msgBox.exec();
