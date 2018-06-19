@@ -35,7 +35,7 @@ public:
 
     friend class Syntax;
 
-    QString fullName() const;
+    QString fullName() const { return parentName_ + "/" + name_; }
 
   private:
 

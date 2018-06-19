@@ -79,8 +79,6 @@ void SyntaxRule::apply(const QString &line, SyntaxParsingState& state) const
             state.at(kv.first).colorScope = kv.second;
 }
 
-QString SyntaxRule::fullName() const { return parentName_ + "/" + name_; }
-
 Syntax::Syntax() { usedGroups_.insert("line"); }
 
 Syntax::Syntax(const QString &name, const ConfigNode &node) : Syntax()
