@@ -63,6 +63,7 @@ SOURCES += \
     src/syntax.cpp \
     src/log.cpp \
     src/exception.cpp \
+    src/enum.cpp \
 
 INCLUDEPATH += src/
 
@@ -120,6 +121,7 @@ HEADERS += \
     src/syntax.h \
     src/fwd.h \
     src/qt_std_interop.h \
+    src/enum.h \
 
 isEmpty(BOOST_PATH) {
     message(Building using system dynamic Boost libraries)
@@ -208,21 +210,14 @@ UI_DIR = $${OUT_PWD}/.ui/$${DESTDIR}-shared
 
 # Debug symbols even in release build
 QMAKE_CXXFLAGS = -g
+QMAKE_CXXFLAGS += -std=c++14
 
-# Which compiler are we using
-system( $${QMAKE_CXX} --version | grep -e " 4\\.[7-9]" ) || macx {
-    message ( "g++ version 4.7 or newer, supports C++11" )
-    CONFIG += C++11
-}
-else {
-    CONFIG += C++0x
-}
 
 # Extra compiler arguments
 # QMAKE_CXXFLAGS += -Weffc++
 QMAKE_CXXFLAGS += -Wextra
-C++0x:QMAKE_CXXFLAGS += -std=c++0x
-C++11:QMAKE_CXXFLAGS += -std=c++11
+# C++0x:QMAKE_CXXFLAGS += -std=c++0x
+# C++11:QMAKE_CXXFLAGS += -std=c++14
 
 GPROF {
     QMAKE_CXXFLAGS += -pg

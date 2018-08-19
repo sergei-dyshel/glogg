@@ -38,21 +38,21 @@ ColorScheme::ColorScheme(const ConfigNode &node)
     LOG(logDEBUG) << "Loading color scheme";
     if (node) {
         if (node.hasMember("defs")) {
-            for (const auto &member : node.member("defs").members())
+            for (const auto &member : node.requiredMember("defs").members())
                 defs_.emplace(member.first,
                                 QColor(member.second.as<int>()));
         }
         if (node.hasMember("base")) {
-            auto base = node.member("base");
+            auto base = node.requiredMember("base");
             if (base.hasMember(TEXT))
-                text = readTextColor(base.member(TEXT));
+                text = readTextColor(base.requiredMember(TEXT));
             if (base.hasMember(SELECTION))
-                selection = readTextColor(base.member(SELECTION));
+                selection = readTextColor(base.requiredMember(SELECTION));
             if (base.hasMember(QUICK_FIND))
-                quickFind = readTextColor(base.member(QUICK_FIND));
+                quickFind = readTextColor(base.requiredMember(QUICK_FIND));
         }
         if (node.hasMember("user")) {
-            for (const auto &member : node.member("user").members())
+            for (const auto &member : node.requiredMember("user").members())
                 user_.emplace(member.first, readColor(member.second, true));
         }
     }

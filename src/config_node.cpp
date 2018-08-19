@@ -9,34 +9,53 @@ ConfigError::ConfigError(const QString &path, const LogContext &context)
     stream_ << "Error parsing config: " << path << " ";
 }
 
+bool ConfigNode::isArray() const
+{
+    return node_.IsSequence();
+}
+
+bool ConfigNode::isObject() const
+{
+    return node_.IsMap();
+}
+
 void ConfigNode::assertIsArray() const
 {
-    if (!node_.IsSequence())
+    if (!isArray())
         throw error(HERE) << " is not an array";
 }
 
 void ConfigNode::assertIsObject() const
 {
-    if (!node_.IsMap())
+    if (!isObject())
         throw error(HERE) << " is not an object";
 }
 
 bool ConfigNode::hasMember(const QString &name) const
 {
-    return memberNoExcept(name);
+    return node_[name.toStdString()];
 }
 
-ConfigNode ConfigNode::member(const QString &name) const
+ConfigNode ConfigNode::requiredMember(const QString &name) const
 {
     assertIsObject();
     if (!hasMember(name))
         throw error(HERE) << "does not have member '" << name << "'";
-    return memberNoExcept(name);
+    return member(name);
 }
 
-ConfigNode ConfigNode::memberNoExcept(const QString &name) const
+ConfigNode
+ConfigNode::member(const QString &name, const QString &defaultYaml) const
 {
-    return ConfigNode(path_ + "/" + name, node_[name.toStdString()]);
+    auto path = path_ + "/" + name;
+    auto yamlNode = hasMember(name)
+                        ? node_[name.toStdString()]
+                        : (defaultYaml.isNull()
+                               ? YAML::Node(YAML::NodeType::Undefined)
+                               : (defaultYaml.isEmpty()
+                                      ? YAML::Load("''")
+                                      : YAML::Load(defaultYaml.toStdString())));
+    return ConfigNode(path, yamlNode);
 }
 
 ConfigNode ConfigNode::element(unsigned index) const
@@ -88,7 +107,7 @@ std::vector<std::pair<QString, ConfigNode>> ConfigNode::members() const
     std::vector<std::pair<QString, ConfigNode>> result;
     for (const auto &node : node_) {
         auto key = QString::fromStdString(node.first.as<std::string>());
-        result.emplace_back(key, ConfigNode(key, node.second));
+        result.emplace_back(key, ConfigNode(path_ + "/" + key, node.second));
     }
     return result;
 }

@@ -6,6 +6,7 @@
 
 #include <QtGlobal>
 #include <QDebug>
+#include <QStringRef>
 
 #define FOR_RANGE(var, range)                                                  \
     for (unsigned var = (range).start; var < (range).end; ++var)
@@ -21,6 +22,10 @@ struct Range final {
 
     Range() = default;
     Range(unsigned length) : start(0), end(length) {}
+
+    explicit Range(const QStringRef& ref)
+        : start(ref.position()), end(ref.position() + ref.length())
+    {}
 
     static Range WithLength(unsigned start, unsigned length) {
         return Range(start, start + length);

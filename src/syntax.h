@@ -5,6 +5,7 @@
 #include "config_node.h"
 #include "exception.h"
 #include "qt_std_interop.h"
+#include "enum.h"
 
 #include <unordered_map>
 #include <unordered_set>
@@ -13,8 +14,7 @@
 #include <QRegularExpression>
 #include <QString>
 
-using SyntaxParsingState = std::unordered_map<QString, Token>;
-
+struct SyntaxParsingState;
 class Syntax;
 class SyntaxCollection;
 
@@ -38,14 +38,21 @@ public:
 
     QString fullName() const { return parentName_ + "/" + name_; }
 
-  private:
+    enum class SearchType {
+        MATCH,
+        ALL,
+    };
 
+  private:
     void PostInit();
+    void processMatch(const QRegularExpressionMatch &match,
+                      SyntaxParsingState &state) const;
 
     QString name_;
     QString parentName_;
     QString matchGroup_;
     QRegularExpression regExp_;
+    SearchType searchType_;
 
     std::unordered_set<QString> regExpGroups_;
 
@@ -53,7 +60,7 @@ public:
 };
 
 class Syntax final {
-public:
+  public:
     Syntax();
     Syntax(const QString &name, const ConfigNode &node);
 
@@ -65,7 +72,7 @@ public:
 
     friend class SyntaxCollection;
 
-private:
+  private:
     QString name_;
     std::unordered_set<QString> usedScopes_;
     std::unordered_set<QString> usedGroups_;
@@ -89,3 +96,5 @@ private:
     std::unordered_set<QString> usedNames_;
 
 };
+
+QDEBUG_DEFINE_ENUM(SyntaxRule::SearchType)

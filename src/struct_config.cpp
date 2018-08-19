@@ -72,8 +72,8 @@ void StructConfig::load() {
     }
 
     ConfigNode root = ConfigNode("", yamlRoot);
-    colorScheme_ = ColorScheme(root.memberNoExcept("colorScheme"));
-    syntaxColl_ = SyntaxCollection  (root.memberNoExcept("syntax"));
+    colorScheme_ = ColorScheme(root.member("colorScheme"));
+    syntaxColl_ = SyntaxCollection(root.member("syntax"));
 }
 
 bool StructConfig::checkForIssues() const

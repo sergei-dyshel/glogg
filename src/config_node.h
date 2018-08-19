@@ -1,5 +1,6 @@
 #pragma once
 
+#include "enum.h"
 #include "exception.h"
 #include "yaml-cpp/yaml.h"
 
@@ -23,14 +24,24 @@ public:
       : path_(path), node_(node)
   {}
 
-  ConfigNode member(const QString &name) const;
+  ConfigNode requiredMember(const QString &name) const;
   bool hasMember(const QString &name) const;
-  ConfigNode memberNoExcept(const QString &name) const;
+  ConfigNode member(const QString &name,
+                    const QString &defaultYaml = QString()) const;
   ConfigNode element(unsigned index) const;
   size_t numElements() const;
   bool isScalar() const;
   QString asString() const;
   QStringList asStringList() const;
+  bool isArray() const;
+  bool isObject() const;
+
+  template <typename E>
+  E asEnum() const;
+
+  template <typename E>
+  E memberEnum(const QString &name,
+               const E &defaultVal) const;
 
   std::vector<std::pair<QString, ConfigNode>> members() const;
   std::vector<ConfigNode> elements() const;
@@ -66,4 +77,21 @@ template <typename T> T ConfigNode::as() const
     if (!is<T>())
         throw error(HERE) << "is not a " << typeid(T).name();
     return node_.as<T>();
+}
+
+template <typename E>
+E ConfigNode::asEnum() const
+{
+    auto str = asString();
+    auto strlist = Enum<E>::stringList();
+    if (!strlist.count(str)) {
+        throw error(HERE) << "is not one of" << strlist;
+    }
+    return Enum<E>::fromString(str);
+}
+
+template <typename E>
+E ConfigNode::memberEnum(const QString &name, const E &defaultVal) const
+{
+    return hasMember(name) ? member(name).asEnum<E>() : defaultVal;
 }
