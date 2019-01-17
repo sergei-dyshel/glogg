@@ -139,7 +139,7 @@ int main(int argc, char *argv[])
 
         if (vm.count("server"))
             instanceServer
-                = QString::fromStdString(vm["log"].as<std::string>());
+                = QString::fromStdString(vm["server"].as<std::string>());
 
         for (string s = "dd"; s.length() <= 10; s.append("d"))
             if ( vm.count( s ) )
@@ -238,6 +238,9 @@ int main(int argc, char *argv[])
 
     // No icon in menus
     app.setAttribute( Qt::AA_DontShowIconsInMenus );
+
+    if (!instanceServer.isEmpty())
+        app.setApplicationName(app.applicationName() + "_" + instanceServer);
 
     // FIXME: should be replaced by a two staged init of MainWindow
     GetPersistentInfo().retrieve( QString( "settings" ) );
