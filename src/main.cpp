@@ -67,7 +67,6 @@ int main(int argc, char *argv[])
     bool new_session = false;
     bool load_session = false;
     bool multi_instance = false;
-    QString instanceServer = "";
     QString logFile;
 
     TLogLevel logLevel = logWARNING;
@@ -168,8 +167,6 @@ int main(int argc, char *argv[])
         }
     }
 
-    // External communicator
-    shared_ptr<ExternalCommunicator> externalCommunicator = nullptr;
     shared_ptr<ExternalInstance> externalInstance = nullptr;
 
     try {
@@ -185,6 +182,11 @@ int main(int argc, char *argv[])
     }
     catch(CantCreateExternalErr& e) {
         LOG(logWARNING) << "Cannot initialise external communication.";
+    }
+
+    if (externalCommunicator) {
+        for (auto name : externalCommunicator->otherInstanceNames())
+          INFO << "Found another server: " << name;
     }
 
     LOG(logDEBUG) << "externalInstance = " << externalInstance;
@@ -239,7 +241,7 @@ int main(int argc, char *argv[])
     // No icon in menus
     app.setAttribute( Qt::AA_DontShowIconsInMenus );
 
-    if (!instanceServer.isEmpty())
+    if (instanceServer != DEFAULT_INSTANCE_NAME)
         app.setApplicationName(app.applicationName() + "_" + instanceServer);
 
     // FIXME: should be replaced by a two staged init of MainWindow

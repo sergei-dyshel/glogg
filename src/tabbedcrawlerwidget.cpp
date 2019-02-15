@@ -25,6 +25,7 @@
 #include <QInputDialog>
 
 #include "crawlerwidget.h"
+#include "externalcom.h"
 
 #include "log.h"
 
@@ -122,6 +123,17 @@ void TabbedCrawlerWidget::mouseReleaseEvent( QMouseEvent *event)
         QMenu menu(this);
         auto rename_action = menu.addAction("Rename");
         auto close_previous_action = menu.addAction("Close previous");
+        if (externalCommunicator) {
+          auto servers = externalCommunicator->otherInstanceNames();
+          if (!servers.isEmpty()) {
+            auto move_submenu = menu.addMenu("Move to...");
+            for (auto name : servers)
+              if (name != instanceServer) {
+                auto action = move_submenu->addAction(name);
+                action->setData("move");
+              }
+          }
+        }
         auto action = menu.exec(mapToGlobal(event->pos()));
         if (action == rename_action) {
             auto old_name = myTabBar_.tabText(tab);
@@ -135,6 +147,10 @@ void TabbedCrawlerWidget::mouseReleaseEvent( QMouseEvent *event)
         else if (action == close_previous_action) {
             for (int prevTab = 0; prevTab < tab; ++prevTab)
                 emit tabCloseRequested(0);
+        }
+        else if (action && action->data() == "move") {
+            auto crawler = dynamic_cast<CrawlerWidget*>(widget(tab));
+            emit openInAnotherServer(crawler, action->text());
         }
     }
 }

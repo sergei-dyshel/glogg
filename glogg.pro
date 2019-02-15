@@ -64,6 +64,7 @@ SOURCES += \
     src/log.cpp \
     src/exception.cpp \
     src/enum.cpp \
+    src/externalcom.cpp \
 
 INCLUDEPATH += src/
 
@@ -316,5 +317,5 @@ perf {
 }
 
 INCLUDEPATH += 3rdparty/yaml-cpp/include
-QMAKE_LFLAGS += -L3rdparty/build/yaml-cpp
+QMAKE_LFLAGS += -L3rdparty/build
 LIBS += -lyaml-cpp

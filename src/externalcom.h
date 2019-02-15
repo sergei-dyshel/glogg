@@ -20,7 +20,11 @@
 #ifndef EXTERNALCOM_H
 #define EXTERNALCOM_H
 
+#include <memory>
+
 #include <QObject>
+
+static const QString DEFAULT_INSTANCE_NAME = "main";
 
 class CantCreateExternalErr {};
 
@@ -52,6 +56,8 @@ class ExternalCommunicator : public QObject
 
     virtual ExternalInstance* otherInstance(const QString &name) const = 0;
 
+    virtual QStringList otherInstanceNames() const = 0;
+
     /* Instruct the communicator to start listening for
      * remote initiated operations */
     virtual void startListening(const QString &name) = 0;
@@ -62,5 +68,9 @@ class ExternalCommunicator : public QObject
   public slots:
     virtual qint32 version() const = 0;
 };
+
+extern std::shared_ptr<ExternalCommunicator> externalCommunicator;
+
+extern QString instanceServer;
 
 #endif

@@ -62,6 +62,18 @@ void DBusExternalCommunicator::startListening(const QString &name)
     }
 }
 
+QStringList DBusExternalCommunicator::otherInstanceNames() const
+{
+  auto all_services =
+      QDBusConnection::sessionBus().interface()->registeredServiceNames().value();
+  QStringList result;
+  for (auto name : all_services) {
+      if (name.startsWith(DBUS_SERVICE_NAME))
+        result.append(name.mid(DBUS_SERVICE_NAME.size() + 1));
+  }
+  return result;
+}
+
 ExternalInstance* DBusExternalCommunicator::otherInstance(const QString &name) const
 {
     try {

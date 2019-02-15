@@ -82,7 +82,7 @@ QString ConfigNode::asString() const
     try {
         return QString::fromStdString(node_.as<std::string>());
     }
-    catch (YAML::BadConversion) {
+    catch (const YAML::BadConversion&) {
         throw error(HERE) << "is not a string";
     }
 }
