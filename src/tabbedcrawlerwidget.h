@@ -25,6 +25,8 @@
 
 #include "loadingstatus.h"
 
+class CrawlerWidget;
+
 // This class represents glogg's main widget, a tabbed
 // group of CrawlerWidgets.
 // This is a very slightly customised QTabWidget, with
@@ -44,6 +46,9 @@ class TabbedCrawlerWidget : public QTabWidget
 
       // Set the data status (icon) for the tab number 'index'
       void setTabDataStatus( int index, DataStatus status );
+
+    signals:
+      void openInAnotherServer(int tab, QString server);
 
     protected:
       void keyPressEvent( QKeyEvent* event );

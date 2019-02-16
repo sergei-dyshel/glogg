@@ -132,6 +132,9 @@ MainWindow::MainWindow( std::unique_ptr<Session> session,
     connect( &mainTabWidget_, SIGNAL( currentChanged( int ) ),
             this, SLOT( currentTabChanged( int ) ) );
 
+    connect(&mainTabWidget_, &TabbedCrawlerWidget::openInAnotherServer, this,
+            &MainWindow::openInAnotherServer);
+
     // Establish the QuickFindWidget and mux ( to send requests from the
     // QFWidget to the right window )
     connect( &quickFindWidget_, SIGNAL( patternConfirmed( const QString&, bool ) ),
@@ -592,6 +595,13 @@ void MainWindow::encodingChanged( QAction* action )
     LOG(logDEBUG) << "encodingChanged, encoding " << i;
     currentCrawlerWidget()->setEncoding( static_cast<Encoding>( i ) );
     updateInfoLine();
+}
+
+void MainWindow::openInAnotherServer(int tab, QString server)
+{
+    auto crawler = dynamic_cast<CrawlerWidget *>(mainTabWidget_.widget(tab));
+    auto other = externalCommunicator->otherInstance(server);
+    other->loadFile(QString::fromStdString(session_->getFilename(crawler)));
 }
 
 void MainWindow::toggleOverviewVisibility( bool isVisible )

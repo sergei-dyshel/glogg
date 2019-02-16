@@ -43,6 +43,7 @@ void EncodingSpeculator::inject_byte( uint8_t byte )
                     state_ = State::ASCIIOnly;
                     // And carry on...
                 }
+                [[gnu::fallthrough]];
             case State::ASCIIOnly:
             case State::ValidUTF8:
                 if ( ( byte & 0xE0 ) == 0xC0 ) {
