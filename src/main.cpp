@@ -68,7 +68,7 @@ int main(int argc, char *argv[])
     bool load_session = false;
     bool multi_instance = false;
     QString logFile;
-    QString instanceServer = "";
+    QString serverName;
 
     TLogLevel logLevel = logWARNING;
 
@@ -141,9 +141,16 @@ int main(int argc, char *argv[])
             if ( vm.count( s ) )
                 logLevel = (TLogLevel) (logWARNING + s.length());
 
-        if (vm.count("server"))
-            instanceServer
+        if (vm.count("server")) {
+            serverName
                 = QString::fromStdString(vm["server"].as<std::string>());
+            if (!QRegExp("[a-zA-Z_]\\S*").exactMatch(serverName)) {
+                cerr << "Server name must consist of alphanumeric and not "
+                        "begin with a digit: "
+                     << serverName.toStdString();
+                return 1;
+            }
+        }
 
         if ( vm.count("input-file") ) {
             filenames = vm["input-file"].as<vector<string>>();
@@ -168,15 +175,11 @@ int main(int argc, char *argv[])
         }
     }
 
-    // External communicator
-    shared_ptr<ExternalCommunicator> externalCommunicator = nullptr;
-    shared_ptr<ExternalInstance> externalInstance = nullptr;
+
 
     try {
 #ifdef GLOGG_SUPPORTS_DBUS
         externalCommunicator = make_shared<DBusExternalCommunicator>();
-        externalInstance = shared_ptr<ExternalInstance>(
-                externalCommunicator->otherInstance(instanceServer) );
 #elif GLOGG_SUPPORTS_SOCKETIPC
         externalCommunicator = make_shared<SocketExternalCommunicator>();
         auto ptr = externalCommunicator->otherInstance();
@@ -187,24 +190,40 @@ int main(int argc, char *argv[])
         LOG(logWARNING) << "Cannot initialise external communication.";
     }
 
-    LOG(logDEBUG) << "externalInstance = " << externalInstance;
-    if ( ( ! multi_instance ) && externalInstance ) {
-        uint32_t version = externalInstance->getVersion();
-        LOG(logINFO) << "Found another glogg (version = "
-             << version << ")";
-
-        for ( const auto& filename: filenames ) {
-            externalInstance->loadFile( QString::fromStdString( filename ) );
+    if (externalCommunicator) {
+        QStringList allServers = externalCommunicator->allServerNames();
+        for (auto name : allServers)
+               INFO << "Found another server: " << name; // TODO: add version
+        QString existingServer;
+        if (!serverName.isEmpty()) {
+            if (allServers.contains(serverName))
+                existingServer = serverName;
+        } else if (! multi_instance && !allServers.isEmpty()) {
+            if (allServers.contains(ExternalCommunicator::DEFAULT_SERVER_NAME))
+                existingServer = ExternalCommunicator::DEFAULT_SERVER_NAME;
+            else
+                existingServer = allServers[0];
         }
 
-        return 0;
-    }
-    else {
-        // FIXME: there is a race condition here. One glogg could start
-        // between the declaration of externalInstance and here,
-        // is it a problem?
-        if ( externalCommunicator )
-            externalCommunicator->startListening(instanceServer);
+        if (!existingServer.isEmpty()) {
+            shared_ptr<ExternalInstance> externalInstance(
+                externalCommunicator->otherInstance(existingServer));
+            LOG(logDEBUG) << "externalInstance = " << externalInstance
+                          << ", version = " << externalInstance->getVersion();
+            for ( const auto& filename: filenames ) {
+                externalInstance->loadFile( QString::fromStdString( filename ) );
+            }
+            return 0;
+        }
+        else {
+            // FIXME: there is a race condition here. One glogg could start
+            // between the declaration of externalInstance and here,
+            // is it a problem?
+            externalCommunicator->startServer(serverName);
+            if (!externalCommunicator->isDefaultServer())
+                app.setApplicationName(app.applicationName() + "."
+                                    + externalCommunicator->serverName());
+        }
     }
 
     // Register types for Qt
@@ -238,9 +257,6 @@ int main(int argc, char *argv[])
 
     // No icon in menus
     app.setAttribute( Qt::AA_DontShowIconsInMenus );
-
-    if (!instanceServer.isEmpty())
-        app.setApplicationName(app.applicationName() + "_" + instanceServer);
 
     // FIXME: should be replaced by a two staged init of MainWindow
     GetPersistentInfo().retrieve( QString( "settings" ) );

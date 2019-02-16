@@ -72,6 +72,7 @@ void Log::configure(TLogLevel level, const QString &fileName)
     } else {
         file_.open(stderr, QIODevice::WriteOnly);
     }
+    isConfigured_ = true;
 }
 
 Log::~Log()

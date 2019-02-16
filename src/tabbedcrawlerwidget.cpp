@@ -23,8 +23,11 @@
 #include <QLabel>
 #include <QMenu>
 #include <QInputDialog>
+#include <QWidgetAction>
+#include <QLabel>
 
 #include "crawlerwidget.h"
+#include "externalcom.h"
 
 #include "log.h"
 
@@ -121,6 +124,36 @@ void TabbedCrawlerWidget::mouseReleaseEvent( QMouseEvent *event)
         QMenu menu(this);
         auto rename_action = menu.addAction("Rename");
         auto close_previous_action = menu.addAction("Close previous");
+        if (externalCommunicator) {
+            auto servers = externalCommunicator->otherServerNames();
+            if (!servers.isEmpty()) {
+                auto copy_submenu = menu.addMenu("Copy to...");
+                auto move_submenu = menu.addMenu("Move to...");
+                for (auto name : servers) {
+                    auto copy_action = copy_submenu->addAction(name);
+                    connect(copy_action, &QAction::triggered,
+                            [=]() { emit openInAnotherServer(tab, name); });
+                    auto move_action = move_submenu->addAction(name);
+                    connect(move_action, &QAction::triggered, [=]() {
+                        emit openInAnotherServer(tab, name);
+                        emit tabCloseRequested(tab);
+                    });
+                }
+            }
+        }
+        auto color_submenu = menu.addMenu("Change color...");
+        QStringList colors = {"red", "blue"};
+        for (auto color : colors) {
+            QWidgetAction *widgetAction= new QWidgetAction(color_submenu);
+            QLabel* label
+                = new QLabel(QString("your text here"), color_submenu);
+            label->setStyleSheet(QString("color: ") + color);
+            widgetAction->setDefaultWidget(label);
+            widgetAction->setFont(menu.font());
+            color_submenu->addAction(widgetAction);
+            connect(widgetAction, &QWidgetAction::triggered,
+                    [=]() { myTabBar_.setTabTextColor(tab, color); });
+        }
         auto action = menu.exec(mapToGlobal(event->pos()));
         if (action == rename_action) {
             auto old_name = myTabBar_.tabText(tab);
