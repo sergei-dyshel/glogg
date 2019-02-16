@@ -87,6 +87,7 @@ class MainWindow : public QMainWindow
     void about();
     void aboutQt();
     void encodingChanged( QAction* action );
+    void openInAnotherServer(int tab, QString server);
 
     // Change the view settings
     void toggleOverviewVisibility( bool isVisible );
