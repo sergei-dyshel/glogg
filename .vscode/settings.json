@@ -1,0 +1,14 @@
+{
+    "clang-format.language.c.style": "file",
+    "clang-format.language.cpp.style": "file",
+    "dash.languageIdToDocsetMap.cpp": "qt5",
+    "ccls.index.blacklist": ["yaml-cpp/.*\\.cpp"],
+    "yaml.schemas": {
+        "./colors.schema.json": "*.glogg-colors.yaml",
+        "./syntax.schema.json": "*.glogg-syntax.yaml"
+    },
+    "files.associations": {
+        "tasks.json": "jsonc",
+        "*.json": "json"
+    }
+}
