@@ -128,6 +128,7 @@ LineNumber lookupLineNumber( Iterator begin, Iterator end, LineNumber lineNum )
     return lineIndex;
 }
 
+#define HAVE_MAKE_UNIQUE
 #ifndef HAVE_MAKE_UNIQUE
 #include <memory>
 
