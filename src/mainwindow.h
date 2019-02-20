@@ -34,6 +34,8 @@
 #include "versionchecker.h"
 #endif
 #include "utils.h"
+#include "struct_config.h"
+#include "color_scheme.h"
 
 class QAction;
 class QActionGroup;
@@ -154,6 +156,7 @@ class MainWindow : public QMainWindow
     void displayQuickFindBar( QuickFindMux::QFDirection direction );
     void updateMenuBarFromDocument( const CrawlerWidget* crawler );
     void updateInfoLine();
+    void reloadStructConfig();
 
     std::unique_ptr<Session> session_;
     std::shared_ptr<ExternalCommunicator> externalCommunicator_;
@@ -176,6 +179,7 @@ class MainWindow : public QMainWindow
     QMenu *editMenu;
     QMenu *viewMenu;
     QMenu *toolsMenu;
+    QMenu *configMenu;
     QMenu *encodingMenu;
     QMenu *helpMenu;
 
@@ -202,6 +206,8 @@ class MainWindow : public QMainWindow
     QAction *aboutQtAction;
     QActionGroup *encodingGroup;
     QAction *encodingAction[static_cast<int>( Encoding::ENCODING_MAX )];
+
+    QAction *configReloadAction;
 
     QIcon mainIcon_;
 

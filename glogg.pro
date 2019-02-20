@@ -56,6 +56,14 @@ SOURCES += \
     src/encodingspeculator.cpp \
     src/gloggapp.cpp \
     src/regexp_filter.cpp \
+    src/color_scheme.cpp \
+    src/colorizer.cpp \
+    src/config_node.cpp \
+    src/struct_config.cpp \
+    src/syntax.cpp \
+    src/log.cpp \
+    src/exception.cpp \
+    src/enum.cpp \
 
 INCLUDEPATH += src/
 
@@ -105,6 +113,15 @@ HEADERS += \
     src/encodingspeculator.h \
     src/gloggapp.h \
     src/regexp_filter.h \
+    src/range.h \
+    src/color_scheme.h \
+    src/colorizer.h \
+    src/config_node.h \
+    src/struct_config.h \
+    src/syntax.h \
+    src/fwd.h \
+    src/qt_std_interop.h \
+    src/enum.h \
 
 isEmpty(BOOST_PATH) {
     message(Building using system dynamic Boost libraries)

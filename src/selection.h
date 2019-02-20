@@ -24,6 +24,7 @@
 #include <QString>
 
 #include "utils.h"
+#include "range.h"
 
 class AbstractLogData;
 
@@ -81,6 +82,8 @@ class Selection
 
     // Returns whether the selection is a single line
     bool isSingleLine() const { return ( selectedLine_ != -1 ); }
+
+    Range wholeLineRange() const;
 
     // Returns whether the selection is a portion of line
     bool isPortion() const { return ( selectedPartial_.line != -1 ); }
