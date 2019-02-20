@@ -20,8 +20,6 @@
 #ifndef WATCHTOWER_H
 #define WATCHTOWER_H
 
-#include "config.h"
-
 #include <memory>
 #include <atomic>
 #include <thread>
@@ -321,7 +319,7 @@ void WatchTower<Driver>::run()
 namespace {
     bool isSymLink( const std::string& file_name )
     {
-#ifdef HAVE_SYMLINK
+#ifndef _WIN32
         struct stat buf;
 
         lstat( file_name.c_str(), &buf );

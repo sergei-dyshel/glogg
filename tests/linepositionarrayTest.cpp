@@ -1,7 +1,5 @@
 #include "gmock/gmock.h"
 
-#include "config.h"
-
 #include "log.h"
 
 #include "data/linepositionarray.h"
