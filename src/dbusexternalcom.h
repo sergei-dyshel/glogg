@@ -29,7 +29,7 @@
 // An implementation of ExternalInstance using D-Bus via Qt
 class DBusExternalInstance : public ExternalInstance {
   public:
-    DBusExternalInstance();
+    DBusExternalInstance(const QString &name);
     ~DBusExternalInstance() {}
 
     virtual void loadFile( const QString& file_name ) const;
@@ -66,9 +66,9 @@ class DBusExternalCommunicator : public ExternalCommunicator
     DBusExternalCommunicator();
     ~DBusExternalCommunicator() {}
 
-    virtual void startListening();
+    virtual void startListening(const QString &name);
 
-    virtual ExternalInstance* otherInstance() const;
+    virtual ExternalInstance* otherInstance(const QString &name) const;
 
   public slots:
     qint32 version() const;
