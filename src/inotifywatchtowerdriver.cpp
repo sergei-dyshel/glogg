@@ -204,7 +204,7 @@ size_t INotifyWatchTowerDriver::processINotifyEvent(
 
     if ( file )
     {
-        LOG(logDEBUG) << "Adding file: " << std::hex << file;
+        LOG(logDEBUG) << "Adding file: " << hex << file;
         files_to_notify->push_back( file );
     }
 

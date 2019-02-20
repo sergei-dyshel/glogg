@@ -18,6 +18,7 @@
  */
 
 #include <QFileInfo>
+#include <QTextStream>
 
 #include <memory>
 
@@ -66,9 +67,7 @@ int main(int argc, char *argv[])
     bool new_session = false;
     bool load_session = false;
     bool multi_instance = false;
-#ifdef _WIN32
-    bool log_to_file = false;
-#endif
+    QString logFile;
 
     TLogLevel logLevel = logWARNING;
 
@@ -80,9 +79,7 @@ int main(int argc, char *argv[])
             ("multi,m", "allow multiple instance of glogg to run simultaneously (use together with -s)")
             ("load-session,s", "load the previous session (default when no file is passed)")
             ("new-session,n", "do not load the previous session (default when a file is passed)")
-#ifdef _WIN32
-            ("log,l", "save the log to a file (Windows only)")
-#endif
+            ("log,l", po::value<std::string>(), "Filename to redirect log to")
             ("debug,d", "output more debug (include multiple times for more verbosity e.g. -dddd)")
             ;
         po::options_description desc_hidden("Hidden options");
@@ -135,10 +132,8 @@ int main(int argc, char *argv[])
         if ( vm.count( "load-session" ) )
             load_session = true;
 
-#ifdef _WIN32
         if ( vm.count( "log" ) )
-            log_to_file = true;
-#endif
+            logFile = QString::fromStdString(vm["log"].as<std::string>());
 
         for ( string s = "dd"; s.length() <= 10; s.append("d") )
             if ( vm.count( s ) )
@@ -156,17 +151,7 @@ int main(int argc, char *argv[])
         cerr << "Exception of unknown type!\n";
     }
 
-#ifdef _WIN32
-    if ( log_to_file )
-    {
-        char file_name[255];
-        snprintf( file_name, sizeof file_name, "glogg_%d.log", getpid() );
-        FILE* file = fopen(file_name, "w");
-        Output2FILE::Stream() = file;
-    }
-#endif
-
-    FILELog::setReportingLevel( logLevel );
+    Log::configure(logLevel, logFile);
 
     for ( auto& filename: filenames ) {
         if ( ! filename.empty() ) {

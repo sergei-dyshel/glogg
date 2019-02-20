@@ -20,181 +20,179 @@
 #ifndef __LOG_H__
 #define __LOG_H__
 
+#include <cstdio>
+#include <exception>
+#include <memory>
 #include <sstream>
 #include <string>
-#include <cstdio>
+#include <unordered_map>
+#include <set>
 
-// Modify here!
-//#define FILELOG_MAX_LEVEL logDEBUG
+#include <QDebug>
+#include <QFile>
+#include <QDebugStateSaver>
+#include <QMessageLogContext>
+#include <QMutex>
 
-inline std::string NowTime();
+enum TLogLevel {logNoLevel, logERROR, logWARNING, logINFO, logDEBUG, logTRACE};
 
-enum TLogLevel {logERROR, logWARNING, logINFO, logDEBUG, logDEBUG1, logDEBUG2, logDEBUG3, logDEBUG4};
+#define LOG(level) (Log(LOG_HERE(level), true))
 
-template <typename T>
-class Log
-{
-public:
-    Log();
-    virtual ~Log();
-    std::ostringstream& Get(TLogLevel level = logINFO,
-            const std::string& sourceFile = "", int lineNumber = 0);
-public:
-    static TLogLevel ReportingLevel() { return reportingLevel; }
-    static std::string ToString(TLogLevel level);
-    static TLogLevel FromString(const std::string& level);
-    static void setReportingLevel(TLogLevel level) { reportingLevel = level; }
+#define HERE (LogContext(__FILE__, __LINE__, __PRETTY_FUNCTION__))
+#define LOG_HERE(level)                                                        \
+    LogContext(__FILE__, __LINE__, __PRETTY_FUNCTION__, level)
 
-    template <typename U> friend class Log;
+#define NEW_LOG(level) (Log(LOG_HERE(level)))
 
-protected:
-    std::ostringstream os;
-private:
-    static TLogLevel reportingLevel;
-
-    Log(const Log&);
-    Log& operator =(const Log&);
-};
-
-template <typename T> TLogLevel Log<T>::reportingLevel = logDEBUG4;
-
-template <typename T>
-Log<T>::Log()
-{
-}
-
-template <typename T>
-std::ostringstream& Log<T>::Get(TLogLevel level,
-        const std::string& sourceFile, int lineNumber)
-{
-    os << "- " << NowTime();
-    os << " " << ToString(level);
-    os << " " << sourceFile << ":" << lineNumber << ": ";
-    os << std::string(level > logDEBUG ? level - logDEBUG : 0, '\t');
-    return os;
-}
-
-template <typename T>
-Log<T>::~Log()
-{
-    os << std::endl;
-    T::Output(os.str());
-}
-
-template <typename T>
-std::string Log<T>::ToString(TLogLevel level)
-{
-    static const char* const buffer[] = {"ERROR", "WARNING", "INFO", "DEBUG", "DEBUG1", "DEBUG2", "DEBUG3", "DEBUG4"};
-    return buffer[level];
-}
-
-template <typename T>
-TLogLevel Log<T>::FromString(const std::string& level)
-{
-    if (level == "DEBUG4")
-        return logDEBUG4;
-    if (level == "DEBUG3")
-        return logDEBUG3;
-    if (level == "DEBUG2")
-        return logDEBUG2;
-    if (level == "DEBUG1")
-        return logDEBUG1;
-    if (level == "DEBUG")
-        return logDEBUG;
-    if (level == "INFO")
-        return logINFO;
-    if (level == "WARNING")
-        return logWARNING;
-    if (level == "ERROR")
-        return logERROR;
-    Log<T>().Get(logWARNING) << "Unknown logging level '" << level << "'. Using INFO level as default.";
-    return logINFO;
-}
-
-class Output2FILE
-{
-public:
-    static FILE*& Stream();
-    static void Output(const std::string& msg);
-};
-
-inline FILE*& Output2FILE::Stream()
-{
-    static FILE* pStream = stderr;
-    return pStream;
-}
-
-inline void Output2FILE::Output(const std::string& msg)
-{
-    FILE* pStream = Stream();
-    if (!pStream)
-        return;
-    fprintf(pStream, "%s", msg.c_str());
-    fflush(pStream);
-}
-
-#if defined(WIN32) || defined(_WIN32) || defined(__WIN32__)
-#   if defined (BUILDING_FILELOG_DLL)
-#       define FILELOG_DECLSPEC   __declspec (dllexport)
-#   elif defined (USING_FILELOG_DLL)
-#       define FILELOG_DECLSPEC   __declspec (dllimport)
-#   else
-#       define FILELOG_DECLSPEC
-#   endif // BUILDING_DBSIMPLE_DLL
+#ifdef ENABLE_TRACE
+#define TRACE NEW_LOG(logTRACE)
 #else
-#   define FILELOG_DECLSPEC
-#endif // _WIN32
-
-//class FILELOG_DECLSPEC FILELog : public Log<Output2FILE> {};
-typedef Log<Output2FILE> FILELog;
-
-#ifndef FILELOG_MAX_LEVEL
-#define FILELOG_MAX_LEVEL logDEBUG
+#define TRACE NoLog()
 #endif
 
-#define FILE_LOG(level) \
-    if (level > FILELOG_MAX_LEVEL) ;\
-    else if (level > FILELog::ReportingLevel() || !Output2FILE::Stream()) ; \
-    else FILELog().Get(level, __FILE__, __LINE__)
+#define DEBUG NEW_LOG(logDEBUG)
+#define INFO NEW_LOG(logINFO)
+#define WARN NEW_LOG(logWARNING)
+#define ERROR NEW_LOG(logERROR)
 
-#define LOG(level) FILE_LOG(level)
+#define QDEBUG_DEFINE_OPERATOR(type, expr)                                     \
+    inline QDebug operator<<(QDebug debug, const type &val)                    \
+    {                                                                          \
+        return debug << expr;                                                  \
+    }
 
-#if defined(WIN32) || defined(_WIN32) || defined(__WIN32__)
+#define QDEBUG_DEFINE_OPERATOR_STREAMED(type)                                  \
+    inline QDebug &operator<<(QDebug &debug, const type &val)                  \
+    {                                                                          \
+        std::stringstream ss;                                                  \
+        ss << val;                                                             \
+        return debug << QString::fromStdString(ss.str());                      \
+    }
 
-#include <windows.h>
+#define QDEBUG_DEFINE_OPERATOR_LIST_CONTAINER(type)                            \
+    template <typename T> QDebug &operator<<(QDebug &debug, type<T> list)      \
+    {                                                                          \
+        QDEBUG_COMPAT(debug);                                                  \
+        debug.quote();                                                         \
+        debug << "[";                                                          \
+        unsigned numElems = 0;                                                 \
+        for (const auto &elem : list) {                                        \
+            debug << elem;                                                     \
+            if (++numElems < list.size())                                      \
+                debug << ", ";                                                 \
+        }                                                                      \
+        return debug << "]";                                                   \
+    }
 
-inline std::string NowTime()
+#define QDEBUG_DEFINE_OPERATOR_MAP_CONTAINER(type)                             \
+    template <typename K, typename V>                                          \
+    QDebug &operator<<(QDebug &debug, type<K, V> map)                          \
+    {                                                                          \
+        QDEBUG_COMPAT(debug);                                                  \
+        debug.quote();                                                         \
+        debug << "{";                                                          \
+        unsigned numElems = 0;                                                 \
+        for (const auto &elem : map) {                                         \
+            debug << elem.first << ": " << elem.second;                        \
+            if (++numElems < map.size())                                       \
+                debug << ", ";                                                 \
+        }                                                                      \
+        return debug << "}";                                                   \
+    }
+
+class LogContext final {
+  public:
+    LogContext(const char *file, unsigned line, const char *func,
+               TLogLevel level = logNoLevel);
+    const QMessageLogContext &qtContext() const { return qtContext_; }
+    LogContext(const LogContext &other);
+
+    TLogLevel level;
+  private:
+    static std::string fileName(const char *file);
+    static const char *levelNames_[];
+
+    std::string file_;
+    unsigned line_;
+    std::string func_;
+
+    QMessageLogContext qtContext_;
+};
+
+#define QDEBUG_COMPAT(debug)                                                   \
+    QDebugStateSaver save(debug);                                              \
+    debug.nospace().noquote()
+
+enum QDebugManip {
+    NOQUOTE,
+    NOSPACE,
+    QUOTE,
+    SPACE,
+};
+
+class LogStream {
+  public:
+    QDebug d;
+
+    LogStream(const LogContext &context);
+    LogStream &compat();
+    QString fullMessage() const;
+
+    const QString &message() const { return str_; }
+
+    template <typename T> LogStream &operator<<(const T &val);
+
+  protected:
+    LogContext context_;
+
+  private:
+    static bool isPatternSet_;
+    static const char *QT_PATTERN;
+
+    QString str_;
+};
+
+class Log final : public LogStream {
+  public:
+    Log(const LogContext &context, bool oldCompat = false);
+    ~Log();
+
+    static void configure(TLogLevel level, const QString &fileName = QString());
+
+  private:
+    static TLogLevel level_;
+    static QFile file_;
+    static std::unique_ptr<QTextStream> stream_;
+    static QMutex mutex_;
+    static bool isConfigured_;
+};
+
+struct NoLog final {
+    template <typename T> const NoLog &operator<<(const T &) const
+    {
+        return *this;
+    }
+};
+
+QString ellipsize(const QString &str, int len = 30);
+
+// Implementation
+
+template <typename T> LogStream &LogStream::operator<<(const T &val)
 {
-    const int MAX_LEN = 200;
-    char buffer[MAX_LEN];
-    if (GetTimeFormatA(LOCALE_USER_DEFAULT, 0, 0, 
-            "HH':'mm':'ss", buffer, MAX_LEN) == 0)
-        return "Error in NowTime()";
-
-    char result[100] = {0};
-    static DWORD first = GetTickCount();
-    std::sprintf(result, "%s.%03ld", buffer, (long)(GetTickCount() - first) % 1000); 
-    return result;
+    d = d << val;
+    return *this;
 }
 
-#else
+QDEBUG_DEFINE_OPERATOR(std::string, QString::fromStdString(val))
 
-#include <sys/time.h>
+template <typename T>
+QDEBUG_DEFINE_OPERATOR_STREAMED(std::shared_ptr<T>)
 
-inline std::string NowTime()
-{
-    char buffer[11];
-    time_t t;
-    time(&t);
-    tm r;
-    strftime(buffer, sizeof(buffer), "%T", localtime_r(&t, &r));
-    struct timeval tv;
-    gettimeofday(&tv, 0);
-    char result[100] = {0};
-    std::sprintf(result, "%s.%03ld", buffer, (long)tv.tv_usec / 1000); 
-    return result;
-}
+QDEBUG_DEFINE_OPERATOR_LIST_CONTAINER(std::list)
+QDEBUG_DEFINE_OPERATOR_LIST_CONTAINER(std::set)
+QDEBUG_DEFINE_OPERATOR_MAP_CONTAINER(std::unordered_map)
 
-#endif //WIN32
+QDebug &operator<<(QDebug &debug, QDebugManip manip);
 
 #endif //__LOG_H__
