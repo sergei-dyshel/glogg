@@ -1,15 +1,19 @@
 # Standard Qt style
 BasedOnStyle: llvm
-AccessModifierOffset: -4
-BreakBeforeBinaryOperators: true
+# AccessModifierOffset: -4
 ColumnLimit: 80
 Standard: Cpp11
 IndentWidth: 4
-BreakBeforeBraces: Linux
+# BreakBeforeBraces: Linux
+
+# Qt-specific (https://wiki.qt.io/Qt_Coding_Style)
+SpaceAfterCStyleCast: false
+AllowShortIfStatementsOnASingleLine: false
+BreakBeforeBinaryOperators: All
 
 # Glogg-specific options
-SpacesInParentheses: true
-SpacesInSquareBrackets: true
+# SpacesInParentheses: true
+# SpacesInSquareBrackets: true
 DerivePointerAlignment: true
 AccessModifierOffset: -2
 
@@ -17,3 +21,13 @@ BreakBeforeBraces: Custom
 BraceWrapping:
     BeforeElse: true
     AfterFunction: true
+    SplitEmptyFunction: false
+
+IncludeBlocks: Regroup
+IncludeCategories:
+  - Regex:           '^<Q.*>'
+    Priority:        3
+  - Regex:           '^<.*'
+    Priority:        2
+  - Regex:           '.*'
+    Priority:        1
