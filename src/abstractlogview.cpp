@@ -54,7 +54,7 @@
 
 namespace {
 int mapPullToFollowLength( int length );
-};
+}
 
 namespace {
 
@@ -1729,4 +1729,4 @@ int mapPullToFollowLength( int length )
     return length / 14;
 }
 
-};
+}

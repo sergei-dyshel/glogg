@@ -93,7 +93,7 @@ void Selection::crop( int last_line )
 
     if ( selectedRange_.startLine > last_line )
         selectedRange_.startLine = last_line;
-};
+}
 
 bool Selection::getPortionForLine( int line, int* start_column, int* end_column ) const
 {
