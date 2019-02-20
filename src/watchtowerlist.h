@@ -206,7 +206,7 @@ class ObservedFileList {
 
 namespace {
     std::string directory_path( const std::string& path );
-};
+}
 
 // ObservedFileList class
 template <typename Driver>
@@ -424,5 +424,5 @@ namespace {
 
         return std::string( path, 0, slash_pos );
     }
-};
+}
 #endif
