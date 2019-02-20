@@ -22,7 +22,7 @@ class PerfLogFilteredData : public testing::Test {
     PerfLogFilteredData()
         : log_data_(), filtered_data_( log_data_.getNewFilteredData() ),
           progressSpy( filtered_data_.get(), SIGNAL( searchProgressed( int, int ) ) ) {
-        FILELog::setReportingLevel( logERROR );
+        Log::configure( logERROR );
 
         generateDataFiles();
 
@@ -70,7 +70,7 @@ class PerfLogFilteredData : public testing::Test {
 TEST_F( PerfLogFilteredData, allMatchingSearch ) {
     {
         TestTimer t;
-        filtered_data_->runSearch( QRegularExpression( "glogg.*this" ) );
+        filtered_data_->runSearch( RegExpFilter( "glogg.*this" ) );
         search();
     }
     ASSERT_THAT( filtered_data_->getNbLine(), VBL_NB_LINES );

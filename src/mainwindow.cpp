@@ -790,7 +790,7 @@ void MainWindow::dropEvent( QDropEvent* event )
 
 void MainWindow::keyPressEvent( QKeyEvent* keyEvent )
 {
-    LOG(logDEBUG4) << "keyPressEvent received";
+    TRACE << "keyPressEvent received";
 
     if ( keyEvent->key() == Qt::Key_Escape && !quickFindWidget_.isHidden() ) {
         quickFindWidget_.closeHandler();

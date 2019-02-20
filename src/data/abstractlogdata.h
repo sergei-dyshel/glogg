@@ -86,7 +86,7 @@ class AbstractLogData : public QObject {
         for ( int j = 0; j < line.length(); j++ ) {
             if ( line[j] == '\t' ) {
                 int spaces = tabStop - ( ( j + total_spaces ) % tabStop );
-                // LOG(logDEBUG4) << "Replacing tab at char " << j << " (" << spaces << " spaces)";
+                // TRACE << "Replacing tab at char " << j << " (" << spaces << " spaces)";
                 QString blanks( spaces, QChar(' ') );
                 untabified_line.append( blanks );
                 total_spaces += spaces - 1;
@@ -109,7 +109,7 @@ class AbstractLogData : public QObject {
         for ( const char* i = line; *i != '\0'; i++ ) {
             if ( *i == '\t' ) {
                 int spaces = tabStop - ( ( (i - line) + total_spaces ) % tabStop );
-                // LOG(logDEBUG4) << "Replacing tab at char " << j << " (" << spaces << " spaces)";
+                // TRACE << "Replacing tab at char " << j << " (" << spaces << " spaces)";
                 QString blanks( spaces, QChar(' ') );
                 untabified_line.append( blanks );
                 total_spaces += spaces - 1;
