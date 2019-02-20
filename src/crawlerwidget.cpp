@@ -1079,6 +1079,8 @@ void CrawlerWidget::updateEncoding()
                     encoding = Encoding::ENCODING_UTF16BE;
                     encoding_text_ = tr( "UTF-16BE" );
                     break;
+                default:
+                    break;
             }
             break;
         case Encoding::ENCODING_UTF8:

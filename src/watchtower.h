@@ -107,7 +107,7 @@ class WatchTower {
 namespace {
     bool isSymLink( const std::string& file_name );
     std::string directory_path( const std::string& path );
-};
+}
 
 template <typename Driver>
 WatchTower<Driver>::WatchTower()
@@ -330,6 +330,6 @@ namespace {
         return false;
 #endif
     }
-};
+}
 
 #endif

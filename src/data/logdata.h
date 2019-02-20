@@ -194,6 +194,6 @@ class LogData : public AbstractLogData {
     LogDataWorkerThread workerThread_;
 };
 
-Q_DECLARE_METATYPE( LogData::MonitoredFileStatus );
+Q_DECLARE_METATYPE( LogData::MonitoredFileStatus )
 
 #endif
