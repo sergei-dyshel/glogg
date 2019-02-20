@@ -244,6 +244,8 @@ class AbstractLogView :
 
     void gotFocus();
 
+    void markLines(const Range& range, bool addMark);
+
   public slots:
     // Makes the widget select and display the passed line.
     // Scrolling as necessary
@@ -358,6 +360,8 @@ class AbstractLogView :
     QAction* findNextAction_;
     QAction* findPreviousAction_;
     QAction* addToSearchAction_;
+    QAction* addMarkAction_;
+    QAction* removeMarkAction_;
 
     // Pointer to the CrawlerWidget's QFP object
     const QuickFindPattern* const quickFindPattern_;

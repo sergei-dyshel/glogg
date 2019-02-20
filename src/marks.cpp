@@ -79,6 +79,7 @@ void Marks::deleteMark( qint64 line )
     if ( lookupLineNumber< QList<Mark> >( marks_, line, &index ) )
     {
         marks_.removeAt( index );
+        DEBUG << "Removed mark at line" << line;
     }
 }
 
