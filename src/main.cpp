@@ -68,6 +68,7 @@ int main(int argc, char *argv[])
     bool load_session = false;
     bool multi_instance = false;
     QString logFile;
+    QString instanceServer = "";
 
     TLogLevel logLevel = logWARNING;
 
@@ -78,6 +79,7 @@ int main(int argc, char *argv[])
             ("version,v", "print glogg's version information")
             ("multi,m", "allow multiple instance of glogg to run simultaneously (use together with -s)")
             ("load-session,s", "load the previous session (default when no file is passed)")
+            ("server", po::value<std::string>(), "instance server name")
             ("new-session,n", "do not load the previous session (default when a file is passed)")
             ("log,l", po::value<std::string>(), "Filename to redirect log to")
             ("debug,d", "output more debug (include multiple times for more verbosity e.g. -dddd)")
@@ -139,6 +141,10 @@ int main(int argc, char *argv[])
             if ( vm.count( s ) )
                 logLevel = (TLogLevel) (logWARNING + s.length());
 
+        if (vm.count("server"))
+            instanceServer
+                = QString::fromStdString(vm["server"].as<std::string>());
+
         if ( vm.count("input-file") ) {
             filenames = vm["input-file"].as<vector<string>>();
         }
@@ -170,7 +176,7 @@ int main(int argc, char *argv[])
 #ifdef GLOGG_SUPPORTS_DBUS
         externalCommunicator = make_shared<DBusExternalCommunicator>();
         externalInstance = shared_ptr<ExternalInstance>(
-                externalCommunicator->otherInstance() );
+                externalCommunicator->otherInstance(instanceServer) );
 #elif GLOGG_SUPPORTS_SOCKETIPC
         externalCommunicator = make_shared<SocketExternalCommunicator>();
         auto ptr = externalCommunicator->otherInstance();
@@ -185,7 +191,7 @@ int main(int argc, char *argv[])
     if ( ( ! multi_instance ) && externalInstance ) {
         uint32_t version = externalInstance->getVersion();
         LOG(logINFO) << "Found another glogg (version = "
-            << std::setbase(16) << version << ")";
+             << version << ")";
 
         for ( const auto& filename: filenames ) {
             externalInstance->loadFile( QString::fromStdString( filename ) );
@@ -198,7 +204,7 @@ int main(int argc, char *argv[])
         // between the declaration of externalInstance and here,
         // is it a problem?
         if ( externalCommunicator )
-            externalCommunicator->startListening();
+            externalCommunicator->startListening(instanceServer);
     }
 
     // Register types for Qt
@@ -232,6 +238,9 @@ int main(int argc, char *argv[])
 
     // No icon in menus
     app.setAttribute( Qt::AA_DontShowIconsInMenus );
+
+    if (!instanceServer.isEmpty())
+        app.setApplicationName(app.applicationName() + "_" + instanceServer);
 
     // FIXME: should be replaced by a two staged init of MainWindow
     GetPersistentInfo().retrieve( QString( "settings" ) );
