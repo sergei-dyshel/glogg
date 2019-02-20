@@ -172,7 +172,11 @@ QString ellipsize(const QString &str, int len = 30);
 
 template <typename T> LogStream &LogStream::operator<<(const T &val)
 {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Waddress"
+#pragma GCC diagnostic ignored "-Wnonnull-compare"
     d = d << val;
+#pragma GCC diagnostic pop
     return *this;
 }
 

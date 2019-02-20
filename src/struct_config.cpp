@@ -67,7 +67,7 @@ void StructConfig::load() {
         if (!yamlRoot.IsMap()) {
             LOG(logERROR) << "Root node type is not mapping";
         }
-    } catch (YAML::ParserException) {
+    } catch (const YAML::ParserException &) {
         LOG(logERROR) << "Error parsing " << path;
     }
 
