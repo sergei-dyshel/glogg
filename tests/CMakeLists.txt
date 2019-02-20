@@ -64,17 +64,29 @@ check_symbol_exists( symlink "unistd.h" HAVE_SYMLINK )
 
 # Libs
 
-set(LIBS gmock gtest)
+set(LIBS gmock gtest yaml-cpp)
 
 # Setup testing
 enable_testing()
 include_directories(
-    $ENV{GMOCK_HOME}/include
-    $ENV{GMOCK_HOME}/gtest/include
+    $ENV{GMOCK_HOME}/googletest/include
+    $ENV{GMOCK_HOME}/googlemock/include
     $ENV{BOOST_ROOT}/
     ../src/
 )
-link_directories($ENV{GMOCK_HOME}/mybuild $ENV{GMOCK_HOME}/mybuild/gtest)
+link_directories(
+    $ENV{GMOCK_HOME}/build/googlemock/gtest
+    $ENV{GMOCK_HOME}/build/googlemock
+)
+
+include_directories(
+    ../3rdparty/yaml-cpp/include
+)
+
+link_directories(
+    ../3rdparty/build/yaml-cpp
+)
+add_subdirectory(googletest)
 
 # Sources
 set(glogg_SOURCES
@@ -116,6 +128,19 @@ set(glogg_SOURCES
     ../src/encodingspeculator.cpp
     ../src/platformfilewatcher.cpp
     ../src/filewatcher.cpp
+    ../src/regexp_filter.cpp
+    ../src/exception.cpp
+    ../src/log.cpp
+)
+
+set(glogg_syntax_SRC
+    ../src/colorizer.cpp
+    ../src/struct_config.cpp
+    ../src/color_scheme.cpp
+    ../src/config_node.cpp
+    ../src/syntax.cpp
+    ../src/exception.cpp
+    ../src/log.cpp
 )
 
 set(glogg_HEADERS
@@ -132,6 +157,12 @@ set(glogg_UTESTS
     encodingspeculatorTest.cpp
 )
 
+set(glogg_syntax_TESTS
+    colorizer_test.cpp
+    syntax_test.cpp
+)
+
+set(glogg_)
 # Integration tests
 set(glogg_ITESTS
     logdataTest.cpp
@@ -160,7 +191,7 @@ elseif (APPLE)
 endif (WIN32)
 
 # Compiler flags
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${PARANOID_FLAGS} -fPIC -DGLOGG_VERSION=\\\"unit_tests\\\" -g -gdwarf-2")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${PARANOID_FLAGS} -fPIC -DENABLE_TRACE=1 -DGLOGG_VERSION=\\\"unit_tests\\\" -g -gdwarf-2")
 
 # Add test cpp file
 add_executable(glogg_tests
@@ -171,6 +202,13 @@ add_executable(glogg_tests
 
 # Link test executable against gtest & gtest_main
 target_link_libraries(glogg_tests ${LIBS} gtest_main pthread Qt5::Widgets)
+
+add_executable(glogg_syntax_tests
+    ${glogg_syntax_SRC}
+    ${glogg_syntax_TESTS}
+)
+
+target_link_libraries(glogg_syntax_tests ${LIBS} gtest_main pthread Qt5::Widgets)
 
 add_executable(glogg_itests
     ${glogg_SOURCES}
