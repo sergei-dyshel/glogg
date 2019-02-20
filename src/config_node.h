@@ -86,7 +86,7 @@ template <typename T> bool ConfigNode::is() const
         node_.as<T>();
         return true;
     }
-    catch (YAML::BadConversion) {
+    catch (const YAML::BadConversion &) {
         return false;
     }
 }
