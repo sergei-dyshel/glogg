@@ -243,22 +243,37 @@ void LogFilteredData::deleteMark( QChar mark )
     // FIXME: maxLengthMarks_
 }
 
-void LogFilteredData::deleteMark( qint64 line )
+bool LogFilteredData::deleteMarkInBulk( qint64 line )
 {
     marks_.deleteMark( line );
-    filteredItemsCacheDirty_ = true;
 
     // Now update the max length if needed
-    if ( sourceLogData_->getLineLength( line ) >= maxLengthMarks_ ) {
-        LOG(logDEBUG) << "deleteMark recalculating longest mark";
-        maxLengthMarks_ = 0;
-        for ( Marks::const_iterator i = marks_.begin();
-                i != marks_.end(); ++i ) {
-            LOG(logDEBUG) << "line " << i->lineNumber();
-            maxLengthMarks_ = qMax( maxLengthMarks_,
-                    sourceLogData_->getLineLength( i->lineNumber() ) );
-        }
+    return sourceLogData_->getLineLength( line ) >= maxLengthMarks_;
+}
+
+void LogFilteredData::deleteMark ( qint64 line )
+{
+    bool needsRecalc = deleteMarkInBulk(line);
+    invalidateCache();
+
+    if (needsRecalc)
+        recalcMaxLengthMarks();
+}
+
+void LogFilteredData::recalcMaxLengthMarks()
+{
+    LOG(logDEBUG) << "deleteMark recalculating longest mark";
+    maxLengthMarks_ = 0;
+    for (Marks::const_iterator i = marks_.begin(); i != marks_.end(); ++i) {
+        LOG(logDEBUG) << "line " << i->lineNumber();
+        maxLengthMarks_ = qMax(maxLengthMarks_,
+                               sourceLogData_->getLineLength(i->lineNumber()));
     }
+}
+
+void LogFilteredData::invalidateCache()
+{
+    filteredItemsCacheDirty_ = true;
 }
 
 void LogFilteredData::clearMarks()
