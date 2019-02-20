@@ -39,6 +39,7 @@
 #include "signalmux.h"
 #include "overview.h"
 #include "loadingstatus.h"
+#include "fwd.h"
 
 class InfoLine;
 class QuickFindPattern;
@@ -156,6 +157,8 @@ class CrawlerWidget : public QSplitter,
     void markLineFromMain( qint64 line );
     // Mark a line that has been clicked on the filtered (bottom) view.
     void markLineFromFiltered( qint64 line );
+
+    void markLines(const Range& range, bool filtered, bool addMark);
 
     void loadingFinishedHandler( LoadingStatus status );
     // Manages the info lines to inform the user the file has changed.

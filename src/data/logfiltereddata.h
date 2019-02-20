@@ -104,8 +104,11 @@ class LogFilteredData : public AbstractLogData {
     // Delete the mark present on the passed line or do nothing if there is
     // none.
     void deleteMark( qint64 line );
+    bool deleteMarkInBulk( qint64 line );
     // Completely clear the marks list.
     void clearMarks();
+    void recalcMaxLengthMarks();
+    void invalidateCache();
 
     // Changes what the AbstractLogData returns via its getXLines/getNbLines
     // API.
