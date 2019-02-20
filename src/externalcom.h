@@ -50,11 +50,11 @@ class ExternalCommunicator : public QObject
   public:
     ExternalCommunicator() : QObject() {}
 
-    virtual ExternalInstance* otherInstance() const = 0;
+    virtual ExternalInstance* otherInstance(const QString &name) const = 0;
 
     /* Instruct the communicator to start listening for
      * remote initiated operations */
-    virtual void startListening() = 0;
+    virtual void startListening(const QString &name) = 0;
 
   signals:
     void loadFile( const QString& file_name );
