@@ -518,7 +518,7 @@ void AbstractLogView::timerEvent( QTimerEvent* timerEvent )
 
 void AbstractLogView::keyPressEvent( QKeyEvent* keyEvent )
 {
-    LOG(logDEBUG4) << "keyPressEvent received";
+    TRACE << "keyPressEvent received";
 
     bool controlModifier = (keyEvent->modifiers() & Qt::ControlModifier) == Qt::ControlModifier;
     bool shiftModifier = (keyEvent->modifiers() & Qt::ShiftModifier) == Qt::ShiftModifier;
@@ -640,7 +640,7 @@ void AbstractLogView::keyPressEvent( QKeyEvent* keyEvent )
     else {
         // Only pass bare keys to the superclass this is so that
         // shortcuts such as Ctrl+Alt+Arrow are handled by the parent.
-        LOG(logDEBUG) << std::hex << keyEvent->modifiers();
+        LOG(logDEBUG) << hex << keyEvent->modifiers();
         if ( keyEvent->modifiers() == Qt::NoModifier ||
                 keyEvent->modifiers() == Qt::KeypadModifier ) {
             QAbstractScrollArea::keyPressEvent( keyEvent );
@@ -709,7 +709,7 @@ void AbstractLogView::focusOutEvent( QFocusEvent* )
 
 bool AbstractLogView::event( QEvent* e )
 {
-    LOG(logDEBUG4) << "Event! Type: " << e->type();
+    TRACE << "Event! Type: " << e->type();
 
     // Make sure we ignore the gesture events as
     // they seem to be accepted by default.
@@ -717,7 +717,7 @@ bool AbstractLogView::event( QEvent* e )
         auto gesture_event = dynamic_cast<QGestureEvent*>( e );
         if ( gesture_event ) {
             foreach( QGesture* gesture, gesture_event->gestures() ) {
-                LOG(logDEBUG4) << "Gesture: " << gesture->gestureType();
+                TRACE << "Gesture: " << gesture->gestureType();
                 gesture_event->ignore( gesture );
             }
 
@@ -767,7 +767,7 @@ void AbstractLogView::paintEvent( QPaintEvent* paintEvent )
     if ( (invalidRect.isEmpty()) || (logData == NULL) )
         return;
 
-    LOG(logDEBUG4) << "paintEvent received, firstLine=" << firstLine
+    TRACE << "paintEvent received, firstLine=" << firstLine
         << " lastLineAligned=" << lastLineAligned
         << " rect: " << invalidRect.topLeft().x() <<
         ", " << invalidRect.topLeft().y() <<
@@ -1197,7 +1197,7 @@ QPoint AbstractLogView::convertCoordToFilePos( const QPoint& pos ) const
     if ( column < 0 )
         column = 0;
 
-    LOG(logDEBUG4) << "AbstractLogView::convertCoordToFilePos col="
+    TRACE << "AbstractLogView::convertCoordToFilePos col="
         << column << " line=" << line;
     QPoint point( column, line );
 

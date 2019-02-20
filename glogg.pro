@@ -215,14 +215,9 @@ GPROF {
 
 isEmpty(LOG_LEVEL) {
     CONFIG(debug, debug|release) {
-        DEFINES += FILELOG_MAX_LEVEL=\"logDEBUG4\"
-    } else {
-        DEFINES += FILELOG_MAX_LEVEL=\"logDEBUG\"
+        message("Traces are enabled")
+        DEFINES += ENABLE_TRACE=1
     }
-}
-else {
-    message("Using specified log level: $$LOG_LEVEL")
-    DEFINES += FILELOG_MAX_LEVEL=\"$$LOG_LEVEL\"
 }
 
 macx {
