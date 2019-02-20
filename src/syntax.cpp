@@ -230,9 +230,9 @@ Syntax &Syntax::addRule(const SyntaxRule &_rule)
 
 std::list<Token> Syntax::parse(const QString &line) const
 {
-    SyntaxParsingState state
-        = {.groups = {{GROUP_LINE, Token(Range(0, line.size()), "")}},
-           .tokens = {}};
+    SyntaxParsingState state;
+    state.groups = {{GROUP_LINE, Token(Range(0, line.size()), "")}};
+    state.tokens = {};
 
     for (const auto &rule : rules_) {
         rule.apply(line, state);
