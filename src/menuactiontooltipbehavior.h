@@ -33,7 +33,7 @@ class QTimerEvent;
 // files in the file menu. Not thread-safe.
 class MenuActionToolTipBehavior : public QObject
 {
-    Q_OBJECT;
+    Q_OBJECT
 
  public:
     MenuActionToolTipBehavior(QAction *action, QMenu *parentMenu,
