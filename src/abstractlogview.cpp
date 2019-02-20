@@ -50,6 +50,8 @@
 #include "overview.h"
 #include "configuration.h"
 
+#include "struct_config.h"
+
 namespace {
 int mapPullToFollowLength( int length );
 };
@@ -97,67 +99,13 @@ int countDigits( quint64 n )
 } // anon namespace
 
 
-LineChunk::LineChunk( int first_col, int last_col, ChunkType type )
-{
-    // LOG(logDEBUG) << "new LineChunk: " << first_col << " " << last_col;
-
-    start_ = first_col;
-    end_   = last_col;
-    type_  = type;
-}
-
-QList<LineChunk> LineChunk::select( int sel_start, int sel_end ) const
-{
-    QList<LineChunk> list;
-
-    if ( ( sel_start < start_ ) && ( sel_end < start_ ) ) {
-        // Selection BEFORE this chunk: no change
-        list << LineChunk( *this );
-    }
-    else if ( sel_start > end_ ) {
-        // Selection AFTER this chunk: no change
-        list << LineChunk( *this );
-    }
-    else /* if ( ( sel_start >= start_ ) && ( sel_end <= end_ ) ) */
-    {
-        // We only want to consider what's inside THIS chunk
-        sel_start = qMax( sel_start, start_ );
-        sel_end   = qMin( sel_end, end_ );
-
-        if ( sel_start > start_ )
-            list << LineChunk( start_, sel_start - 1, type_ );
-        list << LineChunk( sel_start, sel_end, Selected );
-        if ( sel_end < end_ )
-            list << LineChunk( sel_end + 1, end_, type_ );
-    }
-
-    return list;
-}
-
-inline void LineDrawer::addChunk( int first_col, int last_col,
-        QColor fore, QColor back )
-{
-    if ( first_col < 0 )
-        first_col = 0;
-    int length = last_col - first_col + 1;
-    if ( length > 0 ) {
-        list << Chunk ( first_col, length, fore, back );
-    }
-}
-
-inline void LineDrawer::addChunk( const LineChunk& chunk,
-        QColor fore, QColor back )
-{
-    int first_col = chunk.start();
-    int last_col  = chunk.end();
-
-    addChunk( first_col, last_col, fore, back );
-}
-
-inline void LineDrawer::draw( QPainter& painter,
-        int initialXPos, int initialYPos,
-        int line_width, const QString& line,
-        int leftExtraBackgroundPx )
+void AbstractLogView::drawColorizedText(QPainter& painter, int initialXPos,
+                                   int initialYPos, int line_width,
+                                   const QString& line,
+                                   int leftExtraBackgroundPx,
+                                   const std::list<Token>& tokens,
+                                   const Range& range,
+                                   const QColor& backgroundColor)
 {
     QFontMetrics fm = painter.fontMetrics();
     const int fontHeight = fm.height();
@@ -165,38 +113,54 @@ inline void LineDrawer::draw( QPainter& painter,
     // For some reason on Qt 4.8.2 for Win, maxWidth() is wrong but the
     // following give the right result, not sure why:
     const int fontWidth = fm.width( QChar('a') );
+    auto &colorScheme = StructConfig::instance().colorScheme();
 
     int xPos = initialXPos;
     int yPos = initialYPos;
 
-    foreach ( Chunk chunk, list ) {
-        // Draw each chunk
-        // LOG(logDEBUG) << "Chunk: " << chunk.start() << " " << chunk.length();
-        QString cutline = line.mid( chunk.start(), chunk.length() );
+    unsigned sum_length = 0;
+
+    for (const auto &token : tokens) {
+        if (token.range.end <= range.start || token.range.start >= range.end)
+            continue;
+        Range token_range = token.range;
+        if (token.range.start < range.start)
+            token_range.start = range.start;
+        if (token.range.end > range.end)
+            token_range.end = range.end;
+        sum_length += token_range.length();
+
+        QString cutline = line.mid( token_range.start, token_range.length() );
+        // LOG(logDEBUG) << token << " '" << cutline << "'";
         const int chunk_width = cutline.length() * fontWidth;
         if ( xPos == initialXPos ) {
             // First chunk, we extend the left background a bit,
             // it looks prettier.
-            painter.fillRect( xPos - leftExtraBackgroundPx, yPos,
-                    chunk_width + leftExtraBackgroundPx,
-                    fontHeight, chunk.backColor() );
+            painter.fillRect(xPos - leftExtraBackgroundPx, yPos,
+                             chunk_width + leftExtraBackgroundPx, fontHeight,
+                             colorScheme.scopeColor(token.colorScope).background);
         }
         else {
             // other chunks...
-            painter.fillRect( xPos, yPos, chunk_width,
-                    fontHeight, chunk.backColor() );
+            painter.fillRect(xPos, yPos, chunk_width, fontHeight,
+                             colorScheme.scopeColor(token.colorScope).background);
         }
-        painter.setPen( chunk.foreColor() );
+        painter.setPen( colorScheme.scopeColor(token.colorScope).foreground );
         painter.drawText( xPos, yPos + fontAscent, cutline );
         xPos += chunk_width;
     }
+
+    if (sum_length > range.length())
+      throw ASSERT << "Total length of tokens " << sum_length
+                   << " is bigger than given range " << range;
 
     // Draw the empty block at the end of the line
     int blank_width = line_width - xPos;
 
     if ( blank_width > 0 )
-        painter.fillRect( xPos, yPos, blank_width, fontHeight, backColor_ );
+        painter.fillRect(xPos, yPos, blank_width, fontHeight, backgroundColor);
 }
+
 
 const int DigitsBuffer::timeout_ = 2000;
 
@@ -373,11 +337,21 @@ void AbstractLogView::mousePressEvent( QMouseEvent* mouseEvent )
             findNextAction_->setEnabled( true );
             findPreviousAction_->setEnabled( true );
             addToSearchAction_->setEnabled( true );
+            highlightAction_->setEnabled( true );
         }
         else {
             findNextAction_->setEnabled( false );
             findPreviousAction_->setEnabled( false );
             addToSearchAction_->setEnabled( false );
+            highlightAction_->setEnabled( false );
+        }
+
+        if (selection_.wholeLineRange()) {
+            addMarkAction_->setEnabled(true);
+            removeMarkAction_->setEnabled(true);
+        } else {
+            addMarkAction_->setEnabled(false);
+            removeMarkAction_->setEnabled(false);
         }
 
         // "Add to search" only makes sense in regexp mode
@@ -905,15 +879,15 @@ LineNumber AbstractLogView::getViewPosition() const
 }
 
 void AbstractLogView::searchUsingFunction(
-        qint64 (QuickFind::*search_function)() )
+        RangeInLine (QuickFind::*search_function)() )
 {
     disableFollow();
 
-    int line = (quickFind_.*search_function)();
-    if ( line >= 0 ) {
-        LOG(logDEBUG) << "Found line " << line;
-        displayLine( line );
-        emit updateLineNumber( line );
+    auto rangeInLine = (quickFind_.*search_function)();
+    if ( rangeInLine ) {
+        DEBUG << "Found" << rangeInLine;
+        displayRangeInLine(rangeInLine);
+        emit updateLineNumber( rangeInLine.line );
     }
 }
 
@@ -1162,8 +1136,18 @@ LineNumber AbstractLogView::getNbVisibleLines() const
     return static_cast<LineNumber>( viewport()->height() / charHeight_ + 1 );
 }
 
+Range AbstractLogView::visibleLineRange() const
+{
+    return Range::WithLength(firstLine, getNbVisibleLines());
+}
+
+Range AbstractLogView::visibleColumnRange() const
+{
+    return Range::WithLength(firstCol, getNbVisibleCols());
+}
+
 // Returns the number of columns visible in the viewport
-int AbstractLogView::getNbVisibleCols() const
+unsigned AbstractLogView::getNbVisibleCols() const
 {
     return ( viewport()->width() - leftMarginPx_ ) / charWidth_ + 1;
 }
@@ -1219,6 +1203,32 @@ void AbstractLogView::displayLine( LineNumber line )
     } else {
         jumpToLine( line );
     }
+}
+
+void AbstractLogView::displayRangeInLine(const RangeInLine &rangeInLine)
+{
+    DEBUG << "Displaying" << rangeInLine;
+    auto line = rangeInLine.line;
+    auto range = rangeInLine.columns;
+    int newLine = -1;
+    if (!visibleLineRange().contains(line))
+        newLine = qMax(0U, line - (getNbVisibleLines() / 2));
+    int newCol = -1;
+    if (!visibleColumnRange().contains(range)) {
+        if (range.length() >= getNbVisibleCols())
+            newCol = range.start;
+        else if (range.end <= getNbVisibleCols())
+            newCol = 0;
+        else
+            newCol = range.middle() - (getNbVisibleCols() / 2);
+    }
+    DEBUG << "Will scroll to line" << newLine << ", column" << newCol;
+    if (newLine != -1)
+        verticalScrollBar()->setValue(newLine);
+    if (newCol != -1)
+        horizontalScrollBar()->setValue(newCol);
+    textAreaCache_.invalid_ = true;
+    update();
 }
 
 // Move the selection up and down by the passed number of lines
@@ -1393,12 +1403,28 @@ void AbstractLogView::createMenu()
     connect( addToSearchAction_, SIGNAL( triggered() ),
             this, SLOT( addToSearch() ) );
 
+    addMarkAction_ = new QAction(tr("&Mark selected lines"), this);
+    connect(addMarkAction_, &QAction::triggered, [=]() {
+        emit markLines(selection_.wholeLineRange(), true /* addMark */);
+    });
+    removeMarkAction_ = new QAction(tr("&Unmark selected lines"), this);
+    connect(removeMarkAction_, &QAction::triggered, [=]() {
+        emit markLines(selection_.wholeLineRange(), false /* removeMark */);
+    });
+
+    highlightAction_ = new QAction( tr( "&Highlight" ), this );
+    highlightAction_->setStatusTip(
+        tr( "Highlight matches of currently selected text" ) );
+
     popupMenu_ = new QMenu( this );
     popupMenu_->addAction( copyAction_ );
     popupMenu_->addSeparator();
     popupMenu_->addAction( findNextAction_ );
     popupMenu_->addAction( findPreviousAction_ );
     popupMenu_->addAction( addToSearchAction_ );
+    popupMenu_->addAction(addMarkAction_);
+    popupMenu_->addAction(removeMarkAction_);
+    popupMenu_->addAction( highlightAction_ );
 }
 
 void AbstractLogView::considerMouseHovering( int x_pos, int y_pos )
@@ -1429,7 +1455,7 @@ void AbstractLogView::updateScrollBars()
             logData->getNbLine() - getNbVisibleLines() + 1 ) );
 
     const int hScrollMaxValue = std::max( 0,
-            logData->getMaxLength() - getNbVisibleCols() + 1 );
+        logData->getMaxLength() - int(getNbVisibleCols()) + 1 );
     horizontalScrollBar()->setRange( 0, hScrollMaxValue );
 }
 
@@ -1477,6 +1503,8 @@ void AbstractLogView::drawTextArea( QPaintDevice* paint_device, int32_t )
     const int bottomOfTextPx = nbLines * fontHeight;
 
     LOG(logDEBUG) << "drawing lines from " << firstLine << " (" << nbLines << " lines)";
+    DEBUG << "drawing columns from" << firstCol << " (" << nbCols << " columns)";
+
     LOG(logDEBUG) << "bottomOfTextPx: " << bottomOfTextPx;
     LOG(logDEBUG) << "Height: " << paintDeviceHeight;
 
@@ -1546,105 +1574,57 @@ void AbstractLogView::drawTextArea( QPaintDevice* paint_device, int32_t )
         const QString line = lines[i];
         const QString cutLine = line.mid( firstCol, nbCols );
 
-        if ( selection_.isLineSelected( line_index ) ) {
-            // Reverse the selected line
-            foreColor = palette.color( QPalette::HighlightedText );
-            backColor = palette.color( QPalette::Highlight );
-            painter.setPen(palette.color(QPalette::Text));
-        }
-        else if ( filterSet->matchLine( logData->getLineString( line_index ),
-                    &foreColor, &backColor ) ) {
-            // Apply a filter to the line
-        }
-        else {
-            // Use the default colors
-            foreColor = palette.color( QPalette::Text );
-            backColor = palette.color( QPalette::Base );
-        }
+        std::list<Token> tokens;
 
         // Is there something selected in the line?
         int sel_start, sel_end;
         bool isSelection =
             selection_.getPortionForLine( line_index, &sel_start, &sel_end );
+        bool isLineSelected = selection_.isLineSelected(line_index);
+        auto &colorScheme = StructConfig::instance().colorScheme();
+        if (isSelection) {
+            Range selRange = Range(sel_start, sel_end + 1);
+            mergeTokens(tokens, {Token(selRange, ColorScheme::SELECTION)});
+        }
+        else if (isLineSelected) {
+            Range selRange = Range(line.size());
+            mergeTokens(tokens, {Token(selRange, ColorScheme::SELECTION)});
+        }
+
         // Has the line got elements to be highlighted
         QList<QuickFindMatch> qfMatchList;
-        bool isMatch =
-            quickFindPattern_->matchLine( line, qfMatchList );
+        bool isMatch = quickFindPattern_->matchLine(line, qfMatchList);
 
-        if ( isSelection || isMatch ) {
-            // We use the LineDrawer and its chunks because the
-            // line has to be somehow highlighted
-            LineDrawer lineDrawer( backColor );
-
-            // First we create a list of chunks with the highlights
-            QList<LineChunk> chunkList;
-            int column = 0; // Current column in line space
-            foreach( const QuickFindMatch match, qfMatchList ) {
-                int start = match.startColumn() - firstCol;
+        if (isMatch) {
+            std::list<Token> qfTokens;
+            foreach (const QuickFindMatch match, qfMatchList) {
+                int start = match.startColumn();
                 int end = start + match.length();
                 // Ignore matches that are *completely* outside view area
-                if ( ( start < 0 && end < 0 ) || start >= nbCols )
+                if (end <= firstCol || start >= firstCol + nbCols)
                     continue;
-                if ( start > column )
-                    chunkList << LineChunk( column, start - 1, LineChunk::Normal );
-                column = qMin( start + match.length() - 1, nbCols );
-                chunkList << LineChunk( qMax( start, 0 ), column,
-                        LineChunk::Highlighted );
-                column++;
+                qfTokens.emplace_back(Range(start, end),
+                                      ColorScheme::QUICK_FIND);
             }
-            if ( column <= cutLine.length() - 1 )
-                chunkList << LineChunk( column, cutLine.length() - 1, LineChunk::Normal );
-
-            // Then we add the selection if needed
-            QList<LineChunk> newChunkList;
-            if ( isSelection ) {
-                sel_start -= firstCol; // coord in line space
-                sel_end   -= firstCol;
-
-                foreach ( const LineChunk chunk, chunkList ) {
-                    newChunkList << chunk.select( sel_start, sel_end );
-                }
-            }
-            else
-                newChunkList = chunkList;
-
-            foreach ( const LineChunk chunk, newChunkList ) {
-                // Select the colours
-                QColor fore;
-                QColor back;
-                switch ( chunk.type() ) {
-                    case LineChunk::Normal:
-                        fore = foreColor;
-                        back = backColor;
-                        break;
-                    case LineChunk::Highlighted:
-                        fore = QColor( "black" );
-                        back = QColor( "yellow" );
-                        // fore = highlightForeColor;
-                        // back = highlightBackColor;
-                        break;
-                    case LineChunk::Selected:
-                        fore = palette.color( QPalette::HighlightedText ),
-                             back = palette.color( QPalette::Highlight );
-                        break;
-                }
-                lineDrawer.addChunk ( chunk, fore, back );
-            }
-
-            lineDrawer.draw( painter, xPos, yPos,
-                    viewport()->width(), cutLine,
-                    CONTENT_MARGIN_WIDTH );
+            mergeTokens(tokens, qfTokens);
         }
-        else {
-            // Nothing to be highlighted, we print the whole line!
-            painter.fillRect( xPos - CONTENT_MARGIN_WIDTH, yPos,
-                    viewport()->width(), fontHeight, backColor );
-            // (the rectangle is extended on the left to cover the small
-            // margin, it looks better (LineDrawer does the same) )
-            painter.setPen( foreColor );
-            painter.drawText( xPos, yPos + fontAscent, cutLine );
-        }
+        /* TODO: make this configurable */
+        auto lineForSyntax = line.left(1024);
+        auto syntaxTokens
+            = StructConfig::instance().syntaxColl().parse(lineForSyntax);
+        TRACE << "Parsed syntax:" << syntaxTokens;
+        filterTokensByScheme(syntaxTokens, colorScheme);
+        mergeSyntaxTokens(tokens, syntaxTokens);
 
+        mergeTokens(tokens, {Token(Range(line.length()), ColorScheme::TEXT)});
+        TRACE << "All  tokens" << tokens;
+
+        const auto& lineColor = isLineSelected
+                                    ? colorScheme.selection.background
+                                    : colorScheme.text.background;
+        drawColorizedText(painter, xPos, yPos, viewport()->width(), line,
+                          CONTENT_MARGIN_WIDTH, tokens,
+                          Range::WithLength(firstCol, nbCols), lineColor);
         // Then draw the bullet
         painter.setPen( palette.color( QPalette::Text ) );
         const qreal circleSize = 5;

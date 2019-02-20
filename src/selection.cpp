@@ -25,6 +25,8 @@
 
 #include "selection.h"
 
+// TODO: remove
+#include "log.h"
 #include "data/abstractlogdata.h"
 
 Selection::Selection()
@@ -197,4 +199,13 @@ FilePosition Selection::getPreviousPosition() const
     }
 
     return FilePosition( line, column );
+}
+
+Range Selection::wholeLineRange() const
+{
+    if (selectedLine_ >= 0)
+        return Range::WithLength(selectedLine_, 1);
+    if (selectedRange_.startLine >= 0)
+        return Range(selectedRange_.startLine, selectedRange_.endLine + 1);
+    return Range();
 }
