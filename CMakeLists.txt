@@ -92,6 +92,13 @@ list(APPEND LIBS Qt5::DBus)
 
 string(APPEND CMAKE_CXX_FLAGS " -Wall -pedantic -Wextra -Werror")
 
+# debug
+string(APPEND CMAKE_CXX_FLAGS_DEBUG " -DENABLE_TRACE")
+if(CMAKE_BUILD_TYPE MATCHES Debug)
+    message(STATUS Debug build)
+    # add_subdirectory(tests)
+endif()
+
 execute_process(COMMAND git describe OUTPUT_STRIP_TRAILING_WHITESPACE
     OUTPUT_VARIABLE VERSION)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DGLOGG_VERSION=\\\"${VERSION}\\\"")
@@ -108,7 +115,9 @@ add_executable(${TARGET}
 
 target_link_libraries(${TARGET} ${LIBS} pthread Qt5::Widgets Boost::program_options)
 
-install(TARGETS ${TARGET} RUNTIME DESTINATION bin ${CMAKE_INSTALL_BINDIR})
+include(GNUInstallDirs)
+
+install(TARGETS ${TARGET} RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 install(FILES images/hicolor/16x16/glogg.png DESTINATION share/icons/hicolor/16x16/apps)
 install(FILES images/hicolor/32x32/glogg.png DESTINATION share/icons/hicolor/32x32/apps)
 install(FILES images/hicolor/scalable/glogg.svg DESTINATION share/icons/hicolor/scalable/apps)
