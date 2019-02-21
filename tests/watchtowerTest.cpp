@@ -1,7 +1,5 @@
 #include "gmock/gmock.h"
 
-#include "config.h"
-
 #include <cstdio>
 #include <fcntl.h>
 

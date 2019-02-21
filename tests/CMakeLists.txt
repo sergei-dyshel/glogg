@@ -57,8 +57,6 @@ check_cxx_source_compiles("
     }
 " HAVE_OVERRIDE)
 
-configure_file(../config.h.in ${CMAKE_CURRENT_BINARY_DIR}/config.h)
-
 # Configuration
 check_symbol_exists( symlink "unistd.h" HAVE_SYMLINK )
 

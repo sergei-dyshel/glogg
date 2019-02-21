@@ -22,8 +22,6 @@
 
 #include <QtGlobal>
 
-#include "config.h"
-
 // Line number are unsigned 32 bits for now.
 typedef uint32_t LineNumber;
 
@@ -127,21 +125,5 @@ LineNumber lookupLineNumber( Iterator begin, Iterator end, LineNumber lineNum )
     }
     return lineIndex;
 }
-
-#define HAVE_MAKE_UNIQUE
-#ifndef HAVE_MAKE_UNIQUE
-#include <memory>
-
-namespace std {
-template<typename T, typename... Args>
-std::unique_ptr<T> make_unique(Args&&... args) {
-        return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
-}
-}
-#endif
-
-#ifndef HAVE_OVERRIDE
-#define override
-#endif
 
 #endif
