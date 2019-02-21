@@ -8,7 +8,6 @@ moc_*.cpp
 ui_*.h
 .*.sw?
 qrc_glogg.cpp
-Makefile
 glogg
 glogg_tests
 massif.out*
