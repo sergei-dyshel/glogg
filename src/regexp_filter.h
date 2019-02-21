@@ -10,8 +10,8 @@
 class RegExpFilter final {
   public:
     RegExpFilter() = default;
-    RegExpFilter( QString text, enum SearchRegexpType type,
-                  bool case_insensitive );
+    RegExpFilter( QString text, enum SearchRegexpType type = ExtendedRegexp,
+                  bool case_insensitive = true );
 
     bool isValid() const { return include_.isValid() && exclude_.isValid(); }
 
