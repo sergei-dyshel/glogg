@@ -5,7 +5,7 @@
 int main(int argc, char *argv[]) {
     QApplication a( argc, argv );
     ::testing::InitGoogleTest(&argc, argv);
-    int iReturn = RUN_ALL_TESTS();
+    // int iReturn = RUN_ALL_TESTS();
 
     // qDebug()<<"rcode:"<<iReturn;
 
