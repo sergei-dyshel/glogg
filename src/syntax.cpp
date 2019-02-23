@@ -25,9 +25,9 @@ struct SyntaxParsingState {
     std::list<Token> tokens;
 };
 
-static const QString GROUP_LINE = "LINE";
-static const QString GROUP_MATCH = "MATCH";
-static const QString GROUP_GROUP = "GROUP";
+const QString SyntaxRule::GROUP_LINE = "LINE";
+const QString SyntaxRule::GROUP_MATCH = "MATCH";
+const QString SyntaxRule::GROUP_GROUP = "GROUP";
 
 template <> const QString Enum<SyntaxRule::SearchType>::name = "SearchType";
 template <> const std::unordered_map<SyntaxRule::SearchType, QString>
@@ -44,9 +44,10 @@ static QString stringList2Regex(const QStringList &strings)
 }
 
 SyntaxRule::SyntaxRule(const QString &name, const QString &group,
-                       const QString &regExp,
+                       const QString &regExp, SearchType searchType,
                        const std::unordered_map<QString, QString> &colorize)
-    : name_(name), matchGroup_(group), regExp_(regExp), colorize_(colorize)
+    : name_(name), matchGroup_(group), regExp_(regExp), searchType_(searchType),
+      colorize_(colorize)
 {
     PostInit();
 }
@@ -197,7 +198,7 @@ void SyntaxRule::processMatch(const QRegularExpressionMatch &match,
     }
 }
 
-Syntax::Syntax() { usedGroups_.insert(GROUP_LINE); }
+Syntax::Syntax() { usedGroups_.insert(SyntaxRule::GROUP_LINE); }
 
 Syntax::Syntax(const QString &name, const ConfigNode &node) : Syntax()
 {
@@ -230,11 +231,11 @@ Syntax &Syntax::addRule(const SyntaxRule &_rule)
         throw rule.error(HERE) << "matches group" << rule.matchGroup_
                                << "which is not provided by previous rules";
     for (const auto &group : rule.regExpGroups_)
-        if (group != GROUP_MATCH)
+        if (group != SyntaxRule::GROUP_MATCH)
             usedGroups_.insert(group);
     for (const auto &kv : rule.colorize_) {
         auto group = kv.first;
-        if (group != GROUP_GROUP && group != GROUP_MATCH
+        if (group != SyntaxRule::GROUP_GROUP && group != SyntaxRule::GROUP_MATCH
             && !usedGroups_.count(group))
             throw rule.error(HERE)
                 << "colorizes group" << group
@@ -250,7 +251,7 @@ Syntax &Syntax::addRule(const SyntaxRule &_rule)
 std::list<Token> Syntax::parse(const QString &line) const
 {
     SyntaxParsingState state;
-    state.groups = {{GROUP_LINE, Token(Range(0, line.size()), "")}};
+    state.groups = {{SyntaxRule::GROUP_LINE, Token(Range(0, line.size()), "")}};
     state.tokens = {};
 
     for (const auto &rule : rules_) {

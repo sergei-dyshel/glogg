@@ -39,8 +39,11 @@ class SyntaxCollection;
 
 class SyntaxRule final {
 public:
+    enum class SearchType;
+
     SyntaxRule(const ConfigNode &node);
     SyntaxRule(const QString &name, const QString &group, const QString &regExp,
+               SearchType searchType,
                const std::unordered_map<QString, QString> &colorize);
 
     void apply(const QString &line, SyntaxParsingState& state) const;
@@ -61,6 +64,10 @@ public:
         MATCH,
         ALL,
     };
+
+    static const QString GROUP_LINE;
+    static const QString GROUP_MATCH;
+    static const QString GROUP_GROUP;
 
   private:
     void PostInit();
