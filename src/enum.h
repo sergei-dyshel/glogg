@@ -40,6 +40,7 @@ template <typename E> struct Enum {
     }
 };
 
+// TODO: move to unittests
 // Example
 
 enum class SampleEnum {

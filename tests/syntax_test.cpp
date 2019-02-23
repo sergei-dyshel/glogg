@@ -6,6 +6,7 @@ static constexpr auto NUM = "NUM";
 static constexpr auto BASE = "BASE";
 static constexpr auto CAT = "CAT";
 
+
 class SyntaxTest : public ::testing::Test {
 public:
   using PairList = std::list<std::pair<std::string, std::string>>;
@@ -14,6 +15,9 @@ public:
              const PairList &syntax,
              const PairList &flat);
   Syntax syntax_;
+  const QString LINE = SyntaxRule::GROUP_LINE;
+  const SyntaxRule::SearchType MATCH = SyntaxRule::SearchType::MATCH;
+
 private:
   PairList tokens2pairs(const std::string &line,
                          const std::list<Token> &tokens);
@@ -30,6 +34,8 @@ SyntaxTest::PairList SyntaxTest::tokens2pairs(const std::string &line,
     PairList pairs;
     for (const auto &token : tokens) {
         auto str = line.substr(token.range.start, token.range.length());
+        if (token.colorScope.isEmpty())
+            continue;
         pairs.emplace_back(str, token.colorScope.toStdString());
     }
     return pairs;
@@ -58,28 +64,35 @@ TEST_F(SyntaxTest, Empty)
 TEST_F(SyntaxTest, WholeLine)
 {
     syntax_.addRule(
-        SyntaxRule("rule1", "line", ".*", {{"line", BASE}}));
+        SyntaxRule("rule1", LINE, ".*", MATCH, {{LINE, BASE}}));
     Check("some string", {{"some string", BASE}},
           {{"some string", BASE}});
 }
 
 TEST_F(SyntaxTest, OneRule)
 {
-    syntax_.addRule(SyntaxRule("rule1", "line", "(?<num>\\d+)",
-                               {{"line", BASE}, {"num", NUM}}));
+    syntax_.addRule(SyntaxRule("rule1", LINE, "(?<num>\\d+)", MATCH,
+                               {{LINE, BASE}, {"num", NUM}}));
     Check("prefix1234suffix", {{"prefix1234suffix", BASE}, {"1234", NUM}},
           {{"prefix", BASE}, {"1234", NUM}, {"suffix", BASE}});
 }
 
 TEST_F(SyntaxTest, Nested)
 {
-    syntax_.addRule(SyntaxRule("rule1", "line", "(?<num>\\d+) (?<rest>.*)",
+    syntax_.addRule(SyntaxRule("rule1", LINE, "(?<num>\\d+) (?<rest>.*)", MATCH,
                                {{"num", NUM}}));
-    syntax_.addRule(SyntaxRule("rule2", "rest", "\\[(?<cat>.*)\\]",
-                               {{"line", BASE}, {"cat", CAT}}));
+    syntax_.addRule(SyntaxRule("rule2", "rest", "\\[(?<cat>.*)\\]", MATCH,
+                               {{LINE, BASE}, {"cat", CAT}}));
     Check("1234 [category] suffix",
 
-          {{"1234 [category] suffix", BASE}, {"1234", NUM}, {"category", CAT}},
+          {{"1234 [category] suffix", BASE},
+           {"1234", NUM},
+           {"[category] suffix", "rest"},
+           {"category", CAT}},
 
-          {{"1234", NUM}, {" [", BASE}, {"category", CAT}, {"] suffix", BASE}});
+          {{"1234", NUM},
+           {" ", BASE},
+           {"[", "rest"},
+           {"category", CAT},
+           {"] suffix", "rest"}});
 }

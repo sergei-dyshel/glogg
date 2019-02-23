@@ -6,10 +6,6 @@
 #include <iostream>
 #include <tuple>
 
-static const auto SEL= ColorScheme::SELECTION;
-static const auto QF = ColorScheme::QUICK_FIND;
-static const auto TXT = ColorScheme::TEXT;
-
 class ColorizerTest : public ::testing::Test {
 public:
   ColorizerTest() {}
@@ -44,6 +40,11 @@ public:
         return Token(Range(std::get<0>(tuple), std::get<1>(tuple)),
                      std::get<2>(tuple));
     }
+
+    const QString SEL= ColorScheme::SELECTION;
+    const QString QF = ColorScheme::QUICK_FIND;
+    const QString TXT = ColorScheme::TEXT;
+
 }; // class ColorizerTest
 
 TEST_F(ColorizerTest, Basic) {
