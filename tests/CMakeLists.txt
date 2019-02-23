@@ -131,6 +131,7 @@ set(glogg_SOURCES
     ../src/regexp_filter.cpp
     ../src/exception.cpp
     ../src/log.cpp
+    ../src/externalcom.cpp
 )
 
 set(glogg_syntax_SRC
@@ -181,8 +182,8 @@ if (WIN32)
     set(FileWatcherEngine_SOURCES
         ../src/winwatchtowerdriver.cpp
     )
-elseif (LINUX)
-    # set(FileWatcherEngine_SOURCES ../src/inotifywatchtowerdriver.cpp)
+elseif (CMAKE_SYSTEM_NAME MATCHES Linux)
+    set(FileWatcherEngine_SOURCES ../src/inotifywatchtowerdriver.cpp)
 elseif (APPLE)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DGLOGG_SUPPORTS_KQUEUE")
     set(FileWatcherEngine_SOURCES
@@ -212,6 +213,7 @@ target_link_libraries(glogg_syntax_tests ${LIBS} gtest_main pthread Qt5::Widgets
 
 add_executable(glogg_itests
     ${glogg_SOURCES}
+    ${glogg_syntax_SRC}
     ${FileWatcherEngine_SOURCES}
     ${glogg_ITESTS}
     itests.cpp
