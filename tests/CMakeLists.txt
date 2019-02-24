@@ -13,6 +13,7 @@ add_executable(glogg_tests
     watchtowerTest.cpp
     linepositionarrayTest.cpp
     encodingspeculatorTest.cpp
+    utests.cpp
 )
 
 # Link test executable against gtest & gtest_main

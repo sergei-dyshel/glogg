@@ -24,6 +24,8 @@ public:
       : path_(path), node_(node)
   {}
 
+  ConfigNode(const QString &path);
+
   ConfigNode requiredMember(const QString &name) const;
   bool hasMember(const QString &name) const;
   ConfigNode member(const QString &name,

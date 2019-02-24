@@ -22,7 +22,6 @@ class PerfLogFilteredData : public testing::Test {
     PerfLogFilteredData()
         : log_data_(), filtered_data_( log_data_.getNewFilteredData() ),
           progressSpy( filtered_data_.get(), SIGNAL( searchProgressed( int, int ) ) ) {
-        Log::configure( logERROR );
 
         generateDataFiles();
 

@@ -1,6 +1,7 @@
 #include "gtest/gtest.h"
 
 #include "syntax.h"
+#include "struct_config.h"
 
 static constexpr auto NUM = "NUM";
 static constexpr auto BASE = "BASE";
@@ -95,4 +96,8 @@ TEST_F(SyntaxTest, Nested)
            {"[", "rest"},
            {"category", CAT},
            {"] suffix", "rest"}});
+}
+
+TEST(StructConfig, Basic) {
+    StructConfig::reload({"./config"});
 }

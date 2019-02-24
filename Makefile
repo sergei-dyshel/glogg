@@ -16,6 +16,8 @@ ifneq (,$(wildcard $(RELEASE)))
 	$(MAKE) release
 endif
 
+MAKE := $(MAKE) --no-print-directory
+
 configure_debug:
 	mkdir -p $(DEBUG)
 	cd $(DEBUG) && cmake $(ROOT) -DCMAKE_BUILD_TYPE=Debug \
@@ -43,10 +45,14 @@ distclean_release:
 install:
 	$(MAKE) -C $(RELEASE) install
 
-clean:
+clean_debug:
 ifneq (,$(wildcard $(DEBUG)))
 	$(MAKE) -C $(DEBUG) clean
 endif
+
+clean_release:
 ifneq (,$(wildcard $(RELEASE)))
 	$(MAKE) -C $(RELEASE) clean
 endif
+
+clean: clean_debug clean_release

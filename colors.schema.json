@@ -1,0 +1,24 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Glogg color scheme file schema",
+    "type": "object",
+    "properties": {
+        "defs": {
+            "description": "Color definitions",
+            "type": "object",
+            "additionalProperties": {
+                "type": "integer"
+            }
+        },
+        "base": {
+            "description": "Base colors",
+            "type": "object"
+        },
+        "user": {
+            "description": "Additional colors",
+            "type": "object"
+        }
+    },
+    "required": ["base"],
+    "additionalProperties": false
+}

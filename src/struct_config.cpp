@@ -8,9 +8,11 @@
 #include <QFile>
 #include <QProcessEnvironment>
 #include <QStandardPaths>
+#include <QDir>
 
-static const QString ENV_VAR_NAME = "GLOGG_JSON_CONFIG";
-static const QString CONFIG_FILE_NAME = "glogg.yaml";
+static const QString ENV_VAR_NAME = "GLOGG_CONFIG";
+static const QString COLORS_GLOB_PATTERN = "*.glogg-colors.yaml";
+static const QString SYNTAX_GLOB_PATTERN = "*.glogg-syntax.yaml";
 
 static std::unique_ptr<StructConfig> theStructConfig;
 
@@ -23,57 +25,57 @@ void StructConfig::loadDefault()
     theStructConfig = std::make_unique<StructConfig>();
 }
 
-void StructConfig::reload()
+void StructConfig::reload(const QStringList &dirs)
 {
     auto newConfig = std::make_unique<StructConfig>();
-    newConfig->load();
+    newConfig->load(dirs);
     theStructConfig = std::move(newConfig);
 }
 
-static QString getPathFromEnv()
+static QString getConfigDir()
 {
-    QString path;
+    auto stdPath
+        = QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation);
     auto env = QProcessEnvironment::systemEnvironment();
     if (!env.contains(ENV_VAR_NAME))
-        return "";
-    path = env.value(ENV_VAR_NAME);
-    if (path == "") {
-        LOG(logWARNING) << ENV_VAR_NAME << " is empty!";
-        return "";
-    }
-    QFile file(path);
-    if (!file.exists()) {
-        LOG(logWARNING) << ENV_VAR_NAME << " contains " << path
-                        << " which does not exist";
-        return "";
-    }
+        return stdPath;
+    auto path = env.value(ENV_VAR_NAME);
+    INFO << ENV_VAR_NAME << "is" << path;
     return path;
 }
 
-void StructConfig::load() {
-    QString path = getPathFromEnv();
+void StructConfig::load(const QStringList &dirs) {
     YAML::Node yamlRoot;
-    if (path == "") {
-        path = QStandardPaths::locate(QStandardPaths::AppConfigLocation,
-                                 CONFIG_FILE_NAME);
-        if (path == "") {
-            LOG(logWARNING) << "Could not locate " << CONFIG_FILE_NAME
-                            << " in standard locations";
-            return;
+    auto configDirs = dirs.empty() ? QStringList{getConfigDir()} : dirs;
+    for (auto dirPath : configDirs) {
+        QDir dir(dirPath);
+        if (!dir.exists()) {
+            WARN << dirPath << " does not exist, skipping";
+            continue;
+        }
+        for (auto fileInfo : dir.entryInfoList({COLORS_GLOB_PATTERN})) {
+            auto filePath  = fileInfo.absoluteFilePath();
+            try {
+                colorScheme_ = ColorScheme(ConfigNode(filePath));
+            }
+            catch (const std::exception &exc) {
+                ERROR << "Error loading color scheme file " << filePath << ": "
+                      << exc.what();
+            }
+            INFO << "Loaded color scheme file " << filePath;
+        }
+        for (auto fileInfo : dir.entryInfoList({SYNTAX_GLOB_PATTERN})) {
+            auto filePath  = fileInfo.absoluteFilePath();
+            try {
+                syntaxColl_ = SyntaxCollection(ConfigNode(filePath));
+            }
+            catch (const std::exception &exc) {
+                ERROR << "Error loading syntax file " << filePath << ": "
+                      << exc.what();
+            }
+            INFO << "Loaded syntax file " << filePath;
         }
     }
-    try {
-        yamlRoot = YAML::LoadFile(path.toStdString());
-        if (!yamlRoot.IsMap()) {
-            LOG(logERROR) << "Root node type is not mapping";
-        }
-    } catch (const YAML::ParserException &) {
-        LOG(logERROR) << "Error parsing " << path;
-    }
-
-    ConfigNode root = ConfigNode("", yamlRoot);
-    colorScheme_ = ColorScheme(root.member("colorScheme"));
-    syntaxColl_ = SyntaxCollection(root.member("syntax"));
 }
 
 bool StructConfig::checkForIssues() const

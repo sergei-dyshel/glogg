@@ -5,20 +5,19 @@
 #include "syntax.h"
 
 class StructConfig {
-public:
+  public:
     StructConfig() = default;
 
-    void Load();
     const ColorScheme &colorScheme() const { return colorScheme_; }
     const SyntaxCollection &syntaxColl() const { return syntaxColl_; }
     bool checkForIssues() const;
 
     static const StructConfig &instance();
     static void loadDefault();
-    static void reload();
+    static void reload(const QStringList &dirs = {});
 
-private:
-    void load();
+  private:
+    void load(const QStringList &dirs = {});
 
     ColorScheme colorScheme_;
     SyntaxCollection syntaxColl_;

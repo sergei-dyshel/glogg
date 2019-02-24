@@ -9,6 +9,10 @@ ConfigError::ConfigError(const QString &path, const LogContext &context)
     stream_ << "Error parsing config: " << path << " ";
 }
 
+ConfigNode::ConfigNode(const QString &path)
+    : ConfigNode(path, YAML::LoadFile(path.toStdString()))
+{}
+
 bool ConfigNode::isArray() const
 {
     return node_.IsSequence();
