@@ -29,6 +29,7 @@ configure: configure_debug configure_release
 
 debug:
 	$(MAKE) -C $(DEBUG)
+	$(DEBUG)/tests/glogg_syntax_tests --quiet
 
 release:
 	$(MAKE) -C $(RELEASE)
