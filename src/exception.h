@@ -25,6 +25,7 @@
 class Exception : public std::exception {
   public:
     Exception(const LogContext &context) : stream_(context) {}
+    virtual ~Exception() {}
     const char *what() const noexcept override;
     const QString &message() const { return stream_.message(); }
 
@@ -37,6 +38,9 @@ class Exception : public std::exception {
     mutable std::string str_;
 };
 
+QString exceptionMessage(const std::exception &exc);
+
 DERIVE_EXCEPTION(AssertionFailure, Exception);
 
 QDebug operator<<(QDebug debug, const Exception &);
+QDebug operator<<(QDebug debug, const std::exception &);

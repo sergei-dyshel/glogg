@@ -4,21 +4,34 @@
 #include "color_scheme.h"
 #include "syntax.h"
 
+struct StructConfigFiles {
+    QStringList colorsFiles;
+    QStringList syntaxFiles;
+};
+
 class StructConfig {
   public:
     StructConfig() = default;
+    StructConfig(const QStringList &colorsFiles, const QStringList &syntaxFiles,
+                 bool stopOnError = false);
+    StructConfig(const StructConfigFiles &configFiles,
+                          bool stopOnError = false);
 
-    const ColorScheme &colorScheme() const { return colorScheme_; }
+    StructConfig(const StructConfig &) = delete;
+
+    const ColorScheme &colorScheme() const { return colorSchemes_.at("default"); }
     const SyntaxCollection &syntaxColl() const { return syntaxColl_; }
     bool checkForIssues() const;
 
-    static const StructConfig &instance();
-    static void loadDefault();
-    static void reload(const QStringList &dirs = {});
-
   private:
-    void load(const QStringList &dirs = {});
-
-    ColorScheme colorScheme_;
+    std::map<QString, ColorScheme> colorSchemes_;
     SyntaxCollection syntaxColl_;
+};
+
+class StructConfigStore {
+  public:
+    static const StructConfig &current();
+    static void loadDefault();
+    static void reload();
+    static StructConfigFiles scanDirs(const QStringList &dirs);
 };

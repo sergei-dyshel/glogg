@@ -87,7 +87,7 @@ MainWindow::MainWindow( std::unique_ptr<Session> session,
     setWindowIcon( mainIcon_ );
 
     readSettings();
-    StructConfig::loadDefault();
+    StructConfigStore::loadDefault();
     reloadStructConfig();
 
     // Connect the signals to the mux (they will be forwarded to the
@@ -186,14 +186,14 @@ MainWindow::MainWindow( std::unique_ptr<Session> session,
 void MainWindow::reloadStructConfig()
 {
     try {
-        StructConfig::reload();
+        StructConfigStore::reload();
     }
     catch(const Exception& err) {
         QMessageBox msgBox;
         msgBox.setText(QString("Could not load config: ") + err.message());
         msgBox.exec();
     }
-    if (StructConfig::instance().checkForIssues()) {
+    if (StructConfigStore::current().checkForIssues()) {
         QMessageBox msgBox;
         msgBox.setText("Issues were found when loading config");
         msgBox.exec();
@@ -793,7 +793,7 @@ void MainWindow::newVersionNotification( const QString& new_version )
 
     QMessageBox msgBox;
     msgBox.setText( QString( "A new version of glogg (%1) is available for download <p>"
-                "<a href=\"http://glogg.bonnefon.org/download.html\">http://glogg.bonnefon.org/download.html</a>" 
+                "<a href=\"http://glogg.bonnefon.org/download.html\">http://glogg.bonnefon.org/download.html</a>"
                 ).arg( new_version ) );
     msgBox.exec();
 }

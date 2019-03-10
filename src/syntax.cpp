@@ -24,20 +24,19 @@ static QString stringList2Regex(const QStringList &strings)
     return escaped.join('|');
 }
 
-SyntaxRule::SyntaxRule(const QString &name, const QString &group,
+SyntaxRule::SyntaxRule(const QString &group,
                        const QString &regExp, SearchType searchType,
                        const std::unordered_map<QString, QString> &colorize)
-    : name_(name), matchGroup_(group), regExp_(regExp), searchType_(searchType),
+    : matchGroup_(group), regExp_(regExp), searchType_(searchType),
       colorize_(colorize)
 {
     PostInit();
 }
 
-#define RULE_TRACE TRACE << "Rule" << fullName() << ":"
+#define RULE_TRACE TRACE << *this << ":"
 
-SyntaxRule::SyntaxRule(const ConfigNode &node)
+SyntaxRule::SyntaxRule(const ConfigNode &node) : location_(node.location())
 {
-    name_ = node.member("name", "").asString();
     matchGroup_ = node.member("group", GROUP_LINE).asString();
     auto regexNode = node.requiredMember("regex");
     QString regex = regexNode.isScalar()
@@ -179,6 +178,12 @@ void SyntaxRule::processMatch(const QRegularExpressionMatch &match,
     }
 }
 
+QDebug &operator<<(QDebug &d, const SyntaxRule &rule)
+{
+    QDEBUG_COMPAT(d);
+    return d << "(" << rule.fullName() << ")";
+}
+
 Syntax::Syntax() { usedGroups_.insert(SyntaxRule::GROUP_LINE); }
 
 Syntax::Syntax(const QString &name, const ConfigNode &node) : Syntax()
@@ -193,20 +198,6 @@ Syntax::Syntax(const QString &name, const ConfigNode &node) : Syntax()
 Syntax &Syntax::addRule(const SyntaxRule &_rule)
 {
     SyntaxRule rule = _rule;
-
-    if (rule.name_.isEmpty()) {
-        if (!usedNames_.count(rule.matchGroup_))
-            rule.name_ = rule.matchGroup_;
-        else {
-            unsigned i = 1;
-            do {
-                rule.name_ = rule.matchGroup_ + QString::number(i++);
-            } while (usedNames_.count(rule.name_));
-        }
-    }
-    if (usedNames_.count(rule.name_))
-        throw rule.error(HERE) << ": already exists";
-    usedNames_.insert(rule.name_);
 
     if (!usedGroups_.count(rule.matchGroup_))
         throw rule.error(HERE) << "matches group" << rule.matchGroup_
@@ -251,6 +242,11 @@ std::list<Token> Syntax::parse(const QString &line) const
 
 SyntaxCollection::SyntaxCollection(const ConfigNode &node)
 {
+    merge(node);
+}
+
+void SyntaxCollection::merge(const ConfigNode &node)
+{
     for (const auto &kv : node.members()) {
         auto syntax = Syntax(kv.first, kv.second);
         addSyntax(syntax);
@@ -276,3 +272,4 @@ std::list<Token> SyntaxCollection::parse(const QString &line) const
     }
     return result;
 }
+

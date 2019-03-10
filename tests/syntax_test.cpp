@@ -65,14 +65,14 @@ TEST_F(SyntaxTest, Empty)
 TEST_F(SyntaxTest, WholeLine)
 {
     syntax_.addRule(
-        SyntaxRule("rule1", LINE, ".*", MATCH, {{LINE, BASE}}));
+        SyntaxRule(LINE, ".*", MATCH, {{LINE, BASE}}));
     Check("some string", {{"some string", BASE}},
           {{"some string", BASE}});
 }
 
 TEST_F(SyntaxTest, OneRule)
 {
-    syntax_.addRule(SyntaxRule("rule1", LINE, "(?<num>\\d+)", MATCH,
+    syntax_.addRule(SyntaxRule(LINE, "(?<num>\\d+)", MATCH,
                                {{LINE, BASE}, {"num", NUM}}));
     Check("prefix1234suffix", {{"prefix1234suffix", BASE}, {"1234", NUM}},
           {{"prefix", BASE}, {"1234", NUM}, {"suffix", BASE}});
@@ -80,9 +80,9 @@ TEST_F(SyntaxTest, OneRule)
 
 TEST_F(SyntaxTest, Nested)
 {
-    syntax_.addRule(SyntaxRule("rule1", LINE, "(?<num>\\d+) (?<rest>.*)", MATCH,
+    syntax_.addRule(SyntaxRule(LINE, "(?<num>\\d+) (?<rest>.*)", MATCH,
                                {{"num", NUM}}));
-    syntax_.addRule(SyntaxRule("rule2", "rest", "\\[(?<cat>.*)\\]", MATCH,
+    syntax_.addRule(SyntaxRule("rest", "\\[(?<cat>.*)\\]", MATCH,
                                {{LINE, BASE}, {"cat", CAT}}));
     Check("1234 [category] suffix",
 
@@ -99,5 +99,9 @@ TEST_F(SyntaxTest, Nested)
 }
 
 TEST(StructConfig, Basic) {
-    StructConfig::reload({"./config"});
+    auto configFiles = StructConfigStore::scanDirs({"./config"});
+    ASSERT_TRUE(!configFiles.colorsFiles.empty()
+                && !configFiles.syntaxFiles.empty());
+
+    StructConfig config(configFiles, true /* stopOnError */);
 }

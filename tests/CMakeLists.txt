@@ -22,6 +22,7 @@ target_link_libraries(glogg_tests
 
 add_executable(glogg_syntax_tests
     colorizer_test.cpp
+    colors_test.cpp
     syntax_test.cpp
     utests.cpp
 )

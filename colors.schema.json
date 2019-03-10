@@ -10,15 +10,25 @@
                 "type": "integer"
             }
         },
-        "base": {
-            "description": "Base colors",
-            "type": "object"
-        },
-        "user": {
-            "description": "Additional colors",
-            "type": "object"
+        "schemes": {
+            "description": "Scheme definitions",
+            "type": "object",
+            "additionalProperties": {
+                "description": "Single color scheme definition",
+                "type": "object",
+                "properties": {
+                    "base": {
+                        "description": "Base colors",
+                        "type": "object"
+                    },
+                    "user": {
+                        "description": "Additional colors",
+                        "type": "object"
+                    }
+                },
+                "additionalProperties": false
+            }
         }
     },
-    "required": ["base"],
     "additionalProperties": false
 }

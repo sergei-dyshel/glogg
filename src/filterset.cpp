@@ -181,8 +181,7 @@ void Filter::saveToStorage( QSettings& settings ) const
 }
 
 void Filter::retrieveFromStorage( QSettings& settings )
-{
-    LOG(logDEBUG) << "Filter::retrieveFromStorage";
+{    LOG(logDEBUG) << "Filter::retrieveFromStorage";
 
     regexp_ = QRegularExpression( settings.value( "regexp" ).toString(),
                        getPatternOptions( settings.value( "ignore_case", false ).toBool() ) );

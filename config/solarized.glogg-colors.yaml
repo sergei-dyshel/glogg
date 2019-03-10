@@ -15,19 +15,21 @@ defs:
   blue:      0x268bd2
   cyan:      0x2aa198
   green:     0x859900
-base:
-  Text: [base1, base03]
-  Selection: [base03, base1]
-  QuickFind: [base01, base2]
-user:
-  function: blue
-  filename: green
-  linenum: cyan
-  # log levels
-  error: red
-  warning: yellow
-  notice: base2
-  # Special
-  special1: magenta
-  special2: orange
-  special3: violet
+schemes:
+  solarized:
+    base:
+      Text: [base1, base03]
+      Selection: [base03, base1]
+      QuickFind: [base01, base2]
+    user:
+      function: blue
+      filename: green
+      linenum: cyan
+      # log levels
+      error: red
+      warning: yellow
+      notice: base2
+      # Special
+      special1: magenta
+      special2: orange
+      special3: violet

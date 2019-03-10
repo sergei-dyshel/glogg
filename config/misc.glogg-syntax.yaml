@@ -1,0 +1,5 @@
+glogg:
+  - regex: '^- \d+:\d+:\d+\.\d+ (?<level>[A-Z]+) (?<filename>.+):(?<linenum>\d+): \[(?<function>.*?)\].*'
+python_traceback:
+  - group: LINE
+    regex: 'File "(?<filename>.+?)", line (?<linenum>\d+), in (?<function>\w+)'

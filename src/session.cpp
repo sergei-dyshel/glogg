@@ -32,7 +32,7 @@
 #include "data/logdata.h"
 #include "data/logfiltereddata.h"
 
-Session::Session()
+Session::Session(bool noSave) : noSave_(noSave)
 {
     GetPersistentInfo().retrieve( QString( "savedSearches" ) );
 
@@ -89,6 +89,10 @@ void Session::save( std::vector<
         > view_list,
         const QByteArray& geometry )
 {
+    if (noSave_) {
+        INFO << "Not saving temporary session";
+        return;
+    }
     LOG(logDEBUG) << "Session::save";
 
     std::vector<SessionInfo::OpenFile> session_files;

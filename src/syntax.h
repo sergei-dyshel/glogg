@@ -23,7 +23,7 @@ public:
     enum class SearchType;
 
     SyntaxRule(const ConfigNode &node);
-    SyntaxRule(const QString &name, const QString &group, const QString &regExp,
+    SyntaxRule(const QString &group, const QString &regExp,
                SearchType searchType,
                const std::unordered_map<QString, QString> &colorize);
 
@@ -39,7 +39,9 @@ public:
 
     friend class Syntax;
 
-    QString fullName() const { return parentName_ + "/" + name_; }
+    QString fullName() const {
+        return parentName_ + "/" + location_.toString();
+    }
 
     enum class SearchType {
         MATCH,
@@ -55,7 +57,7 @@ public:
     void processMatch(const QRegularExpressionMatch &match,
                       SyntaxParsingState &state) const;
 
-    QString name_;
+    Location location_;
     QString parentName_;
     QString matchGroup_;
     QRegularExpression regExp_;
@@ -92,6 +94,7 @@ public:
     SyntaxCollection() = default;
     SyntaxCollection(const ConfigNode &node);
 
+    void merge(const ConfigNode &node);
     void addSyntax(const Syntax &syntax);
 
     std::list<Token> parse(const QString &line) const;
@@ -105,3 +108,5 @@ private:
 };
 
 QDEBUG_DEFINE_ENUM(SyntaxRule::SearchType)
+
+QDebug &operator<<(QDebug &d, const SyntaxRule &rule);

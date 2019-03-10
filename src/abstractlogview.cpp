@@ -113,7 +113,7 @@ void AbstractLogView::drawColorizedText(QPainter& painter, int initialXPos,
     // For some reason on Qt 4.8.2 for Win, maxWidth() is wrong but the
     // following give the right result, not sure why:
     const int fontWidth = fm.width( QChar('a') );
-    auto &colorScheme = StructConfig::instance().colorScheme();
+    auto &colorScheme = StructConfigStore::current().colorScheme();
 
     int xPos = initialXPos;
     int yPos = initialYPos;
@@ -1581,7 +1581,7 @@ void AbstractLogView::drawTextArea( QPaintDevice* paint_device, int32_t )
         bool isSelection =
             selection_.getPortionForLine( line_index, &sel_start, &sel_end );
         bool isLineSelected = selection_.isLineSelected(line_index);
-        auto &colorScheme = StructConfig::instance().colorScheme();
+        auto &colorScheme = StructConfigStore::current().colorScheme();
         if (isSelection) {
             Range selRange = Range(sel_start, sel_end + 1);
             mergeTokens(tokens, {Token(selRange, ColorScheme::SELECTION)});
@@ -1611,7 +1611,7 @@ void AbstractLogView::drawTextArea( QPaintDevice* paint_device, int32_t )
         /* TODO: make this configurable */
         auto lineForSyntax = line.left(1024);
         auto syntaxTokens
-            = StructConfig::instance().syntaxColl().parse(lineForSyntax);
+            = StructConfigStore::current().syntaxColl().parse(lineForSyntax);
         TRACE << "Parsed syntax:" << syntaxTokens;
         filterTokensByScheme(syntaxTokens, colorScheme);
         mergeSyntaxTokens(tokens, syntaxTokens);

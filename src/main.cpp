@@ -66,6 +66,7 @@ int main(int argc, char *argv[])
     // Configuration
     bool new_session = false;
     bool load_session = false;
+    bool temp_session = false;
     bool multi_instance = false;
     QString logFile;
     QString serverName;
@@ -81,6 +82,7 @@ int main(int argc, char *argv[])
             ("load-session,s", "load the previous session (default when no file is passed)")
             ("server", po::value<std::string>(), "instance server name")
             ("new-session,n", "do not load the previous session (default when a file is passed)")
+            ("temp-session,t", "do not save session on close")
             ("log,l", po::value<std::string>(), "Filename to redirect log to")
             ("debug,d", "output more debug (include multiple times for more verbosity e.g. -dddd)")
             ;
@@ -133,6 +135,9 @@ int main(int argc, char *argv[])
 
         if ( vm.count( "load-session" ) )
             load_session = true;
+
+        if ( vm.count( "temp-session" ) )
+            temp_session = true;
 
         if ( vm.count( "log" ) )
             logFile = QString::fromStdString(vm["log"].as<std::string>());
@@ -261,7 +266,7 @@ int main(int argc, char *argv[])
     // FIXME: should be replaced by a two staged init of MainWindow
     GetPersistentInfo().retrieve( QString( "settings" ) );
 
-    std::unique_ptr<Session> session( new Session() );
+    std::unique_ptr<Session> session( new Session(temp_session) );
     MainWindow mw( std::move( session ), externalCommunicator );
 
     // Geometry

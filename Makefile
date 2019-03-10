@@ -32,6 +32,11 @@ configure: configure_debug configure_release
 debug:
 	$(MAKE) -C $(DEBUG)
 	$(DEBUG)/tests/glogg_syntax_tests --quiet
+	./validate-yaml.py colors.schema.json config/*.glogg-colors.yaml
+	./validate-yaml.py syntax.schema.json config/*.glogg-syntax.yaml
+
+syntax_tests:
+	$(MAKE) -C $(DEBUG) tests/glogg_syntax_tests
 
 release:
 	$(MAKE) -C $(RELEASE)

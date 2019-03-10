@@ -1,0 +1,51 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Glogg syntax file schema",
+    "type": "object",
+    "additionalProperties": {
+        "type": "array",
+        "items": {
+            "type": "object",
+            "properties": {
+                "group": {
+                    "type": "string",
+                    "description": "Previously matched regex group to search in"
+                },
+                "regex": {
+                    "description": "Regular expression pattern or list of literal strings",
+                    "oneOf": [
+                        {
+                            "type": "string",
+                            "description": "Regular expression to search"
+                        },
+                        {
+                            "type": "array",
+                            "description": "List of literal strings to search"
+                        }
+                    ]
+                },
+                "searchType": {
+                    "type": "string",
+                    "description": "Search first match or all matches",
+                    "enum": ["match", "all"],
+                    "default": "match"
+                },
+                "colorize": {
+                    "oneOf": [
+                        {
+                            "type": "string",
+                            "description": "Colorize group being searched"
+                        },
+                        {
+                            "type": "object",
+                            "description": "Colorize some of previously matched groups"
+                        }
+                    ]
+                }
+            },
+            "required": ["regex"],
+            "additionalProperties": false
+        }
+
+    }
+}
