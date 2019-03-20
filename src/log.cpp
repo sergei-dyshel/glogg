@@ -100,3 +100,18 @@ QString ellipsize(const QString &str, int len)
     int rightLen = visibleLen - leftLen;
     return str.left(leftLen) + separator + str.right(rightLen);
 }
+
+QDebug &operator<<(QDebug &debug, QDebugManip manip)
+{
+    switch (manip) {
+        case NOQUOTE:
+            return debug.noquote();
+        case QUOTE:
+            return debug.quote();
+        case NOSPACE:
+            return debug.nospace();
+        case SPACE:
+            return debug.space();
+    }
+    return debug;
+}

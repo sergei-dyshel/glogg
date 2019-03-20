@@ -26,6 +26,7 @@
 #include <sstream>
 #include <string>
 #include <unordered_map>
+#include <set>
 
 #include <QDebug>
 #include <QFile>
@@ -122,6 +123,13 @@ class LogContext final {
     QDebugStateSaver save(debug);                                              \
     debug.nospace().noquote()
 
+enum QDebugManip {
+    NOQUOTE,
+    NOSPACE,
+    QUOTE,
+    SPACE,
+};
+
 class LogStream {
   public:
     QDebug d;
@@ -186,7 +194,9 @@ template <typename T>
 QDEBUG_DEFINE_OPERATOR_STREAMED(std::shared_ptr<T>)
 
 QDEBUG_DEFINE_OPERATOR_LIST_CONTAINER(std::list)
+QDEBUG_DEFINE_OPERATOR_LIST_CONTAINER(std::set)
 QDEBUG_DEFINE_OPERATOR_MAP_CONTAINER(std::unordered_map)
 
+QDebug &operator<<(QDebug &debug, QDebugManip manip);
 
 #endif //__LOG_H__
