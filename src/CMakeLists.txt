@@ -35,7 +35,6 @@ set(SOURCES
     encodingspeculator.cpp
     gloggapp.cpp
     regexp_filter.cpp
-    enum.cpp
     externalcom.cpp
     filewatcher.cpp
 )
