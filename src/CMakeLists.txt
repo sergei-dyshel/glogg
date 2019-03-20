@@ -58,14 +58,10 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 list(APPEND SOURCES platformfilewatcher.cpp inotifywatchtowerdriver.cpp
     watchtower.cpp watchtowerlist.cpp)
 string(APPEND CMAKE_CXX_FLAGS " -DGLOGG_SUPPORTS_INOTIFY")
+set(UI optionsdialog.ui filtersdialog.ui)
 
 # dbus
-find_package(Qt5DBus REQUIRED)
 list(APPEND SOURCES dbusexternalcom.cpp)
-string(APPEND CMAKE_CXX_FLAGS " -DGLOGG_SUPPORTS_DBUS")
-list(APPEND LIBS Qt5::DBus)
-
-set(UI optionsdialog.ui filtersdialog.ui)
 
 add_library(glogg_common
     ${COMMON_SRC}
