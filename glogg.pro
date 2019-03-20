@@ -63,7 +63,6 @@ SOURCES += \
     src/syntax.cpp \
     src/log.cpp \
     src/exception.cpp \
-    src/enum.cpp \
     src/externalcom.cpp \
 
 INCLUDEPATH += src/
