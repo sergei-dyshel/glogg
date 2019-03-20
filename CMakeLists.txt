@@ -60,6 +60,8 @@ target_link_libraries(glogg ${LIBS} glogg_core glogg_syntax pthread Qt5::Widgets
 include(GNUInstallDirs)
 
 install(TARGETS glogg RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+install(DIRECTORY config DESTINATION share/glogg)
+install(FILES colors.schema.json syntax.schema.json DESTINATION share/glogg/schemas)
 install(FILES images/hicolor/16x16/glogg.png DESTINATION share/icons/hicolor/16x16/apps)
 install(FILES images/hicolor/32x32/glogg.png DESTINATION share/icons/hicolor/32x32/apps)
 install(FILES images/hicolor/scalable/glogg.svg DESTINATION share/icons/hicolor/scalable/apps)

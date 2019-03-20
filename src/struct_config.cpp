@@ -21,88 +21,112 @@
 
 #include "log.h"
 #include "utils.h"
+#include "template_utils.h"
 
 #include <memory>
 
 #include <QFile>
-#include <QProcessEnvironment>
-#include <QStandardPaths>
+#include <QDir>
 
-static const QString ENV_VAR_NAME = "GLOGG_JSON_CONFIG";
-static const QString CONFIG_FILE_NAME = "glogg.yaml";
+const QString StructConfig::COLORS_GLOB_PATTERN = "*.glogg-colors.yaml";
+const QString StructConfig::SYNTAX_GLOB_PATTERN = "*.glogg-syntax.yaml";
 
-static std::unique_ptr<StructConfig> theStructConfig;
-
-const StructConfig &StructConfig::instance()
+static void scanSingleDir(const QDir& dir, StructConfigFiles &files)
 {
-    return *theStructConfig;
-}
-void StructConfig::loadDefault()
-{
-    theStructConfig = std::make_unique<StructConfig>();
-}
-
-void StructConfig::reload()
-{
-    auto newConfig = std::make_unique<StructConfig>();
-    newConfig->load();
-    theStructConfig = std::move(newConfig);
-}
-
-static QString getPathFromEnv()
-{
-    QString path;
-    auto env = QProcessEnvironment::systemEnvironment();
-    if (!env.contains(ENV_VAR_NAME))
-        return "";
-    path = env.value(ENV_VAR_NAME);
-    if (path == "") {
-        LOG(logWARNING) << ENV_VAR_NAME << " is empty!";
-        return "";
+    for (auto fileInfo : dir.entryInfoList({StructConfig::COLORS_GLOB_PATTERN}))
+        files.colorsFiles.push_back(fileInfo.absoluteFilePath());
+    for (auto fileInfo :
+         dir.entryInfoList({StructConfig::SYNTAX_GLOB_PATTERN})) {
+        files.syntaxFiles.push_back(fileInfo.absoluteFilePath());
     }
-    QFile file(path);
-    if (!file.exists()) {
-        LOG(logWARNING) << ENV_VAR_NAME << " contains " << path
-                        << " which does not exist";
-        return "";
-    }
-    return path;
 }
 
-void StructConfig::load() {
-    QString path = getPathFromEnv();
-    YAML::Node yamlRoot;
-    if (path == "") {
-        path = QStandardPaths::locate(QStandardPaths::AppConfigLocation,
-                                 CONFIG_FILE_NAME);
-        if (path == "") {
-            LOG(logWARNING) << "Could not locate " << CONFIG_FILE_NAME
-                            << " in standard locations";
-            return;
+void StructConfig::scanDirs(const QStringList &dirs, StructConfigFiles &files)
+{
+    for (auto dirPath : dirs) {
+        QDir dir(dirPath);
+        if (!dir.exists()) {
+            WARN << dirPath << " does not exist, skipping";
+            continue;
+        }
+        scanSingleDir(dir, files);
+    }
+}
+
+StructConfig::StructConfig(const QStringList &colorsFiles,
+                           const QStringList &syntaxFiles,
+                           bool runTests,
+                           bool stopOnError)
+{
+    DEBUG << "Color scheme files:" << colorsFiles;
+    DEBUG << "Syntax files:" << syntaxFiles;
+    for (const auto &file : colorsFiles) {
+        try {
+            mergeMaps(colorSchemes_,
+                      ColorScheme::loadAll(ConfigNode::parseFile(file)),
+                      false /* do not override */);
+            INFO << "Loaded color scheme file " << file;
+        }
+        catch (const ConfigError &exc) {
+            if (stopOnError)
+                throw exc;
+            ERROR << "Error loading color scheme file" << file << ":" << exc;
         }
     }
-    try {
-        yamlRoot = YAML::LoadFile(path.toStdString());
-        if (!yamlRoot.IsMap()) {
-            LOG(logERROR) << "Root node type is not mapping";
+    for (const auto &file : syntaxFiles) {
+        SyntaxCollection fileColl;
+        if (!stopOnError) {
+            try {
+                fileColl
+                    = SyntaxCollection(ConfigNode::parseFile(file), runTests);
+                syntaxColl_.merge(fileColl);
+            } catch (const ConfigError &exc) {
+                ERROR << "Error loading syntax file " << file << ": "
+                    << exc;
+            }
+        } else {
+            fileColl = SyntaxCollection(ConfigNode::parseFile(file), runTests);
+            syntaxColl_.merge(fileColl);
         }
-    } catch (const YAML::ParserException &) {
-        LOG(logERROR) << "Error parsing " << path;
+        INFO << "Loaded syntax file " << file << ","
+             << fileColl.syntaxes().size() << "new syntax defs in file, "
+             << syntaxColl_.syntaxes().size() << "syntax defs after merge";
     }
-
-    ConfigNode root = ConfigNode("", yamlRoot);
-    colorScheme_ = ColorScheme(root.member("colorScheme"));
-    syntaxColl_ = SyntaxCollection(root.member("syntax"));
 }
+
+StructConfig::StructConfig(const StructConfigFiles &configFiles, bool runTests,
+                           bool stopOnError)
+    : StructConfig(configFiles.colorsFiles, configFiles.syntaxFiles, runTests,
+                   stopOnError)
+{}
 
 bool StructConfig::checkForIssues() const
 {
     bool hasIssues = false;
-    for (const auto &syntax : syntaxColl_.syntaxes())
-        for (const auto &scope : syntax.usedScopes())
-            if (!colorScheme_.hasScope(scope)) {
-                ERROR << "Scope" << scope << "used in rule but not defined";
-                hasIssues = true;
-            }
+    for (const auto &nameAndScheme: colorSchemes_)
+        for (const auto &syntax : syntaxColl_.syntaxes())
+            for (const auto &scope : syntax.usedScopes())
+                if (!nameAndScheme.second.hasScope(scope)) {
+                    WARN << "Scope" << scope
+                         << "used in rule but not defined in scheme"
+                         << nameAndScheme.first;
+                    hasIssues = true;
+                }
     return hasIssues;
+}
+
+void StructConfig::scanDirsAndFiles(const QStringList &dirsAndFiles,
+                                    StructConfigFiles &files)
+{
+    for (const auto &path : dirsAndFiles) {
+        QDir dir(path);
+        if (dir.exists())
+            scanSingleDir(dir, files);
+        else if (QDir::match(COLORS_GLOB_PATTERN, path))
+            files.colorsFiles.append(path);
+        else if (QDir::match(SYNTAX_GLOB_PATTERN, path))
+            files.syntaxFiles.append(path);
+        else
+            throw ASSERT << "File" << path << "not recognized";
+    }
 }

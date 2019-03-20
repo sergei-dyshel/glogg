@@ -41,24 +41,17 @@ class SyntaxRule final {
 public:
     enum class SearchType;
 
-    SyntaxRule(const ConfigNode &node);
-    SyntaxRule(const QString &name, const QString &group, const QString &regExp,
-               SearchType searchType,
-               const std::unordered_map<QString, QString> &colorize);
+    SyntaxRule(const QString parent, const ConfigNode &node);
 
     void apply(const QString &line, SyntaxParsingState& state) const;
 
-    class Error : public Exception {
-      public:
-        Error(const QString &ruleName, const LogContext &context);
-        DEFINE_EXCEPTION_SHIFT_OPERATOR(Error)
-    };
-
-    Error error(const LogContext &context) const;
+    ConfigError error(const LogContext &context) const;
 
     friend class Syntax;
 
-    QString fullName() const { return parentName_ + "/" + name_; }
+    QString fullName() const {
+        return parentName_ + "/" + location_.toShortString();
+    }
 
     enum class SearchType {
         MATCH,
@@ -74,8 +67,8 @@ public:
     void processMatch(const QRegularExpressionMatch &match,
                       SyntaxParsingState &state) const;
 
-    QString name_;
     QString parentName_;
+    Location location_;
     QString matchGroup_;
     QRegularExpression regExp_;
     SearchType searchType_;
@@ -88,18 +81,29 @@ public:
 class Syntax final {
   public:
     Syntax();
-    Syntax(const QString &name, const ConfigNode &node);
+    Syntax(const QString &name, const ConfigNode &node, bool runTests);
 
     std::list<Token> parse(const QString &line) const;
 
-    Syntax &addRule(const SyntaxRule &rule);
-
     std::unordered_set<QString> usedScopes() const { return usedScopes_; }
+
+    const QString &name() const { return name_; }
+
+    QString nameAndLocation() const
+    {
+        return name_ + "/" + location_.toString();
+    }
+
+    ConfigError error(const LogContext &ctx) const;
 
     friend class SyntaxCollection;
 
   private:
+    Syntax &addRule(const SyntaxRule &rule);
+    bool runTest(const QString &line, const ConfigNode &node);
+
     QString name_;
+    Location location_;
     std::unordered_set<QString> usedScopes_;
     std::unordered_set<QString> usedGroups_;
     std::unordered_set<QString> usedNames_;
@@ -109,18 +113,18 @@ class Syntax final {
 class SyntaxCollection final {
 public:
     SyntaxCollection() = default;
-    SyntaxCollection(const ConfigNode &node);
+    SyntaxCollection(const ConfigNode &node, bool runTests);
 
-    void addSyntax(const Syntax &syntax);
+    void merge(const SyntaxCollection &other);
 
     std::list<Token> parse(const QString &line) const;
 
-    const std::vector<Syntax> syntaxes() const { return syntaxes_; }
+    const std::list<Syntax> syntaxes() const { return syntaxes_; }
 
-private:
-    std::vector<Syntax> syntaxes_;
-    std::unordered_set<QString> usedNames_;
-
+  private:
+    std::list<Syntax> syntaxes_;
 };
 
 QDEBUG_DEFINE_ENUM(SyntaxRule::SearchType)
+
+QDebug &operator<<(QDebug &d, const SyntaxRule &rule);

@@ -1288,3 +1288,11 @@ std::string CrawlerWidgetContext::toString() const
 
     return { string };
 }
+
+void CrawlerWidget::repaintLogViews()
+{
+    logMainView->forceRefresh();
+    logMainView->update();
+    filteredView->forceRefresh();
+    filteredView->update();
+}

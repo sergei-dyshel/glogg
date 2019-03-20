@@ -20,7 +20,17 @@
 #pragma once
 
 #include <QString>
+#include <QDebug>
 #include <QStringList>
+
+#define DEFINE_STREAM_SHIFT_WITH_QDEBUG(type)                                  \
+    inline std::ostream &operator<<(std::ostream &os, const type &val)         \
+    {                                                                          \
+        QString str;                                                           \
+        QDebug dbg(&str);                                                      \
+        dbg << val;                                                            \
+        return os << str;                                                      \
+    }
 
 namespace std
 {

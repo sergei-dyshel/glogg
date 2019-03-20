@@ -20,6 +20,7 @@
 #pragma once
 
 #include "enum.h"
+#include "location.h"
 #include "exception.h"
 #include "yaml-cpp/yaml.h"
 
@@ -32,16 +33,19 @@
 
 class ConfigError : public Exception {
   public:
-    ConfigError(const QString &path, const LogContext &context);
+    ConfigError(const Location &location, const LogContext &context);
     DEFINE_EXCEPTION_SHIFT_OPERATOR(ConfigError)
 };
 
 class ConfigNode final {
 public:
   ConfigNode() = default;
-  ConfigNode(const QString &path, const YAML::Node &node)
-      : path_(path), node_(node)
-  {}
+  ConfigNode(const YAML::Node &node, const QString &filePath = "");
+
+  const Location &location() const { return location_; }
+
+  static ConfigNode parseFile(const QString &file);
+  static ConfigNode parseString(const QString &str);
 
   ConfigNode requiredMember(const QString &name) const;
   bool hasMember(const QString &name) const;
@@ -62,7 +66,9 @@ public:
   E memberEnum(const QString &name,
                const E &defaultVal) const;
 
-  std::vector<std::pair<QString, ConfigNode>> members() const;
+  std::map<QString, ConfigNode> members() const;
+  std::set<QString> properties() const;
+  void assertProperties(const std::set<QString> &expected) const;
   std::vector<ConfigNode> elements() const;
 
   template <typename T> bool is() const;
@@ -72,12 +78,15 @@ public:
 
   operator bool() const { return node_.IsDefined(); }
 
+  QString toString() const;
+
 private:
     void assertIsArray() const;
     void assertIsObject() const;
 
-    QString path_;
     YAML::Node node_;
+    QString path_;
+    Location location_;
 };
 
 template <typename T> bool ConfigNode::is() const
@@ -114,3 +123,5 @@ E ConfigNode::memberEnum(const QString &name, const E &defaultVal) const
 {
     return hasMember(name) ? member(name).asEnum<E>() : defaultVal;
 }
+
+QDebug &operator<<(QDebug &debug, const ConfigNode& node);

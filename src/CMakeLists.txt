@@ -37,6 +37,8 @@ set(SOURCES
     regexp_filter.cpp
     externalcom.cpp
     filewatcher.cpp
+    struct_config_store.cpp
+    settings.cpp
 )
 
 set(COMMON_SRC
@@ -50,6 +52,8 @@ set(SYNTAX_SRC
     struct_config.cpp
     syntax.cpp
     color_scheme.cpp
+    location.cpp
+    struct_stream.cpp
 )
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})

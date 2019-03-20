@@ -1,0 +1,52 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Glogg color scheme file schema",
+    "definitions": {
+        "textColor": {
+            "description": "Combination of foreground and background colors",
+            "type": "array",
+            "items": { "type": "string" },
+            "minItems": 2,
+            "maximum": 2,
+            "default": ["", ""]
+        }
+    },
+    "type": "object",
+    "additionalProperties": {
+        "description": "Scheme definitions",
+        "type": "object",
+        "properties": {
+            "defs": {
+                "description": "Color definitions",
+                "type": "object",
+                "additionalProperties": {
+                    "type": "string"
+                }
+            },
+            "inherits": {
+                "description": "Base scheme",
+                "type": "string"
+            },
+            "text": {
+                "description": "Main text color",
+                "$ref": "#/definitions/textColor"
+            },
+            "selection": {
+                "description": "Color of selected text",
+                "$ref": "#/definitions/textColor"
+            },
+            "quickFind": {
+                "description": "Color of searched text",
+                "$ref": "#/definitions/textColor"
+            },
+            "user": {
+                "description": "Additional colors",
+                "type": "object",
+                "additionalProperties": {
+                    "type": "string"
+                }
+            }
+        },
+        "additionalProperties": false
+    }
+}

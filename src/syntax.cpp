@@ -43,28 +43,32 @@ static QString stringList2Regex(const QStringList &strings)
     return escaped.join('|');
 }
 
-SyntaxRule::SyntaxRule(const QString &name, const QString &group,
-                       const QString &regExp, SearchType searchType,
-                       const std::unordered_map<QString, QString> &colorize)
-    : name_(name), matchGroup_(group), regExp_(regExp), searchType_(searchType),
-      colorize_(colorize)
-{
-    PostInit();
-}
+#define RULE_TRACE TRACE << *this << ":"
 
-#define RULE_TRACE TRACE << "Rule" << fullName() << ":"
-
-SyntaxRule::SyntaxRule(const ConfigNode &node)
+SyntaxRule::SyntaxRule(const QString parent, const ConfigNode &node)
+    : parentName_(parent), location_(node.location())
 {
-    name_ = node.member("name", "").asString();
+    node.assertProperties({"group", "match", "matchAll", "colorize"});
     matchGroup_ = node.member("group", GROUP_LINE).asString();
-    auto regexNode = node.requiredMember("regex");
+    if (node.hasMember("match") && node.hasMember("matchAll"))
+        throw error(HERE)
+            << "Can not use both 'match' and 'matchAll' at the same time";
+    ConfigNode regexNode;
+    if (node.hasMember("match")) {
+        regexNode = node.requiredMember("match");
+        searchType_ = SearchType::MATCH;
+    }
+    else if (node.hasMember("matchAll")) {
+        regexNode = node.requiredMember("matchAll");
+        searchType_ = SearchType::ALL;
+    } else {
+        throw error(HERE)
+            << "One of 'match' or 'matchAll' properties must be present";
+    }
     QString regex = regexNode.isScalar()
                         ? regexNode.asString()
                         : stringList2Regex(regexNode.asStringList());
     regExp_ = QRegularExpression(regex);
-
-    searchType_ = node.memberEnum<SearchType>("searchType", SearchType::MATCH);
 
     auto colorize = node.member("colorize");
     if (colorize) {
@@ -95,17 +99,9 @@ SyntaxRule::SyntaxRule(const ConfigNode &node)
     PostInit();
 }
 
-SyntaxRule::Error::Error(const QString &ruleName, const LogContext &context)
-    : Exception(context)
+ConfigError SyntaxRule::error(const LogContext &context) const
 {
-    QDEBUG_COMPAT(stream_.d);
-    stream_.d.quote();
-    stream_ << "Rule " << ruleName << ": ";
-}
-
-SyntaxRule::Error SyntaxRule::error(const LogContext &context) const
-{
-    return Error(fullName(), context);
+    return ConfigError(location_, context);
 }
 
 void SyntaxRule::PostInit()
@@ -152,14 +148,15 @@ void SyntaxRule::apply(const QString &line, SyntaxParsingState& state) const
     switch (searchType_) {
         case SearchType::MATCH:
             processMatch(regExp_.match(groupStr), state);
-            break;
+            return;
         case SearchType::ALL:
             auto iter = regExp_.globalMatch(groupStr);
             while (iter.hasNext()) {
                 processMatch(iter.next(), state);
             }
-            break;
+            return;
     }
+    throw ASSERT << "Invalid search type" << searchType_;
 }
 
 void SyntaxRule::processMatch(const QRegularExpressionMatch &match,
@@ -198,35 +195,42 @@ void SyntaxRule::processMatch(const QRegularExpressionMatch &match,
     }
 }
 
+QDebug &operator<<(QDebug &d, const SyntaxRule &rule)
+{
+    QDEBUG_COMPAT(d);
+    return d << "(" << rule.fullName() << ")";
+}
+
 Syntax::Syntax() { usedGroups_.insert(SyntaxRule::GROUP_LINE); }
 
-Syntax::Syntax(const QString &name, const ConfigNode &node) : Syntax()
+ConfigError Syntax::error(const LogContext &ctx) const
+{
+    return ConfigError(location_, ctx);
+}
+
+Syntax::Syntax(const QString &name, const ConfigNode &node, bool runTests)
+    : Syntax()
 {
     name_ = name;
+    location_ = node.location();
+
     DEBUG << "Loading syntax" << name_;
-    for (const auto &elem : node.elements())
-        addRule(SyntaxRule(elem));
+    node.assertProperties({"rules", "tests"});
+    for (const auto &elem : node.requiredMember("rules").elements())
+        addRule(SyntaxRule(name, elem));
+
+    if (runTests && node.hasMember("tests")) {
+        bool ok = false;
+        for (const auto &test : node.requiredMember("tests").members())
+            ok |= runTest(test.first, test.second);
+        if (!ok)
+            throw error(HERE) << "Some tests failed";
+    }
     DEBUG << "Loaded " << rules_.size() << " rules";
 }
 
-Syntax &Syntax::addRule(const SyntaxRule &_rule)
+Syntax &Syntax::addRule(const SyntaxRule &rule)
 {
-    SyntaxRule rule = _rule;
-
-    if (rule.name_.isEmpty()) {
-        if (!usedNames_.count(rule.matchGroup_))
-            rule.name_ = rule.matchGroup_;
-        else {
-            unsigned i = 1;
-            do {
-                rule.name_ = rule.matchGroup_ + QString::number(i++);
-            } while (usedNames_.count(rule.name_));
-        }
-    }
-    if (usedNames_.count(rule.name_))
-        throw rule.error(HERE) << ": already exists";
-    usedNames_.insert(rule.name_);
-
     if (!usedGroups_.count(rule.matchGroup_))
         throw rule.error(HERE) << "matches group" << rule.matchGroup_
                                << "which is not provided by previous rules";
@@ -242,7 +246,7 @@ Syntax &Syntax::addRule(const SyntaxRule &_rule)
                 << "that is not provided by this or previous rules";
         usedScopes_.insert(kv.second);
     }
-    rule.parentName_ = name_;
+    DEBUG << "Added rule" << rule;
 
     rules_.push_back(rule);
     return *this;
@@ -268,21 +272,26 @@ std::list<Token> Syntax::parse(const QString &line) const
     return std::move(state.tokens);
 }
 
-SyntaxCollection::SyntaxCollection(const ConfigNode &node)
+SyntaxCollection::SyntaxCollection(const ConfigNode &node, bool runTests)
 {
     for (const auto &kv : node.members()) {
-        auto syntax = Syntax(kv.first, kv.second);
-        addSyntax(syntax);
+        auto syntax = Syntax(kv.first, kv.second, runTests);
+        syntaxes_.push_back(syntax);
     }
 }
 
-void SyntaxCollection::addSyntax(const Syntax &syntax)
+void SyntaxCollection::merge(const SyntaxCollection &other)
 {
-    if (usedNames_.count(syntax.name_))
-        throw Exception(HERE)
-            << "Syntax" << syntax.name_ << "already loaded (duplicate?)";
-    usedNames_.insert(syntax.name_);
-    syntaxes_.push_back(syntax);
+    for (const auto &syntax : other.syntaxes_) {
+        for (auto iter = syntaxes_.begin(); iter != syntaxes_.end(); ++iter) {
+            if (syntax.name() == iter->name()) {
+                WARN << "Syntax" << syntax.nameAndLocation()
+                     << "overrides syntax" << iter->nameAndLocation();
+                iter = syntaxes_.erase(iter);
+            }
+        }
+        syntaxes_.push_back(syntax);
+    }
 }
 
 std::list<Token> SyntaxCollection::parse(const QString &line) const
@@ -294,4 +303,45 @@ std::list<Token> SyntaxCollection::parse(const QString &line) const
             break;
     }
     return result;
+}
+
+using StringTokens = std::list<std::pair<QString, QString>>;
+
+static StringTokens stringifyTokens(const QString &line,
+                                    const std::list<Token> &tokens)
+{
+    StringTokens pairs;
+    for (const auto &token : tokens) {
+        auto str = line.mid(token.range.start, token.range.length());
+        if (token.colorScope.isEmpty())
+            continue;
+        pairs.emplace_back(str, token.colorScope);
+    }
+    return pairs;
+}
+
+static StringTokens parseStringTokens(const ConfigNode &node)
+{
+    StringTokens pairs;
+    for (const auto &elem : node.elements())
+        pairs.push_back(std::make_pair(elem.element(0).asString(),
+                                       elem.element(1).asString()));
+    return pairs;
+}
+
+bool Syntax::runTest(const QString &line, const ConfigNode &node)
+{
+    auto tokens = parse(line);
+    auto strTokens = stringifyTokens(line, tokens);
+    auto expectedTokens = parseStringTokens(node);
+    if (strTokens != expectedTokens) {
+        StructStream ss;
+        ss << BEGIN_MAP << "line" << line << "parsed" << strTokens << "expected"
+           << expectedTokens << END_MAP;
+        ERROR << "Syntax test" << node.location() << "failed:" << NOQUOTE
+              << ss.toString();
+        return false;
+    }
+    DEBUG << "Syntax test passed:" << node.location();
+    return true;
 }

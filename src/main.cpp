@@ -61,12 +61,14 @@ int main(int argc, char *argv[])
 {
     GloggApp app(argc, argv);
 
-    vector<string> filenames;
+    QStringList filenames;
 
     // Configuration
     bool new_session = false;
     bool load_session = false;
+    bool temp_session = false;
     bool multi_instance = false;
+    bool check_config = false;
     QString logFile;
     QString serverName;
 
@@ -81,8 +83,10 @@ int main(int argc, char *argv[])
             ("load-session,s", "load the previous session (default when no file is passed)")
             ("server", po::value<std::string>(), "instance server name")
             ("new-session,n", "do not load the previous session (default when a file is passed)")
+            ("temp-session,t", "do not save session on close")
             ("log,l", po::value<std::string>(), "Filename to redirect log to")
             ("debug,d", "output more debug (include multiple times for more verbosity e.g. -dddd)")
+            ("check-config", "check color scheme / syntax config files")
             ;
         po::options_description desc_hidden("Hidden options");
         // For -dd, -ddd...
@@ -122,6 +126,9 @@ int main(int argc, char *argv[])
             return 0;
         }
 
+        if (vm.count("check-config"))
+            check_config = true;
+
         if ( vm.count( "debug" ) )
             logLevel = logINFO;
 
@@ -133,6 +140,9 @@ int main(int argc, char *argv[])
 
         if ( vm.count( "load-session" ) )
             load_session = true;
+
+        if ( vm.count( "temp-session" ) )
+            temp_session = true;
 
         if ( vm.count( "log" ) )
             logFile = QString::fromStdString(vm["log"].as<std::string>());
@@ -153,7 +163,9 @@ int main(int argc, char *argv[])
         }
 
         if ( vm.count("input-file") ) {
-            filenames = vm["input-file"].as<vector<string>>();
+             auto vec = vm["input-file"].as<vector<string>>();
+             for (const auto &fname : vec)
+                filenames.append(QString::fromStdString(fname));
         }
     }
     catch(exception& e) {
@@ -166,16 +178,24 @@ int main(int argc, char *argv[])
 
     Log::configure(logLevel, logFile);
 
+    if (check_config){
+        StructConfigFiles configFiles;
+        StructConfig::scanDirsAndFiles(filenames, configFiles);
+        StructConfig config(configFiles, true /* run tests */,
+                            true /* stop on error */);
+        if (config.checkForIssues())
+            throw ASSERT << "Issues found";
+        return 0;
+    }
+
     for ( auto& filename: filenames ) {
-        if ( ! filename.empty() ) {
+        if ( ! filename.isEmpty() ) {
             // Convert to absolute path
-            QFileInfo file( QString::fromLocal8Bit( filename.c_str() ) );
-            filename = file.absoluteFilePath().toStdString();
+            QFileInfo file( filename );
+            filename = file.absoluteFilePath();
             LOG( logDEBUG ) << "Filename: " << filename;
         }
     }
-
-
 
     try {
 #ifdef GLOGG_SUPPORTS_DBUS
@@ -193,7 +213,7 @@ int main(int argc, char *argv[])
     if (externalCommunicator) {
         QStringList allServers = externalCommunicator->allServerNames();
         for (auto name : allServers)
-               INFO << "Found another server: " << name; // TODO: add version
+               INFO << "Found another server: " << name;
         QString existingServer;
         if (!serverName.isEmpty()) {
             if (allServers.contains(serverName))
@@ -211,7 +231,7 @@ int main(int argc, char *argv[])
             LOG(logDEBUG) << "externalInstance = " << externalInstance
                           << ", version = " << externalInstance->getVersion();
             for ( const auto& filename: filenames ) {
-                externalInstance->loadFile( QString::fromStdString( filename ) );
+                externalInstance->loadFile(filename);
             }
             return 0;
         }
@@ -261,7 +281,7 @@ int main(int argc, char *argv[])
     // FIXME: should be replaced by a two staged init of MainWindow
     GetPersistentInfo().retrieve( QString( "settings" ) );
 
-    std::unique_ptr<Session> session( new Session() );
+    std::unique_ptr<Session> session( new Session(temp_session) );
     MainWindow mw( std::move( session ), externalCommunicator );
 
     // Geometry
@@ -277,7 +297,7 @@ int main(int argc, char *argv[])
     mw.show();
 
     for ( const auto& filename: filenames ) {
-        mw.loadInitialFile( QString::fromStdString( filename ) );
+        mw.loadInitialFile(filename);
     }
 
     mw.startBackgroundTasks();

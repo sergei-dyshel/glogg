@@ -13,6 +13,7 @@ add_executable(glogg_tests
     watchtowerTest.cpp
     linepositionarrayTest.cpp
     encodingspeculatorTest.cpp
+    utests.cpp
 )
 
 # Link test executable against gtest & gtest_main
@@ -21,6 +22,7 @@ target_link_libraries(glogg_tests
 
 add_executable(glogg_syntax_tests
     colorizer_test.cpp
+    colors_test.cpp
     syntax_test.cpp
     utests.cpp
 )

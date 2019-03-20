@@ -47,7 +47,7 @@ class FileUnreadableErr {};
 // (SavedSearches, FileHistory, QFPattern...)
 class Session {
   public:
-    Session();
+    explicit Session(bool noSave);
     ~Session();
 
     // No copy/assignment please
@@ -105,6 +105,8 @@ class Session {
         std::shared_ptr<LogFilteredData> logFilteredData;
         ViewInterface* view;
     };
+
+    bool noSave_;
 
     // Open a file without checking if it is existing/readable
     ViewInterface* openAlways( const std::string& file_name,
