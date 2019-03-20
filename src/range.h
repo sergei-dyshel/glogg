@@ -1,4 +1,21 @@
-// TODO: add header
+/*
+ * Copyright (C) 2018-2019 Sergei Dyshel and other contributors
+ *
+ * This file is part of glogg.
+ *
+ * glogg is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * glogg is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with glogg.  If not, see <http://www.gnu.org/licenses/>.
+ */
 
 #pragma once
 
@@ -15,10 +32,6 @@ struct Range final {
   public:
     unsigned start = 0;
     unsigned end = 0;
-
-    // TODO: try to combine these two exceptions
-    DERIVE_EXCEPTION(BadRangeEnd, Exception);
-    DERIVE_EXCEPTION(OutOfBounds, Exception);
 
     Range() = default;
     Range(unsigned length) : start(0), end(length) {}
@@ -49,8 +62,6 @@ struct Range final {
         return qMax(start, range.start) < qMin(end, range.end);
     }
 
-    // Range& intersect(const Range& range) { return *this; }
-
     unsigned length() const { return end - start; }
 
     Range& setStart(unsigned new_start)
@@ -62,7 +73,6 @@ struct Range final {
 
     Range& setEnd(unsigned new_end)
     {
-        // TODO: assert end is proper
         end = new_end;
         assertValid();
         return *this;
@@ -80,14 +90,6 @@ struct Range final {
         return  (start + end) / 2;
     }
 
-    // TODO: check if needed
-    Range splitLeft(unsigned new_start) {
-        assertContains(new_start);
-        auto prev_start = start;
-        setStart(new_start);
-        return Range(prev_start, new_start);
-    }
-
     bool operator== (const Range &range) const {
         return start == range.start && end == range.end;
     }
@@ -98,14 +100,14 @@ struct Range final {
     void assertValid()
     {
         if (end < start)
-            throw BadRangeEnd(HERE) << "Range end " << end
+            throw ASSERT << "Range end " << end
                                 << " is smaller than range start " << start;
     }
 
     void assertContains(unsigned val)
     {
         if (!contains(val))
-            throw OutOfBounds(HERE) << *this << " does not contain " << val;
+            throw ASSERT << *this << " does not contain " << val;
     }
 }; // Range
 
