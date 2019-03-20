@@ -68,8 +68,6 @@ class WatchTowerBehaviour: public testing::Test {
     }
 
     WatchTowerBehaviour() {
-        // Default to quiet, but increase to debug
-        Log::configure( logERROR );
     }
 };
 

@@ -23,22 +23,35 @@
 #include "color_scheme.h"
 #include "syntax.h"
 
-class StructConfig {
-public:
-    StructConfig() = default;
+struct StructConfigFiles {
+    QStringList colorsFiles;
+    QStringList syntaxFiles;
+};
 
-    void Load();
-    const ColorScheme &colorScheme() const { return colorScheme_; }
+class StructConfig {
+  public:
+    using ColorSchemeMap = std::map<QString, ColorScheme>;
+
+    StructConfig() = default;
+    StructConfig(const QStringList &colorsFiles, const QStringList &syntaxFiles,
+                 bool runTests, bool stopOnError);
+    StructConfig(const StructConfigFiles &configFiles, bool runTests,
+                 bool stopOnError);
+
+    StructConfig(const StructConfig &) = delete;
+
+    const ColorSchemeMap &colorSchemes() const { return colorSchemes_; }
     const SyntaxCollection &syntaxColl() const { return syntaxColl_; }
     bool checkForIssues() const;
 
-    static const StructConfig &instance();
-    static void loadDefault();
-    static void reload();
+    static void scanDirs(const QStringList &dirs, StructConfigFiles &files);
+    static void scanDirsAndFiles(const QStringList &dirsAndFiles,
+                                 StructConfigFiles &files);
 
-private:
-    void load();
+    static const QString COLORS_GLOB_PATTERN;
+    static const QString SYNTAX_GLOB_PATTERN;
 
-    ColorScheme colorScheme_;
+  private:
+    ColorSchemeMap colorSchemes_;
     SyntaxCollection syntaxColl_;
 };

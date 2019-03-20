@@ -20,12 +20,26 @@
 #include "struct_config.h"
 
 #include "log.h"
+#include "template_utils.h"
 
-ConfigError::ConfigError(const QString &path, const LogContext &context)
+ConfigNode::ConfigNode(const YAML::Node &node, const QString &path)
+    : node_(node), path_(path), location_(path, node.Mark().line)
+{}
+
+ConfigError::ConfigError(const Location &location, const LogContext &context)
     : Exception(context)
 {
     QDEBUG_COMPAT(stream_.d);
-    stream_ << "Error parsing config: " << path << " ";
+    stream_ << location << ":";
+}
+
+ConfigNode ConfigNode::parseFile(const QString &file)
+{
+    return ConfigNode(YAML::LoadFile(file.toStdString()), file);
+}
+ConfigNode ConfigNode::parseString(const QString &str)
+{
+    return ConfigNode(YAML::Load(str.toStdString()));
 }
 
 bool ConfigNode::isArray() const
@@ -59,14 +73,13 @@ ConfigNode ConfigNode::requiredMember(const QString &name) const
 {
     assertIsObject();
     if (!hasMember(name))
-        throw error(HERE) << "does not have member '" << name << "'";
+        throw error(HERE) << "does not have member" << name;
     return member(name);
 }
 
 ConfigNode
 ConfigNode::member(const QString &name, const QString &defaultYaml) const
 {
-    auto path = path_ + "/" + name;
     auto yamlNode = hasMember(name)
                         ? node_[name.toStdString()]
                         : (defaultYaml.isNull()
@@ -74,13 +87,13 @@ ConfigNode::member(const QString &name, const QString &defaultYaml) const
                                : (defaultYaml.isEmpty()
                                       ? YAML::Load("''")
                                       : YAML::Load(defaultYaml.toStdString())));
-    return ConfigNode(path, yamlNode);
+    return ConfigNode(yamlNode, path_);
 }
 
 ConfigNode ConfigNode::element(unsigned index) const
 {
     assertIsArray();
-    return ConfigNode(path_ + "[" + QString::number(index) + "]", node_[index]);
+    return ConfigNode(node_[index], path_);
 }
 
 size_t ConfigNode::numElements() const
@@ -116,19 +129,32 @@ QStringList ConfigNode::asStringList() const
 
 ConfigError ConfigNode::error(const LogContext &context) const
 {
-    return ConfigError(path_, context);
+    return ConfigError(location_, context);
 }
 
-std::vector<std::pair<QString, ConfigNode>> ConfigNode::members() const
+std::map<QString, ConfigNode> ConfigNode::members() const
 {
     assertIsObject();
-    std::vector<std::pair<QString, ConfigNode>> result;
+    std::map<QString, ConfigNode> result;
     for (const auto &node : node_) {
         auto key = QString::fromStdString(node.first.as<std::string>());
-        result.emplace_back(key, ConfigNode(path_ + "/" + key, node.second));
+        result.emplace(key, ConfigNode(node.second, path_));
     }
     return result;
 }
+
+std::set<QString> ConfigNode::properties() const
+{
+    return mapKeysSet<std::set<QString>>(members());
+}
+
+void ConfigNode::assertProperties(const std::set<QString> &expected) const
+{
+    auto diff = setDifference(properties(), expected);
+    if (!diff.empty())
+        throw error(HERE) << "unexpected properties" << diff;
+}
+
 
 std::vector<ConfigNode> ConfigNode::elements() const
 {
@@ -138,3 +164,17 @@ std::vector<ConfigNode> ConfigNode::elements() const
     return result;
 }
 
+QString ConfigNode::toString() const
+{
+  YAML::Emitter emitter;
+  emitter.SetMapFormat(YAML::Flow);
+  emitter.SetSeqFormat(YAML::Flow);
+  emitter << node_;
+  return emitter.c_str();
+}
+
+QDebug &operator<<(QDebug &debug, const ConfigNode& node)
+{
+    QDEBUG_COMPAT(debug);
+    return debug << node.toString();
+}

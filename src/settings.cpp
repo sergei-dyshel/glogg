@@ -17,11 +17,25 @@
  * along with glogg.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#pragma once
+#include "settings.h"
 
-namespace YAML {
-    class Node;
+#define PREAMBLE "Setting" << (group() + "." + key)
+
+Settings::Settings() : QSettings("glogg", "glogg") {
+
 }
 
-class StructConfig;
-class Settings;
+QString Settings::getString(const QString &key, const QString &default_)
+{
+    if (contains(key)) {
+        auto val = value(key);
+        if (val.type() != QVariant::String) {
+            ERROR << PREAMBLE << "is not a string";
+            return default_;
+        }
+        return val.toString();
+    } else {
+        WARN << PREAMBLE << " is missing";
+        return default_;
+    }
+}

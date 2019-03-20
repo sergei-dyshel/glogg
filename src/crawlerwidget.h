@@ -80,6 +80,8 @@ class CrawlerWidget : public QSplitter,
     // suitable to display to the user.
     QString encodingText() const;
 
+    void repaintLogViews();
+
   public slots:
     // Stop the asynchoronous loading of the file if one is in progress
     // The file is identified by the view attached to it.

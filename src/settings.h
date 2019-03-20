@@ -19,9 +19,11 @@
 
 #pragma once
 
-namespace YAML {
-    class Node;
-}
+#include <QSettings>
+#include "exception.h"
 
-class StructConfig;
-class Settings;
+class Settings : public QSettings {
+public:
+    Settings();
+    QString getString(const QString &key, const QString &default_ = QString());
+};

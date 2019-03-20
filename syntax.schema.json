@@ -1,0 +1,73 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Glogg syntax file schema",
+    "definitions": {
+        "regexOrList": {
+            "description": "Regular expression pattern or list of literal strings",
+            "oneOf": [
+                {
+                    "type": "string",
+                    "description": "Regular expression to search"
+                },
+                {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "description": "List of literal strings to search"
+                }
+            ]
+        }
+    },
+    "additionalProperties": {
+        "type": "object",
+        "properties": {
+            "rules": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "group": {
+                            "type": "string",
+                            "description": "Previously matched regex group to search in"
+                        },
+                        "match": {
+                            "description": "Search first match",
+                            "$ref": "#/definitions/regexOrList"
+                        },
+                        "matchAll": {
+                            "description": "Search all matches",
+                            "$ref": "#/definitions/regexOrList"
+                        },
+                        "colorize": {
+                            "oneOf": [
+                                {
+                                    "type": "string",
+                                    "description": "Colorize group being searched"
+                                },
+                                {
+                                    "type": "object",
+                                    "description": "Colorize some of previously matched groups",
+                                    "additionalProperties": {"type": "string"}
+                                }
+                            ]
+                        }
+                    },
+                    "additionalProperties": false
+                }
+            },
+            "tests": {
+                "additionalProperties": {
+                    "type": "array",
+                    "items": {
+                        "type": "array",
+                        "minItems": 2,
+                        "maxItems": 2,
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "additionalProperties": false
+        }
+    }
+}

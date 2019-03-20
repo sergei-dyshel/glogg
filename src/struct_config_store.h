@@ -19,9 +19,33 @@
 
 #pragma once
 
-namespace YAML {
-    class Node;
-}
+#include "struct_config.h"
+#include "fwd.h"
 
-class StructConfig;
-class Settings;
+#include <QSettings>
+#include <memory>
+
+class StructConfigStore {
+  public:
+    StructConfigStore();
+
+    static StructConfigStore &get();
+    static void init();
+
+    const SyntaxCollection &syntaxColl() { return config_.syntaxColl(); }
+    const QString &colorSchemeName() const { return colorSchemeName_; }
+    const ColorScheme &colorScheme() const;
+    void reload();
+
+    void setColorScheme(const QString &name);
+
+    QStringList colorSchemeNames() const;
+
+    void saveSettings();
+
+  private:
+    Settings &settings_;
+    StructConfig config_;
+    QString colorSchemeName_;
+    ColorScheme defaultColorScheme_;
+};

@@ -20,6 +20,8 @@
 #ifndef PERSISTENTINFO_H
 #define PERSISTENTINFO_H
 
+#include "settings.h"
+
 #include <memory>
 
 #include <QSettings>
@@ -45,6 +47,8 @@ class PersistentInfo {
     // Retrieve a persistable from permanent storage
     void retrieve( const QString& name );
 
+    Settings& settings() { return *settings_; }
+
   private:
     // Can't be constructed or copied (singleton)
     PersistentInfo();
@@ -58,7 +62,7 @@ class PersistentInfo {
     QHash<QString, std::shared_ptr<Persistable>> objectList_;
 
     // Qt setting object
-    QSettings* settings_;
+    Settings* settings_;
 
     // allow this function to create one instance
     friend PersistentInfo& GetPersistentInfo();

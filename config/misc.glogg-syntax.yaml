@@ -1,0 +1,18 @@
+glogg:
+  rules:
+    - match: '^- \d+:\d+:\d+\.\d+ (?<level>[A-Z]+) (?<filename>.+):(?<linenum>\d+): \[(?<function>.*?)\].*'
+  tests:
+    '- 21:06:22.563 INFO struct_config.cpp:49: [StructConfig::StructConfig] Loaded color scheme file  "/home/sergei/src/glogg-devel/config/solarized.glogg-colors.yaml"':
+      - [INFO, level]
+      - [struct_config.cpp, filename]
+      - ['49', linenum]
+      - [StructConfig::StructConfig, function]
+
+python_traceback:
+  rules:
+    - match: 'File "(?<filename>.+?)", line (?<linenum>\d+), in (?<function>[\w<>]+)'
+  tests:
+    '  File "spam.py", line 3, in <module>':
+      - [spam.py, filename]
+      - ['3', linenum]
+      - [<module>, function]

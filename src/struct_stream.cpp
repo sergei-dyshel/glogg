@@ -17,11 +17,20 @@
  * along with glogg.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#pragma once
+#include "struct_stream.h"
 
-namespace YAML {
-    class Node;
+StructStream::StructStream()
+{
+    emitter_.SetSeqFormat(YAML::Flow);
+    emitter_.SetMapFormat(YAML::Flow);
 }
 
-class StructConfig;
-class Settings;
+QString StructStream::toString() const
+{
+    return emitter_.c_str();
+}
+
+YAML::Emitter &operator<<(YAML::Emitter &emitter, const QString &str)
+{
+    return emitter << str.toStdString();
+}

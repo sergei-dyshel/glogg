@@ -24,6 +24,7 @@
 #include "log.h"
 #include "config_node.h"
 #include "qt_std_interop.h"
+#include "struct_stream.h"
 
 #include <iostream>
 
@@ -31,12 +32,16 @@
 #include <QString>
 
 #include <unordered_map>
+#include <utility>
+
+using namespace std::rel_ops;
 
 struct TextColor final {
-    // TODO: remove default after writing tests
-    explicit TextColor(const QColor &fore = QColor(), const QColor &back = QColor())
+    TextColor(const QColor &fore = QColor(), const QColor &back = QColor())
         : foreground(fore), background(back)
     {}
+
+    TextColor(const std::initializer_list<QColor> &init_list);
 
     explicit TextColor(const ConfigNode& node);
 
@@ -49,11 +54,28 @@ private:
 
 class ColorScheme final {
   public:
-    explicit ColorScheme(const ConfigNode& node = ConfigNode());
+    explicit ColorScheme(const QString &name = "",
+                         const Location &location = Location());
+
+    using User = std::unordered_map<QString, QColor>;
+    using Map = std::map<QString, ColorScheme>;
+
+    // Used for tests
+    ColorScheme &setText(const TextColor &text);
+    ColorScheme &setSelection(const TextColor &selection);
+    ColorScheme &setQuickFind(const TextColor &quickFind);
+    ColorScheme &addUser(const User &user, bool override_ = true);
+
+    static Map loadAll(const ConfigNode &node);
+
+    const QString &name() const { return name_; }
 
     TextColor scopeColor(const QString& name) const;
-    TextColor scopeColor(const QString& name, const TextColor &defaultColor) const;
+    TextColor scopeColor(const QString &name,
+                         const TextColor &defaultColor) const;
     bool hasScope(const QString &name) const;
+
+    const User &userScopes() const { return user_; }
 
     TextColor text;
     TextColor selection;
@@ -63,16 +85,28 @@ class ColorScheme final {
     static const QString SELECTION;
     static const QString QUICK_FIND;
 
+    bool operator==(const ColorScheme &other) const;
+
   private:
+    using Defs = std::map<QString, QColor>;
 
-    QColor readColor(const ConfigNode& node, bool allowUser);
-    TextColor readTextColor(const ConfigNode& node);
+    void addDefs(const ConfigNode& node, Defs &defs);
+    void addScopes(const ConfigNode& node, const Defs &defs);
 
-    std::unordered_map<QString, QColor> defs_;
-    std::unordered_map<QString, QColor> user_;
+    static QColor readColor(const ConfigNode &node, const Defs *defs = nullptr,
+                     const User *userScopes = nullptr);
+    TextColor readTextColor(const ConfigNode& node, const Defs &defs);
+
+    QString name_;
+    Location location_;
+    User user_;
 };
 
 bool operator==(const TextColor &color1, const TextColor &color2);
-// TODO: define using https://stackoverflow.com/questions/23388739/c-relational-operators-generator
-bool operator!=(const TextColor &color1, const TextColor &color2);
-QDebug& operator<<(QDebug &debug, const TextColor &color);
+StructStream& operator<<(StructStream &ss, const ColorScheme &scheme);
+StructStream& operator<<(StructStream &ss, const QColor &color);
+StructStream& operator<<(StructStream &ss, const TextColor &color);
+
+DEFINE_QDEBUG_SHIFT_WITH_STRUCT(TextColor)
+DEFINE_QDEBUG_SHIFT_WITH_STRUCT(ColorScheme)
+DEFINE_STREAM_SHIFT_WITH_QDEBUG(ColorScheme)
