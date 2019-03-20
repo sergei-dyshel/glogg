@@ -19,23 +19,33 @@
 
 #pragma once
 
-#include <QString>
+#include "struct_config.h"
+#include "fwd.h"
 
-class Location final {
+#include <QSettings>
+#include <memory>
+
+class StructConfigStore {
   public:
-    Location() = default;
-    Location(const QString &path, unsigned lineNumber);
-    const QString &path() const { return path_; }
-    QString fileName() const;
-    unsigned lineNumber() const { return lineNumber_; }
+    StructConfigStore();
 
-    QString toString(bool fileNameOnly = false) const;
-    QString toShortString() const;
-    operator QString() const;
+    static StructConfigStore &get();
+    static void init();
+
+    const SyntaxCollection &syntaxColl() { return config_.syntaxColl(); }
+    const QString &colorSchemeName() const { return colorSchemeName_; }
+    const ColorScheme &colorScheme() const;
+    void reload();
+
+    void setColorScheme(const QString &name);
+
+    QStringList colorSchemeNames() const;
+
+    void saveSettings();
 
   private:
-    QString path_;
-    unsigned lineNumber_ = 0;
+    Settings &settings_;
+    StructConfig config_;
+    QString colorSchemeName_;
+    ColorScheme defaultColorScheme_;
 };
-
-QDebug& operator<<(QDebug &debug, const Location &location);

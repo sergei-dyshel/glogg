@@ -17,25 +17,25 @@
  * along with glogg.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#pragma once
+#include "settings.h"
 
-#include <QString>
+#define PREAMBLE "Setting" << (group() + "." + key)
 
-class Location final {
-  public:
-    Location() = default;
-    Location(const QString &path, unsigned lineNumber);
-    const QString &path() const { return path_; }
-    QString fileName() const;
-    unsigned lineNumber() const { return lineNumber_; }
+Settings::Settings() : QSettings("glogg", "glogg") {
 
-    QString toString(bool fileNameOnly = false) const;
-    QString toShortString() const;
-    operator QString() const;
+}
 
-  private:
-    QString path_;
-    unsigned lineNumber_ = 0;
-};
-
-QDebug& operator<<(QDebug &debug, const Location &location);
+QString Settings::getString(const QString &key, const QString &default_)
+{
+    if (contains(key)) {
+        auto val = value(key);
+        if (val.type() != QVariant::String) {
+            ERROR << PREAMBLE << "is not a string";
+            return default_;
+        }
+        return val.toString();
+    } else {
+        WARN << PREAMBLE << " is missing";
+        return default_;
+    }
+}

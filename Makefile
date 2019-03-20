@@ -34,9 +34,11 @@ debug:
 	$(DEBUG)/tests/glogg_syntax_tests --quiet
 	./validate-yaml.py colors.schema.json config/*.glogg-colors.yaml
 	./validate-yaml.py syntax.schema.json config/*.glogg-syntax.yaml
+	$(DEBUG)/glogg --check-config ./config
 
 syntax_tests:
-	$(MAKE) -C $(DEBUG) tests/glogg_syntax_tests
+	$(MAKE) -j$(shell nproc) -C $(DEBUG)/tests glogg_syntax_tests
+	$(DEBUG)/tests/glogg_syntax_tests --gtest_filter="*$(f)*" -ddd
 
 release:
 	$(MAKE) -C $(RELEASE)

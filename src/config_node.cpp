@@ -1,6 +1,7 @@
 #include "struct_config.h"
 
 #include "log.h"
+#include "template_utils.h"
 
 ConfigNode::ConfigNode(const YAML::Node &node, const QString &path)
     : node_(node), path_(path), location_(path, node.Mark().line)
@@ -123,6 +124,19 @@ std::map<QString, ConfigNode> ConfigNode::members() const
     return result;
 }
 
+std::set<QString> ConfigNode::properties() const
+{
+    return mapKeysSet<std::set<QString>>(members());
+}
+
+void ConfigNode::assertProperties(const std::set<QString> &expected) const
+{
+    auto diff = setDifference(properties(), expected);
+    if (!diff.empty())
+        throw error(HERE) << "unexpected properties" << diff;
+}
+
+
 std::vector<ConfigNode> ConfigNode::elements() const
 {
     std::vector<ConfigNode> result;
@@ -133,5 +147,15 @@ std::vector<ConfigNode> ConfigNode::elements() const
 
 QString ConfigNode::toString() const
 {
-    return QString::fromStdString(YAML::Dump(node_));
+  YAML::Emitter emitter;
+  emitter.SetMapFormat(YAML::Flow);
+  emitter.SetSeqFormat(YAML::Flow);
+  emitter << node_;
+  return emitter.c_str();
+}
+
+QDebug &operator<<(QDebug &debug, const ConfigNode& node)
+{
+    QDEBUG_COMPAT(debug);
+    return debug << node.toString();
 }

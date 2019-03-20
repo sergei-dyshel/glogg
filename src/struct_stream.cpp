@@ -17,25 +17,20 @@
  * along with glogg.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#pragma once
+#include "struct_stream.h"
 
-#include <QString>
+StructStream::StructStream()
+{
+    emitter_.SetSeqFormat(YAML::Flow);
+    emitter_.SetMapFormat(YAML::Flow);
+}
 
-class Location final {
-  public:
-    Location() = default;
-    Location(const QString &path, unsigned lineNumber);
-    const QString &path() const { return path_; }
-    QString fileName() const;
-    unsigned lineNumber() const { return lineNumber_; }
+QString StructStream::toString() const
+{
+    return emitter_.c_str();
+}
 
-    QString toString(bool fileNameOnly = false) const;
-    QString toShortString() const;
-    operator QString() const;
-
-  private:
-    QString path_;
-    unsigned lineNumber_ = 0;
-};
-
-QDebug& operator<<(QDebug &debug, const Location &location);
+YAML::Emitter &operator<<(YAML::Emitter &emitter, const QString &str)
+{
+    return emitter << str.toStdString();
+}

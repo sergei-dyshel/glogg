@@ -48,6 +48,8 @@ public:
                const E &defaultVal) const;
 
   std::map<QString, ConfigNode> members() const;
+  std::set<QString> properties() const;
+  void assertProperties(const std::set<QString> &expected) const;
   std::vector<ConfigNode> elements() const;
 
   template <typename T> bool is() const;
@@ -102,3 +104,5 @@ E ConfigNode::memberEnum(const QString &name, const E &defaultVal) const
 {
     return hasMember(name) ? member(name).asEnum<E>() : defaultVal;
 }
+
+QDebug &operator<<(QDebug &debug, const ConfigNode& node);

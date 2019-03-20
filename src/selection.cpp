@@ -25,8 +25,6 @@
 
 #include "selection.h"
 
-// TODO: remove
-#include "log.h"
 #include "data/abstractlogdata.h"
 
 Selection::Selection()

@@ -1,13 +1,32 @@
-// TODO: add header
+/*
+ * Copyright (C) 2018-2019 Sergei Dyshel and other contributors
+ *
+ * This file is part of glogg.
+ *
+ * glogg is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * glogg is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with glogg.  If not, see <http://www.gnu.org/licenses/>.
+ */
 
 #include "color_scheme.h"
 
 #include "log.h"
 #include "template_utils.h"
+#include "struct_stream.h"
 
 #include <yaml-cpp/yaml.h>
 
 #include <QPalette>
+#include <QRegularExpression>
 
 TextColor::TextColor(const ConfigNode &node)
     : foreground(colorFromNode(node.element(0))),
@@ -40,9 +59,9 @@ QColor TextColor::colorFromNode(const ConfigNode& node)
     return color;
 }
 
-const QString ColorScheme::TEXT("Text");
-const QString ColorScheme::SELECTION("Selection");
-const QString ColorScheme::QUICK_FIND("QuickFind");
+const QString ColorScheme::TEXT("text");
+const QString ColorScheme::SELECTION("selection");
+const QString ColorScheme::QUICK_FIND("quickFind");
 
 ColorScheme::ColorScheme(const QString &name, const Location &location)
     : name_(name), location_(location)
@@ -73,31 +92,37 @@ ColorScheme &ColorScheme::setQuickFind(const TextColor &quickFind)
     return *this;
 }
 
-void ColorScheme::add(const ConfigNode &node,
+ColorScheme &ColorScheme::addUser(const User &user, bool override_)
+{
+    mergeMaps(user_, user, override_);
+    return *this;
+}
+
+void ColorScheme::addDefs(const ConfigNode& node, Defs &defs)
+{
+    Defs newDefs;
+    if (!node.hasMember("defs"))
+        return;
+    for (const auto &member : node.requiredMember("defs").members()) {
+        newDefs.emplace(member.first, readColor(member.second, &defs));
+    }
+    mergeMaps(defs, newDefs, true /* override */);
+}
+
+void ColorScheme::addScopes(const ConfigNode &node,
                       const Defs &defs)
 {
-    if (node.hasMember("base")) {
-        auto base = node.requiredMember("base");
-        DEBUG << base.toString() << base.requiredMember(TEXT);
-        if (base.hasMember(TEXT))
-            text = readTextColor(base.requiredMember(TEXT), defs);
-        if (base.hasMember(SELECTION))
-            selection = readTextColor(base.requiredMember(SELECTION), defs);
-        if (base.hasMember(QUICK_FIND))
-            quickFind = readTextColor(base.requiredMember(QUICK_FIND), defs);
-    }
+    if (node.hasMember(TEXT))
+        text = readTextColor(node.requiredMember(TEXT), defs);
+    if (node.hasMember(SELECTION))
+        selection = readTextColor(node.requiredMember(SELECTION), defs);
+    if (node.hasMember(QUICK_FIND))
+        quickFind = readTextColor(node.requiredMember(QUICK_FIND), defs);
     if (node.hasMember("user")) {
         for (const auto &member : node.requiredMember("user").members())
             user_.emplace(member.first,
-                          readColor(member.second, defs, true /* allowUser */));
+                          readColor(member.second, &defs, &user_));
     }
-
-    DEBUG << TEXT << text;
-    DEBUG << SELECTION << selection;
-    DEBUG << QUICK_FIND << quickFind;
-
-    for (const auto &kv : user_)
-        DEBUG << kv.first << kv.second.name();
 }
 
 auto ColorScheme::loadAll(const ConfigNode &node) -> Map
@@ -105,15 +130,9 @@ auto ColorScheme::loadAll(const ConfigNode &node) -> Map
     Map schemes;
     std::map<QString, QColor> defs;
 
-    if (node.hasMember("defs")) {
-        for (const auto &member : node.requiredMember("defs").members())
-            defs.emplace(member.first, QColor(member.second.as<int>()));
-    }
-
-    if (!node.hasMember("schemes"))
+    const auto &allSchemeNodes = node.members();
+    if (allSchemeNodes.empty())
         WARN << "No color schemes defined in" << node.location().path();
-
-    const auto &allSchemeNodes = node.requiredMember("schemes").members();
     for (const auto &pair : allSchemeNodes) {
         const auto &name = pair.first;
         if (name.startsWith("_")) {
@@ -121,6 +140,8 @@ auto ColorScheme::loadAll(const ConfigNode &node) -> Map
             continue;
         }
         const auto *schemeNode = &pair.second;
+        schemeNode->assertProperties(
+            {"defs", "inherits", "text", "selection", "quickFind", "user"});
         ColorScheme scheme(name, schemeNode->location());
         std::list<const ConfigNode *> nodesToAdd = {schemeNode};
         while (schemeNode->hasMember("inherits")) {
@@ -131,34 +152,39 @@ auto ColorScheme::loadAll(const ConfigNode &node) -> Map
             schemeNode = &allSchemeNodes.at(base);
             nodesToAdd.push_front(schemeNode);
         }
+        defs.clear();
         for (const auto &nodeToAdd : nodesToAdd)
-            scheme.add(*nodeToAdd, defs);
+            scheme.addDefs(*nodeToAdd, defs);
+        for (const auto &nodeToAdd : nodesToAdd)
+            scheme.addScopes(*nodeToAdd, defs);
         schemes.emplace(name, scheme);
+        DEBUG << "Added scheme" << name << ":" << scheme;
     }
     return schemes;
 }
 
-QColor ColorScheme::readColor(const ConfigNode &node, const Defs &defs,
-                              bool allowUser)
+QColor ColorScheme::readColor(const ConfigNode &node, const Defs *defs,
+                              const User *userScopes)
 {
-    if (node.is<QRgb>()) {
-        return QColor(node.as<QRgb>());
-    }
     auto str = node.asString();
-    if (allowUser && user_.count(str))
-        return user_.at(str);
-    if (!defs.count(str))
+    if (str.contains(QRegularExpression("^#[0-9a-fA-F]{6}$")))
+        return QColor(str);
+    if (defs == nullptr)
         throw node.error(HERE)
-            << " has value of " << str
-            << " but must be either 0xRGB or alias to existing color";
-    return defs.at(str);
+            << "has value of" << str << "but must be of format #RRGGBB";
+    if (defs->count(str))
+        return defs->at(str);
+    if (userScopes && userScopes->count(str))
+        return userScopes->at(str);
+    throw node.error(HERE)
+        << "has value of" << str
+        << "but must be either string #RRGGBB or alias to existing color";
 }
 
 TextColor ColorScheme::readTextColor(const ConfigNode& node, const Defs &defs)
 {
-    return TextColor(
-        readColor(node.element(0), defs, false /* do not allowUser */),
-        readColor(node.element(1), defs, false));
+    return TextColor(readColor(node.element(0), &defs),
+                     readColor(node.element(1), &defs));
 }
 bool ColorScheme::hasScope(const QString &name) const
 {
@@ -195,25 +221,27 @@ bool operator==(const TextColor &color1, const TextColor &color2)
            && color1.background == color2.background;
 }
 
-QDebug& operator<<(QDebug &debug, const ColorScheme &scheme)
+StructStream& operator<<(StructStream &ss, const ColorScheme &scheme)
 {
-    QDEBUG_COMPAT(debug);
     ColorScheme defaultScheme;
+    ss << BEGIN_MAP;
     if (scheme.text != defaultScheme.text)
-        debug << "text: " << scheme.text;
+        ss << "text" << scheme.text;
     if (scheme.selection != defaultScheme.selection)
-            debug << "selection: " << scheme.selection;
+        ss << "selection" << scheme.selection;
     if (scheme.quickFind != defaultScheme.quickFind)
-            debug << "quickFind: " << scheme.quickFind;
+        ss << "quickFind" << scheme.quickFind;
     if (!scheme.userScopes().empty())
-        debug << "user: " << scheme.userScopes();
-    return debug;
+        ss << "user" << scheme.userScopes();
+    return ss << END_MAP;
 }
 
-
-QDebug& operator<<(QDebug& debug, const TextColor& color)
+StructStream& operator<<(StructStream& ss, const QColor& color)
 {
-    QDEBUG_COMPAT(debug);
-    return debug << "{fg: " << color.foreground.name()
-                 << ", bg: " << color.background.name() << "}";
+    return ss << color.name();
+}
+
+StructStream& operator<<(StructStream& ss, const TextColor& color)
+{
+    return ss << BEGIN_SEQ << color.foreground << color.background << END_SEQ;
 }

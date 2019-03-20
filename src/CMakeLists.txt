@@ -35,9 +35,10 @@ set(SOURCES
     encodingspeculator.cpp
     gloggapp.cpp
     regexp_filter.cpp
-    enum.cpp
     externalcom.cpp
     filewatcher.cpp
+    struct_config_store.cpp
+    settings.cpp
 )
 
 set(COMMON_SRC
@@ -52,6 +53,7 @@ set(SYNTAX_SRC
     syntax.cpp
     color_scheme.cpp
     location.cpp
+    struct_stream.cpp
 )
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})

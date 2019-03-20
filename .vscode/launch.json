@@ -29,6 +29,7 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/build/debug/tests/glogg_syntax_tests",
+            "args": ["-dd", "--gtest_filter='*ColorsTest*'"],
             "preLaunchTask": "build syntax tests",
             "cwd": "${workspaceFolder}",
             "externalConsole": false,

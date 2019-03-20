@@ -1,4 +1,21 @@
-// TODO: add header
+/*
+ * Copyright (C) 2018-2019 Sergei Dyshel and other contributors
+ *
+ * This file is part of glogg.
+ *
+ * glogg is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * glogg is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with glogg.  If not, see <http://www.gnu.org/licenses/>.
+ */
 
 #pragma once
 
@@ -7,6 +24,7 @@
 #include "log.h"
 #include "config_node.h"
 #include "qt_std_interop.h"
+#include "struct_stream.h"
 
 #include <iostream>
 
@@ -19,7 +37,6 @@
 using namespace std::rel_ops;
 
 struct TextColor final {
-    // TODO: remove default after writing tests
     TextColor(const QColor &fore = QColor(), const QColor &back = QColor())
         : foreground(fore), background(back)
     {}
@@ -37,17 +54,17 @@ private:
 
 class ColorScheme final {
   public:
-    using User = std::unordered_map<QString, QColor>;
-    using Map = std::map<QString, ColorScheme>;
-
     explicit ColorScheme(const QString &name = "",
                          const Location &location = Location());
+
+    using User = std::unordered_map<QString, QColor>;
+    using Map = std::map<QString, ColorScheme>;
 
     // Used for tests
     ColorScheme &setText(const TextColor &text);
     ColorScheme &setSelection(const TextColor &selection);
     ColorScheme &setQuickFind(const TextColor &quickFind);
-    ColorScheme &addUser(const User &user);
+    ColorScheme &addUser(const User &user, bool override_ = true);
 
     static Map loadAll(const ConfigNode &node);
 
@@ -72,9 +89,12 @@ class ColorScheme final {
 
   private:
     using Defs = std::map<QString, QColor>;
-    void add(const ConfigNode& node, const Defs &defs);
 
-    QColor readColor(const ConfigNode& node, const Defs &defs, bool allowUser);
+    void addDefs(const ConfigNode& node, Defs &defs);
+    void addScopes(const ConfigNode& node, const Defs &defs);
+
+    static QColor readColor(const ConfigNode &node, const Defs *defs = nullptr,
+                     const User *userScopes = nullptr);
     TextColor readTextColor(const ConfigNode& node, const Defs &defs);
 
     QString name_;
@@ -83,7 +103,10 @@ class ColorScheme final {
 };
 
 bool operator==(const TextColor &color1, const TextColor &color2);
-QDebug& operator<<(QDebug &debug, const ColorScheme &scheme);
-QDebug& operator<<(QDebug &debug, const TextColor &color);
+StructStream& operator<<(StructStream &ss, const ColorScheme &scheme);
+StructStream& operator<<(StructStream &ss, const QColor &color);
+StructStream& operator<<(StructStream &ss, const TextColor &color);
 
+DEFINE_QDEBUG_SHIFT_WITH_STRUCT(TextColor)
+DEFINE_QDEBUG_SHIFT_WITH_STRUCT(ColorScheme)
 DEFINE_STREAM_SHIFT_WITH_QDEBUG(ColorScheme)

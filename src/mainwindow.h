@@ -37,8 +37,9 @@
 #include "struct_config.h"
 #include "color_scheme.h"
 
+#include <QActionGroup>
+
 class QAction;
-class QActionGroup;
 class Session;
 class RecentFiles;
 class MenuActionToolTipBehavior;
@@ -158,6 +159,7 @@ class MainWindow : public QMainWindow
     void updateMenuBarFromDocument( const CrawlerWidget* crawler );
     void updateInfoLine();
     void reloadStructConfig();
+    void repaintLogViews();
 
     std::unique_ptr<Session> session_;
     std::shared_ptr<ExternalCommunicator> externalCommunicator_;
@@ -181,6 +183,7 @@ class MainWindow : public QMainWindow
     QMenu *viewMenu;
     QMenu *toolsMenu;
     QMenu *configMenu;
+    QMenu *colorSchemeMenu;
     QMenu *encodingMenu;
     QMenu *helpMenu;
 
@@ -208,6 +211,7 @@ class MainWindow : public QMainWindow
     QActionGroup *encodingGroup;
     QAction *encodingAction[static_cast<int>( Encoding::ENCODING_MAX )];
 
+    std::unique_ptr<QActionGroup> colorSchemeGroup;
     QAction *configReloadAction;
 
     QIcon mainIcon_;

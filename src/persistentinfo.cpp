@@ -60,7 +60,7 @@ void PersistentInfo::migrateAndInit()
     }
 #else
     // We use default Qt storage on proper OSes
-    settings_ = new QSettings( "glogg", "glogg" );
+    settings_ = new Settings();
 #endif
     initialised_ = true;
 }

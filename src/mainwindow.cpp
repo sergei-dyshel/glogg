@@ -50,6 +50,7 @@
 #include "menuactiontooltipbehavior.h"
 #include "tabbedcrawlerwidget.h"
 #include "externalcom.h"
+#include "struct_config_store.h"
 
 // Returns the size in human readable format
 static QString readableSize( qint64 size );
@@ -87,7 +88,7 @@ MainWindow::MainWindow( std::unique_ptr<Session> session,
     setWindowIcon( mainIcon_ );
 
     readSettings();
-    StructConfigStore::loadDefault();
+    StructConfigStore::init();
     reloadStructConfig();
 
     // Connect the signals to the mux (they will be forwarded to the
@@ -186,18 +187,28 @@ MainWindow::MainWindow( std::unique_ptr<Session> session,
 void MainWindow::reloadStructConfig()
 {
     try {
-        StructConfigStore::reload();
+        StructConfigStore::get().reload();
     }
     catch(const Exception& err) {
         QMessageBox msgBox;
         msgBox.setText(QString("Could not load config: ") + err.message());
         msgBox.exec();
+        return;
     }
-    if (StructConfigStore::current().checkForIssues()) {
-        QMessageBox msgBox;
-        msgBox.setText("Issues were found when loading config");
-        msgBox.exec();
+    colorSchemeMenu->clear();
+    colorSchemeGroup = std::make_unique<QActionGroup>(this);
+    for (const auto& schemeName : StructConfigStore::get().colorSchemeNames()) {
+        auto action = new QAction(schemeName, colorSchemeGroup.get());
+        action->setCheckable(true);
+        if (schemeName == StructConfigStore::get().colorSchemeName())
+            action->setChecked(true);
+        connect(action, &QAction::triggered, [=]() {
+            StructConfigStore::get().setColorScheme(schemeName);
+            repaintLogViews();
+        });
+        colorSchemeGroup->addAction(action);
     }
+    colorSchemeMenu->addActions(colorSchemeGroup->actions());
 }
 
 void MainWindow::reloadGeometry()
@@ -389,8 +400,7 @@ void MainWindow::createActions()
     configReloadAction = new QAction(tr("&Reload"), this);
     connect(configReloadAction, &QAction::triggered, [=]() {
         reloadStructConfig();
-        repaint();
-        mainTabWidget_.repaint();
+        repaintLogViews();
     });
 
     connect( encodingGroup, SIGNAL( triggered( QAction* ) ),
@@ -430,6 +440,8 @@ void MainWindow::createMenus()
 
     configMenu = menuBar()->addMenu(tr("&Config"));
     configMenu->addAction(configReloadAction);
+    configMenu->addSeparator();
+    colorSchemeMenu = configMenu->addMenu(tr("&Color schemes..."));
 
     toolsMenu = menuBar()->addMenu( tr("&Tools") );
     toolsMenu->addAction( filtersAction );
@@ -1025,6 +1037,7 @@ void MainWindow::writeSettings()
 
     // User settings
     GetPersistentInfo().save( QString( "settings" ) );
+    StructConfigStore::get().saveSettings();
 }
 
 // Read settings from permanent storage
@@ -1087,4 +1100,10 @@ static QString readableSize( qint64 size )
     output += QString(" ") + sizeStrs[i];
 
     return output;
+}
+
+void MainWindow::repaintLogViews()
+{
+    if (currentCrawlerWidget())
+        currentCrawlerWidget()->repaintLogViews();
 }

@@ -97,6 +97,9 @@ class Configuration : public Persistable {
     virtual void saveToStorage( QSettings& settings ) const;
     virtual void retrieveFromStorage( QSettings& settings );
 
+    QString colorScheme;
+    bool colorSchemePersistent;
+
   private:
     // Configuration settings
     QFont mainFont_;
