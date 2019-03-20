@@ -16,6 +16,8 @@ ifneq (,$(wildcard $(RELEASE)))
 	$(MAKE) release
 endif
 
+MAKE := $(MAKE) --no-print-directory
+
 configure_debug:
 	mkdir -p $(DEBUG)
 	cd $(DEBUG) && cmake $(ROOT) -DCMAKE_BUILD_TYPE=Debug \
@@ -30,6 +32,9 @@ configure: configure_debug configure_release
 debug:
 	$(MAKE) -C $(DEBUG)
 	$(DEBUG)/tests/glogg_syntax_tests --quiet
+syntax_tests:
+	$(MAKE) -j$(shell nproc) -C $(DEBUG)/tests glogg_syntax_tests
+	$(DEBUG)/tests/glogg_syntax_tests --gtest_filter="*$(f)*" -ddd
 
 release:
 	$(MAKE) -C $(RELEASE)
@@ -43,10 +48,14 @@ distclean_release:
 install:
 	$(MAKE) -C $(RELEASE) install
 
-clean:
+clean_debug:
 ifneq (,$(wildcard $(DEBUG)))
 	$(MAKE) -C $(DEBUG) clean
 endif
+
+clean_release:
 ifneq (,$(wildcard $(RELEASE)))
 	$(MAKE) -C $(RELEASE) clean
 endif
+
+clean: clean_debug clean_release
