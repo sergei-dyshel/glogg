@@ -1,17 +1,23 @@
 The fork
 ========
 
-This fork adds some functionality:
-- TODO
+Major contributions:
+- **Syntax highlighting**: syntax and color scheme definitions using regular expressions, defined in YAML format similar to modern editors.
+- **Search (filter) bar redesign**: reduced to single line of control, history dropdown pinning.
+- **Tab bar tweak**: persistent renaming and coloring of tabs.
+- **Improved keyboard navigation**.
+
+For details look [here](README.fork.md).
 
 ## Building
 
-Prior to building `glogg` by instructions below, one should build 3rd-parties:
+The build was migrated to CMake and currently supports only Linux. For convenience, a simple Makefile is added to automate common tasks (e.g. create build directories, run cmake).
+For building release version:
+
 ```
-mkdir -p 3rdparty/build
-cd !$
-cmake ..
+make configure_release
 make
+make install
 ```
 
 glogg - the fast, smart log explorer
