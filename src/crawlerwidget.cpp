@@ -45,6 +45,7 @@
 #include "persistentinfo.h"
 #include "configuration.h"
 #include "regexp_filter.h"
+#include "qt_utils.h"
 
 // Palette for error signaling (yellow background)
 const QPalette CrawlerWidget::errorPalette( QColor( "yellow" ) );
@@ -645,11 +646,6 @@ void CrawlerWidget::activityDetected()
 // Private functions
 //
 
-void adjustFocusPolicy( QWidget* widget, bool clickFocus = false )
-{
-    widget->setFocusPolicy( clickFocus ? Qt::ClickFocus : Qt::NoFocus );
-}
-
 static void setButtonToolTipWithShortcut( QAbstractButton& button,
                                           const QString& toolTip )
 {
@@ -711,7 +707,6 @@ void CrawlerWidget::setup()
     visibilityView->setMinimumWidth( 170 ); // Only needed with custom style-sheet
 
     visibilityBox = new QComboBox();
-    adjustFocusPolicy( visibilityBox );
     visibilityBox->setModel( visibilityModel_ );
     visibilityBox->setView( visibilityView );
 
@@ -740,7 +735,6 @@ void CrawlerWidget::setup()
 
     // Construct the Search Info line
     searchInfoLine = new InfoLine();
-    adjustFocusPolicy( searchInfoLine );
 
     searchInfoLine->setFrameStyle( QFrame::WinPanel | QFrame::Sunken );
     searchInfoLine->setLineWidth( 1 );
@@ -752,7 +746,6 @@ void CrawlerWidget::setup()
     ignoreCaseCheck->setShortcut( QKeySequence( "Alt+I" ) );
     setButtonToolTipWithShortcut( *ignoreCaseCheck, "Ignore case" );
     ignoreCaseCheck->setIcon( QIcon( ":/images/ignore_case.png" ) );
-    adjustFocusPolicy( ignoreCaseCheck );
 
     searchRefreshCheck = new QPushButton();
     searchRefreshCheck->setCheckable( true );
@@ -760,11 +753,9 @@ void CrawlerWidget::setup()
     searchRefreshCheck->setShortcut( QKeySequence( "Alt+R" ) );
     setButtonToolTipWithShortcut(*searchRefreshCheck, "Auto refresh");
     searchRefreshCheck->setIcon( QIcon( ":/images/auto_refresh.png" ) );
-    adjustFocusPolicy( searchRefreshCheck );
 
     // Construct the Search line
     searchLineEdit = new QComboBox;
-    adjustFocusPolicy( searchLineEdit, true /* click focus */ );
     searchLineEdit->setEditable( true );
     searchLineEdit->setCompleter( 0 );
     searchLineEdit->setMaxVisibleItems(30);
@@ -775,19 +766,16 @@ void CrawlerWidget::setup()
     searchLineEditErrorPalette.setColor(QPalette::Base, Qt::yellow);
 
     startButton = new QToolButton();
-    adjustFocusPolicy(startButton);
     startButton->setIcon( QIcon(":/images/search.png") );
     startButton->setAutoRaise( true );
     startButton->setEnabled( false );
 
     stopButton = new QToolButton();
-    adjustFocusPolicy(stopButton);
     stopButton->setIcon( QIcon(":/images/stop14.png") );
     stopButton->setAutoRaise( true );
     stopButton->setEnabled( false );
 
     pinButton = new QToolButton();
-    adjustFocusPolicy( pinButton );
     pinButton->setShortcut( QKeySequence( "Alt+P" ) );
     setPinButtonMode();
     pinButton->setAutoRaise( true );
@@ -820,6 +808,12 @@ void CrawlerWidget::setup()
     splitterSizes += 400;
     splitterSizes += 100;
     setSizes( splitterSizes );
+    setHandleWidth(5);
+    disableTabFocusOnChildren<QWidget>(this);
+    logMainView->setFocusPolicy(Qt::StrongFocus);
+    filteredView->setFocusPolicy(Qt::StrongFocus);
+    connect(this, &CrawlerWidget::splitterMoved, this,
+            &CrawlerWidget::onSplitterMoved);
 
     // Default search checkboxes
     auto config = Persistent<Configuration>( "settings" );
@@ -1295,4 +1289,17 @@ void CrawlerWidget::repaintLogViews()
     logMainView->update();
     filteredView->forceRefresh();
     filteredView->update();
+}
+
+void CrawlerWidget::onSplitterMoved(int, int)
+{
+    if (logMainView->visibleRegion().isEmpty() && logMainView->hasFocus())
+        filteredView->setFocus();
+    else if (filteredView->visibleRegion().isEmpty() && filteredView->hasFocus())
+        logMainView->setFocus();
+
+    logMainView->setFocusPolicy(
+        logMainView->visibleRegion().isEmpty() ? Qt::NoFocus : Qt::StrongFocus);
+    filteredView->setFocusPolicy(
+        filteredView->visibleRegion().isEmpty() ? Qt::NoFocus : Qt::StrongFocus);
 }

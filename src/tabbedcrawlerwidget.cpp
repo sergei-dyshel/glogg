@@ -30,12 +30,7 @@
 #include "externalcom.h"
 
 #include "log.h"
-
-static void disableTabFocus(QWidget *widget)
-{
-  widget->setFocusPolicy(
-      static_cast<Qt::FocusPolicy>(widget->focusPolicy() & ~Qt::TabFocus));
-}
+#include "qt_utils.h"
 
 TabbedCrawlerWidget::TabbedCrawlerWidget() : QTabWidget(),
     olddata_icon_( ":/images/olddata_icon.png" ),
@@ -63,7 +58,8 @@ TabbedCrawlerWidget::TabbedCrawlerWidget() : QTabWidget(),
 #endif
     setTabBar( &myTabBar_ );
     myTabBar_.hide();
-    disableTabFocus(&myTabBar_);
+    disableTabFocus(this);
+    disableTabFocusOnChildren<QToolButton>(&myTabBar_);
 }
 
 // I know hiding non-virtual functions from the base class is bad form

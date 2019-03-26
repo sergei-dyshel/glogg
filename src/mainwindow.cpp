@@ -51,6 +51,7 @@
 #include "tabbedcrawlerwidget.h"
 #include "externalcom.h"
 #include "struct_config_store.h"
+#include "qt_utils.h"
 
 // Returns the size in human readable format
 static QString readableSize( qint64 size );
@@ -173,6 +174,7 @@ MainWindow::MainWindow( std::unique_ptr<Session> session,
 
     // Construct the QuickFind bar
     quickFindWidget_.hide();
+    disableTabFocusOnChildren<QWidget>(&quickFindWidget_);
 
     QWidget* central_widget = new QWidget();
     QVBoxLayout* main_layout = new QVBoxLayout();
