@@ -239,6 +239,7 @@ class CrawlerWidget : public QSplitter,
     void changeTopViewSize( int32_t delta );
     void onSearchTextChanged( const QString& text );
     void setPinButtonMode();
+    void onSplitterMoved(int pos, int index);
 
     // Palette for error notification (yellow background)
     static const QPalette errorPalette;
