@@ -4,6 +4,7 @@ The fork
 Major contributions:
 - **Syntax highlighting**: syntax and color scheme definitions using regular expressions, defined in YAML format similar to modern editors.
 - **Search (filter) bar redesign**: reduced to single line of control, history dropdown pinning.
+- **Tab bar tweak**: persistent renaming and coloring of tabs.
 - **Improved keyboard navigation**.
 
 For details look [here](README.fork.md).
