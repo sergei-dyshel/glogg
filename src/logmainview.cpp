@@ -31,10 +31,11 @@
 
 LogMainView::LogMainView( const LogData* newLogData,
         const QuickFindPattern* const quickFindPattern,
+        Highlights &highlights,
         Overview* overview,
         OverviewWidget* overview_widget,
         QWidget* parent)
-    : AbstractLogView( newLogData, quickFindPattern, parent )
+    : AbstractLogView( newLogData, quickFindPattern, highlights, parent )
 {
     filteredData_ = NULL;
 

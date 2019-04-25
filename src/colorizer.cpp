@@ -21,47 +21,6 @@
 #include "log.h"
 #include "qt_std_interop.h"
 
-void mergeTokens(std::list<Token> &upperTokens,
-                    const std::list<Token> &lowerTokens)
-{
-    auto upper = upperTokens.begin();
-    auto lower = lowerTokens.begin();
-    if (lowerTokens.empty())
-       return;
-    unsigned lower_start = lower->range.start;
-
-    while (lower != lowerTokens.end()) {
-        lower_start = qMax(lower->range.start, lower_start);
-
-        if (upper == upperTokens.end()) {
-            upperTokens.push_back(
-                Token(Range(lower_start, lower->range.end), lower->colorScope));
-            ++lower;
-            continue;
-        }
-
-        if (upper->range.start <= lower_start) {
-            if (upper->range.end >= lower->range.end) {
-                ++lower;
-                continue;
-            }
-            lower_start = upper->range.end;
-            if (upper != upperTokens.end())
-                ++upper;
-            continue;
-        }
-        if (upper->range.start >= lower->range.end) {
-            upperTokens.insert(upper, *lower);
-            ++lower;
-            continue;
-        }
-        upperTokens.insert(
-            upper,
-            Token(Range(lower_start, upper->range.start), lower->colorScope));
-        lower_start = upper->range.start;
-    }
-}
-
 void mergeSyntaxTokens(std::list<Token> &upperTokens,
                        const std::list<Token> &syntaxTokens)
 {

@@ -23,6 +23,7 @@
 
 #include "abstractlogview.h"
 #include "data/logdata.h"
+#include "fwd.h"
 
 // Class implementing the main (top) view widget.
 class LogMainView : public AbstractLogView
@@ -30,6 +31,7 @@ class LogMainView : public AbstractLogView
   public:
     LogMainView( const LogData* newLogData,
             const QuickFindPattern* const quickFindPattern,
+            Highlights &highlights,
             Overview* overview,
             OverviewWidget* overview_widget,
             QWidget* parent = 0 );

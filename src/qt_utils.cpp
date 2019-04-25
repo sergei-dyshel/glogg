@@ -17,16 +17,27 @@
  * along with glogg.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#pragma once
+#include "qt_utils.h"
 
-namespace YAML {
-    class Node;
+#include <QAction>
+#include <QPainter>
+
+void addColorIconToAction(QAction* action, const TextColor& color)
+{
+    QPixmap pixmap(100, 100);
+    pixmap.fill(color.background.isValid() ? color.background
+                                            : color.foreground);
+    if (color.foreground.isValid()) {
+        QPainter painter(&pixmap);
+        painter.setPen(color.foreground);
+        painter.setBrush(color.foreground);
+        painter.drawEllipse(25, 25, 50, 50);
+    }
+    action->setIcon(pixmap);
+    action->setIconVisibleInMenu(true);
 }
 
-class Highlights;
-class StructConfig;
-class Settings;
-
-class QString;
-class QMenu;
-class QAction;
+void addColorIconToAction(QAction* action, const QColor& color)
+{
+    addColorIconToAction(action, TextColor(color));
+}

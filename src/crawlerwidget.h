@@ -39,6 +39,7 @@
 #include "signalmux.h"
 #include "overview.h"
 #include "loadingstatus.h"
+#include "highlights.h"
 #include "fwd.h"
 
 class InfoLine;
@@ -244,6 +245,7 @@ class CrawlerWidget : public QSplitter,
     // Palette for error notification (yellow background)
     static const QPalette errorPalette;
 
+    Highlights      highlights_;
     LogMainView*    logMainView;
     QWidget*        bottomWindow;
     QComboBox*      searchLineEdit;

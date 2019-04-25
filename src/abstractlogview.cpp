@@ -51,6 +51,8 @@
 #include "configuration.h"
 
 #include "struct_config_store.h"
+#include "highlights.h"
+#include "qt_utils.h"
 
 namespace {
 int mapPullToFollowLength( int length );
@@ -203,7 +205,8 @@ void DigitsBuffer::timerEvent( QTimerEvent* event )
 }
 
 AbstractLogView::AbstractLogView(const AbstractLogData* newLogData,
-        const QuickFindPattern* const quickFindPattern, QWidget* parent) :
+        const QuickFindPattern* const quickFindPattern,
+        Highlights &highlights, QWidget* parent) :
     QAbstractScrollArea( parent ),
     followElasticHook_( HOOK_THRESHOLD ),
     lineNumbersVisible_( false ),
@@ -212,7 +215,8 @@ AbstractLogView::AbstractLogView(const AbstractLogData* newLogData,
     autoScrollTimer_(),
     selection_(),
     quickFindPattern_( quickFindPattern ),
-    quickFind_( newLogData, &selection_, quickFindPattern )
+    quickFind_( newLogData, &selection_, quickFindPattern ),
+    highlights_(highlights)
 {
     logData = newLogData;
 
@@ -337,13 +341,11 @@ void AbstractLogView::mousePressEvent( QMouseEvent* mouseEvent )
             findNextAction_->setEnabled( true );
             findPreviousAction_->setEnabled( true );
             addToSearchAction_->setEnabled( true );
-            highlightAction_->setEnabled( true );
         }
         else {
             findNextAction_->setEnabled( false );
             findPreviousAction_->setEnabled( false );
             addToSearchAction_->setEnabled( false );
-            highlightAction_->setEnabled( false );
         }
 
         if (selection_.wholeLineRange()) {
@@ -358,11 +360,57 @@ void AbstractLogView::mousePressEvent( QMouseEvent* mouseEvent )
         if ( config->mainRegexpType() != ExtendedRegexp )
             addToSearchAction_->setEnabled( false );
 
+        configureHighlightPopup();
+
         // Display the popup (blocking)
         popupMenu_->exec( QCursor::pos() );
     }
 
     emit activity();
+}
+
+void AbstractLogView::configureHighlightPopup()
+{
+    DEBUG << "";
+
+    highlightMenu_->setDisabled(true);
+    unhighlightSelAction_->setDisabled(true);
+    unhighlightAllAction_->setDisabled(highlights_.empty());
+    unhighlightMenu_->setDisabled(highlights_.empty());
+    const auto& colorScheme = StructConfigStore::get().colorScheme();
+
+    if (!highlights_.empty()) {
+        unhighlightMenu_->clear();
+        for (const auto &colorAndPattern : highlights_.getAllPatterns()) {
+            auto pattern = colorAndPattern.second;
+            auto action = unhighlightMenu_->addAction(pattern, [=]() {
+                highlights_.removePattern(pattern);
+                emit hightlighsUpdated();
+            });
+            addColorIconToAction(
+                action, colorScheme.highlightColor(colorAndPattern.first));
+        }
+    }
+
+    if (!selection_.isPortion())
+        return;
+
+    auto selection = getSelection();
+
+    if (highlights_.hasPattern(selection))
+        unhighlightSelAction_->setEnabled(true);
+    else {
+        highlightMenu_->setEnabled(true);
+        highlightMenu_->clear();
+        for (unsigned i = 0; i < ColorScheme::HIGHLIGHT_COUNT; ++i) {
+            auto name = highlights_.getPatterns(i).join("|");
+            auto action = highlightMenu_->addAction(name, [=]() {
+                highlights_.addPattern(selection, i);
+                emit hightlighsUpdated();
+            });
+            addColorIconToAction(action, colorScheme.highlightColor(i));
+        }
+    }
 }
 
 void AbstractLogView::mouseMoveEvent( QMouseEvent* mouseEvent )
@@ -1412,10 +1460,6 @@ void AbstractLogView::createMenu()
         emit markLines(selection_.wholeLineRange(), false /* removeMark */);
     });
 
-    highlightAction_ = new QAction( tr( "&Highlight" ), this );
-    highlightAction_->setStatusTip(
-        tr( "Highlight matches of currently selected text" ) );
-
     popupMenu_ = new QMenu( this );
     popupMenu_->addAction( copyAction_ );
     popupMenu_->addSeparator();
@@ -1424,7 +1468,19 @@ void AbstractLogView::createMenu()
     popupMenu_->addAction( addToSearchAction_ );
     popupMenu_->addAction(addMarkAction_);
     popupMenu_->addAction(removeMarkAction_);
-    popupMenu_->addAction( highlightAction_ );
+    popupMenu_->addSeparator();
+    highlightMenu_ = popupMenu_->addMenu(tr("&Highlight..."));
+    unhighlightSelAction_
+        = popupMenu_->addAction(tr("&Unhighlight selection"), [=]() {
+              highlights_.removePattern(getSelection());
+              emit hightlighsUpdated();
+          });
+    unhighlightAllAction_
+        = popupMenu_->addAction(tr("Unhighlight &all"), [=]() {
+              highlights_.clear();
+              emit hightlighsUpdated();
+          });
+    unhighlightMenu_ = popupMenu_->addMenu(tr("&Unhighlight..."));
 }
 
 void AbstractLogView::considerMouseHovering( int x_pos, int y_pos )
@@ -1574,22 +1630,21 @@ void AbstractLogView::drawTextArea( QPaintDevice* paint_device, int32_t )
         const QString line = lines[i];
         const QString cutLine = line.mid( firstCol, nbCols );
 
-        std::list<Token> tokens;
-
         // Is there something selected in the line?
         int sel_start, sel_end;
         bool isSelection =
             selection_.getPortionForLine( line_index, &sel_start, &sel_end );
         bool isLineSelected = selection_.isLineSelected(line_index);
         auto &colorScheme = StructConfigStore::get().colorScheme();
-        if (isSelection) {
-            Range selRange = Range(sel_start, sel_end + 1);
-            mergeTokens(tokens, {Token(selRange, ColorScheme::SELECTION)});
-        }
-        else if (isLineSelected) {
-            Range selRange = Range(line.size());
-            mergeTokens(tokens, {Token(selRange, ColorScheme::SELECTION)});
-        }
+        Range selRange;
+        if (isSelection)
+            selRange = Range(sel_start, sel_end + 1);
+        else if (isLineSelected)
+            selRange = Range(line.size());
+        std::list<Token> tokens
+            = selRange
+                  ? std::list<Token>{Token(selRange, ColorScheme::SELECTION)}
+                  : std::list<Token>();
 
         // Has the line got elements to be highlighted
         QList<QuickFindMatch> qfMatchList;
@@ -1603,11 +1658,11 @@ void AbstractLogView::drawTextArea( QPaintDevice* paint_device, int32_t )
                 // Ignore matches that are *completely* outside view area
                 if (end <= firstCol || start >= firstCol + nbCols)
                     continue;
-                qfTokens.emplace_back(Range(start, end),
-                                      ColorScheme::QUICK_FIND);
+                addLowerToken(
+                    tokens, Token(Range(start, end), ColorScheme::QUICK_FIND));
             }
-            mergeTokens(tokens, qfTokens);
         }
+        mergeSyntaxTokens(tokens, highlights_.colorize(line));
         /* TODO: make this configurable */
         auto lineForSyntax = line.left(1024);
         auto syntaxTokens
@@ -1616,7 +1671,7 @@ void AbstractLogView::drawTextArea( QPaintDevice* paint_device, int32_t )
         filterTokensByScheme(syntaxTokens, colorScheme);
         mergeSyntaxTokens(tokens, syntaxTokens);
 
-        mergeTokens(tokens, {Token(Range(line.length()), ColorScheme::TEXT)});
+        addLowerToken(tokens, Token(Range(line.length()), ColorScheme::TEXT));
         TRACE << "All  tokens" << tokens;
 
         const auto& lineColor = isLineSelected

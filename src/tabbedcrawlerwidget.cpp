@@ -140,15 +140,9 @@ void TabbedCrawlerWidget::mouseReleaseEvent( QMouseEvent *event)
         auto color_submenu = menu.addMenu("Change color...");
         QStringList colors = {"red", "blue"};
         for (auto color : colors) {
-            QWidgetAction *widgetAction= new QWidgetAction(color_submenu);
-            QLabel* label
-                = new QLabel(QString("your text here"), color_submenu);
-            label->setStyleSheet(QString("color: ") + color);
-            widgetAction->setDefaultWidget(label);
-            widgetAction->setFont(menu.font());
-            color_submenu->addAction(widgetAction);
-            connect(widgetAction, &QWidgetAction::triggered,
-                    [=]() { myTabBar_.setTabTextColor(tab, color); });
+            auto action = color_submenu->addAction(
+                "", [=]() { myTabBar_.setTabTextColor(tab, color); });
+            addColorIconToAction(action, color);
         }
         auto action = menu.exec(mapToGlobal(event->pos()));
         if (action == rename_action) {

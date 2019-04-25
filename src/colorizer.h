@@ -54,12 +54,10 @@ inline QDebug& operator<<(QDebug& debug, const Token& token) {
     return debug << token.range << ": " << token.colorScope;
 }
 
-void mergeTokens(std::list<Token> &upperTokens,
-                    const std::list<Token> &lowerTokens);
-
 void filterTokensByScheme(std::list<Token> &tokens,
                           const ColorScheme &scheme);
 
 void mergeSyntaxTokens(std::list<Token> &upperTokens,
                        const std::list<Token> &syntaxTokens);
+
 void addLowerToken(std::list<Token> &tokens, const Token& lower);

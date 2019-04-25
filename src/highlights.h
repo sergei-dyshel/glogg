@@ -19,14 +19,28 @@
 
 #pragma once
 
-namespace YAML {
-    class Node;
-}
+#include "fwd.h"
+#include "syntax.h"
 
-class Highlights;
-class StructConfig;
-class Settings;
+#include <vector>
+#include <map>
 
-class QString;
-class QMenu;
-class QAction;
+class Highlights final {
+  public:
+    Highlights();
+    void addPattern(const QString &pattern, unsigned colorIndex);
+    bool hasPattern(const QString &pattern) const;
+    void removePattern(const QString &pattern);
+    void clear();
+    bool empty() const;
+    const QStringList &getPatterns(unsigned colorIndex) const;
+    std::multimap<unsigned, QString> getAllPatterns() const;
+
+    std::list<Token> colorize(const QString &line) const;
+
+  private:
+    void generateRegex(unsigned colorIndex);
+
+    std::vector<QStringList> patterns_;
+    std::vector<QRegularExpression> regexes_;
+};

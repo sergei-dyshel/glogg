@@ -7,7 +7,7 @@
             "type": "array",
             "items": { "type": "string" },
             "minItems": 2,
-            "maximum": 2,
+            "maxItems": 2,
             "default": ["", ""]
         }
     },
@@ -38,6 +38,14 @@
             "quickFind": {
                 "description": "Color of searched text",
                 "$ref": "#/definitions/textColor"
+            },
+            "highlight": {
+                "description": "Pattern highlight",
+                "type": "array",
+                "items": {"type": "string"},
+                "default": ["", "", "", ""],
+                "minItems": 4,
+                "maxItems": 4
             },
             "user": {
                 "description": "Additional colors",
