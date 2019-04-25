@@ -19,6 +19,11 @@ Solarized dark:
   text: [base1, base03]
   selection: [base03, base1]
   quickFind: [base01, base2]
+  highlight:
+    - magenta
+    - violet
+    - orange
+    - blue
   user:
     function: blue
     filename: green

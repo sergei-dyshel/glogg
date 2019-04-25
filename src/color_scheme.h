@@ -84,8 +84,15 @@ class ColorScheme final {
     static const QString TEXT;
     static const QString SELECTION;
     static const QString QUICK_FIND;
+    static const QString HIGHLIGHT;
+
+    static const unsigned HIGHLIGHT_COUNT;
+
+    QString highlightScope(unsigned i) const;
 
     bool operator==(const ColorScheme &other) const;
+
+    TextColor highlightColor(unsigned i) const;
 
   private:
     using Defs = std::map<QString, QColor>;
@@ -97,9 +104,16 @@ class ColorScheme final {
                      const User *userScopes = nullptr);
     TextColor readTextColor(const ConfigNode& node, const Defs &defs);
 
+    TextColor withTextBackground(const QColor &foreground) const;
+
+    void generateColorsMap();
+
+    std::vector<QColor> highlight_;
+
     QString name_;
     Location location_;
     User user_;
+    std::unordered_map<QString, TextColor> colors_;
 };
 
 bool operator==(const TextColor &color1, const TextColor &color2);

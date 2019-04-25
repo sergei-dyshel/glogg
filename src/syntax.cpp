@@ -35,7 +35,7 @@ template <> const std::unordered_map<SyntaxRule::SearchType, QString>
     = {{SyntaxRule::SearchType::MATCH, "match"},
        {SyntaxRule::SearchType::ALL, "all"}};
 
-static QString stringList2Regex(const QStringList &strings)
+QString stringList2Regex(const QStringList &strings)
 {
     QStringList escaped;
     for (const auto &str : strings)

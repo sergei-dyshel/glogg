@@ -39,6 +39,8 @@ set(SOURCES
     filewatcher.cpp
     struct_config_store.cpp
     settings.cpp
+    qt_utils.cpp
+    highlights.cpp
 )
 
 set(COMMON_SRC

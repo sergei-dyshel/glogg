@@ -109,8 +109,9 @@ class AbstractLogView :
     // Constructor of the widget, the data set is passed.
     // The caller retains ownership of the data set.
     // The pointer to the QFP is used for colouring and QuickFind searches
-    AbstractLogView( const AbstractLogData* newLogData,
-            const QuickFindPattern* const quickFind, QWidget* parent=0 );
+    AbstractLogView(const AbstractLogData* newLogData,
+                    const QuickFindPattern* const quickFind,
+                    Highlights& highlights, QWidget* parent = 0);
     ~AbstractLogView();
 
     // Refresh the widget when the data set has changed.
@@ -197,6 +198,8 @@ class AbstractLogView :
     void gotFocus();
 
     void markLines(const Range& range, bool addMark);
+
+    void hightlighsUpdated();
 
   public slots:
     // Makes the widget select and display the passed line.
@@ -314,12 +317,17 @@ class AbstractLogView :
     QAction* addToSearchAction_;
     QAction* addMarkAction_;
     QAction* removeMarkAction_;
-    QAction* highlightAction_;
+    QMenu* highlightMenu_;
+    QAction *unhighlightSelAction_;
+    QAction *unhighlightAllAction_;
+    QMenu *unhighlightMenu_;
 
     // Pointer to the CrawlerWidget's QFP object
     const QuickFindPattern* const quickFindPattern_;
     // Our own QuickFind object
     QuickFind quickFind_;
+
+    Highlights &highlights_;
 
 #ifdef GLOGG_PERF_MEASURE_FPS
     // Performance measurement
@@ -385,6 +393,8 @@ class AbstractLogView :
     void updateGlobalSelection();
 
     void setBorderColorFromFocus();
+
+    void configureHighlightPopup();
 };
 
 #endif

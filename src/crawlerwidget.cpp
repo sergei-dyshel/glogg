@@ -668,9 +668,10 @@ void CrawlerWidget::setup()
     bottomWindow = new QWidget;
     overviewWidget_ = new OverviewWidget();
     logMainView     = new LogMainView(
-            logData_, quickFindPattern_.get(), &overview_, overviewWidget_ );
+            logData_, quickFindPattern_.get(), highlights_,
+            &overview_, overviewWidget_ );
     filteredView    = new FilteredView(
-            logFilteredData_, quickFindPattern_.get() );
+            logFilteredData_, quickFindPattern_.get(), highlights_ );
 
     overviewWidget_->setOverview( &overview_ );
     overviewWidget_->setParent( logMainView );
@@ -933,6 +934,9 @@ void CrawlerWidget::setup()
             filteredView, SLOT( setFocus() ) );
     connect( filteredView, SIGNAL( exitView() ),
             logMainView, SLOT( setFocus() ) );
+
+    connect(logMainView, &AbstractLogView::hightlighsUpdated,
+            [=]() { repaintLogViews(); });
 }
 
 // Create a new search using the text passed, replace the currently

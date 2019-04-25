@@ -8,7 +8,6 @@ Detailed list of changes
 - Search bar expression is parsed as `<include regex>|||<exclude regex>`.
 - Invalid expression is highlighted by yellow background.
 
-
 ## Keyboard/navigation improvements:
 - Pressing `t` in log view focuses search bar.
 - `tab` always moves focus to log view.
@@ -32,6 +31,7 @@ Detailed list of changes
 - Increase mark bullet size.
 - `h/l` scroll with larger step.
 - Multiline or portion selections copied to clipboard.
+- Highlight selected pattern with one of predefined colors.
 
 # General UI improvements and fixes:
 - Status bar text can be selected.

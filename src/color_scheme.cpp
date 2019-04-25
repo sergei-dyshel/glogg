@@ -62,9 +62,13 @@ QColor TextColor::colorFromNode(const ConfigNode& node)
 const QString ColorScheme::TEXT("text");
 const QString ColorScheme::SELECTION("selection");
 const QString ColorScheme::QUICK_FIND("quickFind");
+const QString ColorScheme::HIGHLIGHT("highlight");
+
+const unsigned ColorScheme::HIGHLIGHT_COUNT = 4;
 
 ColorScheme::ColorScheme(const QString &name, const Location &location)
-    : name_(name), location_(location)
+    : highlight_{"red", "blue", "green", "yellow"}, name_(name),
+      location_(location)
 {
     const QPalette palette;
 
@@ -72,6 +76,7 @@ ColorScheme::ColorScheme(const QString &name, const Location &location)
     selection = TextColor(palette.highlightedText().color(),
                                    palette.highlight().color());
     quickFind = TextColor(QColor("black"), QColor("yellow"));
+    generateColorsMap();
 }
 
 ColorScheme &ColorScheme::setText(const TextColor &text)
@@ -118,6 +123,14 @@ void ColorScheme::addScopes(const ConfigNode &node,
         selection = readTextColor(node.requiredMember(SELECTION), defs);
     if (node.hasMember(QUICK_FIND))
         quickFind = readTextColor(node.requiredMember(QUICK_FIND), defs);
+    if (node.hasMember(HIGHLIGHT)) {
+        auto hlNode = node.requiredMember(HIGHLIGHT);
+        if (hlNode.numElements() != HIGHLIGHT_COUNT)
+            throw hlNode.error(HERE)
+                << "Must define" << HIGHLIGHT_COUNT << "highlight colors";
+        for (unsigned i = 0;i < HIGHLIGHT_COUNT; ++i)
+            highlight_[i] = readColor(hlNode.element(i), &defs);
+    }
     if (node.hasMember("user")) {
         for (const auto &member : node.requiredMember("user").members())
             user_.emplace(member.first,
@@ -140,8 +153,8 @@ auto ColorScheme::loadAll(const ConfigNode &node) -> Map
             continue;
         }
         const auto *schemeNode = &pair.second;
-        schemeNode->assertProperties(
-            {"defs", "inherits", "text", "selection", "quickFind", "user"});
+        schemeNode->assertProperties({"defs", "inherits", "text", "selection",
+                                      "quickFind", "highlight", "user"});
         ColorScheme scheme(name, schemeNode->location());
         std::list<const ConfigNode *> nodesToAdd = {schemeNode};
         while (schemeNode->hasMember("inherits")) {
@@ -157,6 +170,7 @@ auto ColorScheme::loadAll(const ConfigNode &node) -> Map
             scheme.addDefs(*nodeToAdd, defs);
         for (const auto &nodeToAdd : nodesToAdd)
             scheme.addScopes(*nodeToAdd, defs);
+        scheme.generateColorsMap();
         schemes.emplace(name, scheme);
         DEBUG << "Added scheme" << name << ":" << scheme;
     }
@@ -198,15 +212,38 @@ TextColor ColorScheme::scopeColor(const QString& name) const {
 TextColor ColorScheme::scopeColor(const QString& name,
                              const TextColor& defaultColor) const
 {
-    if (name == TEXT)
-        return text;
-    if (name == SELECTION)
-        return selection;
-    if (name == QUICK_FIND)
-        return quickFind;
-    if (user_.count(name))
-        return TextColor(user_.at(name), text.background);
-    return defaultColor;
+    auto iter = colors_.find(name);
+    if (iter == colors_.end())
+        return defaultColor;
+    return iter->second;
+}
+
+TextColor ColorScheme::withTextBackground(const QColor &foreground) const
+{
+    return TextColor(foreground, text.background);
+}
+
+QString ColorScheme::highlightScope(unsigned i) const
+{
+    return "highlight" + QString(i);
+}
+
+
+TextColor ColorScheme::highlightColor(unsigned i) const
+{
+    return withTextBackground(highlight_.at(i));
+}
+
+void ColorScheme::generateColorsMap()
+{
+    colors_.clear();
+    colors_[TEXT] = text;
+    colors_[SELECTION] = selection;
+    colors_[QUICK_FIND] = quickFind;
+    for (unsigned i = 0; i < HIGHLIGHT_COUNT; ++i)
+        colors_[highlightScope(i)] = highlightColor(i);
+    for (const auto &name_color: user_)
+        colors_[name_color.first] = withTextBackground(name_color.second);
 }
 
 bool ColorScheme::operator==(const ColorScheme &other) const

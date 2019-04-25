@@ -19,6 +19,8 @@
 
 #pragma once
 
+#include "color_scheme.h"
+
 #include <QWidget>
 
 inline void disableTabFocus(QWidget* widget)
@@ -32,3 +34,7 @@ template <typename T> void disableTabFocusOnChildren(QWidget* widget)
     for (auto child : widget->findChildren<T*>())
         disableTabFocus(child);
 }
+
+void addColorIconToAction(QAction* action, const TextColor& color);
+
+void addColorIconToAction(QAction* action, const QColor &color);

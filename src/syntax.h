@@ -125,6 +125,8 @@ public:
     std::list<Syntax> syntaxes_;
 };
 
+QString stringList2Regex(const QStringList &strings);
+
 QDEBUG_DEFINE_ENUM(SyntaxRule::SearchType)
 
 QDebug &operator<<(QDebug &d, const SyntaxRule &rule);
