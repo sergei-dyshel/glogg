@@ -8,6 +8,8 @@ ROOT := $(shell pwd)
 DEBUG := build/debug
 RELEASE := build/release
 
+DEBUG_TESTS ?= 1
+
 all:
 ifneq (,$(wildcard $(DEBUG)))
 	$(MAKE) debug
@@ -21,7 +23,8 @@ MAKE := $(MAKE) --no-print-directory
 configure_debug:
 	mkdir -p $(DEBUG)
 	cd $(DEBUG) && cmake $(ROOT) -DCMAKE_BUILD_TYPE=Debug \
-		-DCMAKE_EXPORT_COMPILE_COMMANDS=YES $(CMAKE_ARGS)
+		-DCMAKE_EXPORT_COMPILE_COMMANDS=YES \
+		-DBUILD_TESTS=$(DEBUG_TESTS) $(CMAKE_ARGS)
 
 configure_release:
 	mkdir -p $(RELEASE)
@@ -31,7 +34,7 @@ configure: configure_debug configure_release
 
 debug:
 	$(MAKE) -C $(DEBUG)
-	$(DEBUG)/tests/glogg_syntax_tests --quiet
+	[ -f $(DEBUG)/tests/glogg_syntax_tests ] && $(DEBUG)/tests/glogg_syntax_tests --quiet
 	./validate-yaml.py colors.schema.json config/*.glogg-colors.yaml
 	./validate-yaml.py syntax.schema.json config/*.glogg-syntax.yaml
 	$(DEBUG)/glogg --check-config ./config

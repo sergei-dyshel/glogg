@@ -40,9 +40,9 @@ string(APPEND CMAKE_CXX_FLAGS " -DGLOGG_VERSION=\\\"${VERSION}\\\"")
 string(APPEND CMAKE_CXX_FLAGS " -Wall -pedantic -Wextra -Werror")
 
 # debug
+option(BUILD_TESTS "Compile integration and unit-tests")
 string(APPEND CMAKE_CXX_FLAGS_DEBUG " -DENABLE_TRACE")
-if(CMAKE_BUILD_TYPE MATCHES Debug)
-    message(STATUS Debug build)
+if(BUILD_TESTS)
     add_subdirectory(tests)
 endif()
 
