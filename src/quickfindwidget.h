@@ -28,7 +28,7 @@ class QComboBox;
 class QLineEdit;
 class QToolButton;
 class QLabel;
-class QCheckBox;
+class QPushButton;
 class QFNotification;
 
 enum QFDirection {
@@ -87,7 +87,9 @@ class QuickFindWidget : public QWidget
     QToolButton* nextButton_;
     QToolButton* previousButton_;
     QComboBox*   editQuickFind_;
-    QCheckBox*   ignoreCaseCheck_;
+    QPushButton* ignoreCaseCheck_;
+    QPushButton* regexCheck_;
+    QPushButton* incrementalCheck_;
     QLabel*      notificationText_;
 
     QToolButton* setupToolButton(const QString &text, const QString &icon);

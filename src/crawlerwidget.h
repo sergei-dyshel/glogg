@@ -256,6 +256,7 @@ class CrawlerWidget : public QSplitter,
     InfoLine*       searchInfoLine;
     QPushButton*    ignoreCaseCheck;
     QPushButton*    searchRefreshCheck;
+    QPushButton*    regexSearchCheck;
     OverviewWidget* overviewWidget_;
     QToolButton*    pinButton;
 

@@ -54,6 +54,9 @@ class Configuration : public Persistable {
     { quickfindRegexpType_ = type; }
     void setQuickfindIncremental( bool is_incremental )
     { quickfindIncremental_ = is_incremental; }
+    bool quickfindIgnoreCase() const { return quickfindIgnoreCase_; }
+    void setQuickfindIgnoreCase( bool ignore_case )
+    { quickfindIgnoreCase_ = ignore_case; }
 
     // "Advanced" settings
     bool pollingEnabled() const
@@ -106,6 +109,7 @@ class Configuration : public Persistable {
     SearchRegexpType mainRegexpType_;
     SearchRegexpType quickfindRegexpType_;
     bool quickfindIncremental_;
+    bool quickfindIgnoreCase_;
     bool pollingEnabled_;
     uint32_t pollIntervalMs_;
     bool loadLastSession_;

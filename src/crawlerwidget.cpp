@@ -58,10 +58,12 @@ class CrawlerWidgetContext : public ViewContextInterface {
     // Construct from the value passsed
     CrawlerWidgetContext( QList<int> sizes,
            bool ignore_case,
+           bool regex_search,
            bool auto_refresh,
            bool follow_file )
         : sizes_( sizes ),
           ignore_case_( ignore_case ),
+          regex_search_(regex_search),
           auto_refresh_( auto_refresh ),
           follow_file_( follow_file ) {}
 
@@ -72,6 +74,7 @@ class CrawlerWidgetContext : public ViewContextInterface {
     QList<int> sizes() const { return sizes_; }
 
     bool ignoreCase() const { return ignore_case_; }
+    bool regexSearch() const { return regex_search_; }
     bool autoRefresh() const { return auto_refresh_; }
     bool followFile() const { return follow_file_; }
 
@@ -79,6 +82,7 @@ class CrawlerWidgetContext : public ViewContextInterface {
     QList<int> sizes_;
 
     bool ignore_case_;
+    bool regex_search_;
     bool auto_refresh_;
     bool follow_file_;
 };
@@ -256,7 +260,7 @@ void CrawlerWidget::doSetViewContext(
 
     setSizes( context.sizes() );
     ignoreCaseCheck->setChecked( context.ignoreCase() );
-
+    regexSearchCheck->setChecked(context.regexSearch());
     searchRefreshCheck->setChecked( context.autoRefresh() );
     // Manually call the handler as it is not called when changing the state programmatically
     auto auto_refresh_check_state
@@ -272,6 +276,7 @@ CrawlerWidget::doGetViewContext() const
     auto context = std::make_shared<const CrawlerWidgetContext>(
             sizes(),
             ( ignoreCaseCheck->isChecked() ),
+            ( regexSearchCheck->isChecked()),
             ( searchRefreshCheck->isChecked() ),
             logMainView->isFollowEnabled() );
 
@@ -646,15 +651,6 @@ void CrawlerWidget::activityDetected()
 // Private functions
 //
 
-static void setButtonToolTipWithShortcut( QAbstractButton& button,
-                                          const QString& toolTip )
-{
-    button.setToolTip(
-        QString( "%1 (%2)" )
-            .arg( toolTip )
-            .arg( button.shortcut().toString( QKeySequence::NativeText ) ) );
-}
-
 // Build the widget and connect all the signals, this must be done once
 // the data are attached.
 void CrawlerWidget::setup()
@@ -741,19 +737,14 @@ void CrawlerWidget::setup()
     searchInfoLine->setLineWidth( 1 );
     searchInfoLineDefaultPalette = searchInfoLine->palette();
 
-    ignoreCaseCheck = new QPushButton();
-    ignoreCaseCheck->setCheckable( true );
-    ignoreCaseCheck->setFlat( true );
-    ignoreCaseCheck->setShortcut( QKeySequence( "Alt+I" ) );
-    setButtonToolTipWithShortcut( *ignoreCaseCheck, "Ignore case" );
-    ignoreCaseCheck->setIcon( QIcon( ":/images/ignore_case.png" ) );
+    ignoreCaseCheck
+        = createCheckButton("Ignore case", "Alt+C", ":/images/ignore_case.png");
 
-    searchRefreshCheck = new QPushButton();
-    searchRefreshCheck->setCheckable( true );
-    searchRefreshCheck->setFlat( true );
-    searchRefreshCheck->setShortcut( QKeySequence( "Alt+R" ) );
-    setButtonToolTipWithShortcut(*searchRefreshCheck, "Auto refresh");
-    searchRefreshCheck->setIcon( QIcon( ":/images/auto_refresh.png" ) );
+    regexSearchCheck
+        = createCheckButton("Regex search", "Alt+R", ":/images/regex.png");
+
+    searchRefreshCheck = createCheckButton("Auto refresh", "Alt+F",
+                                           ":/images/auto_refresh.png");
 
     // Construct the Search line
     searchLineEdit = new QComboBox;
@@ -791,6 +782,7 @@ void CrawlerWidget::setup()
     searchLineLayout->addWidget( startButton );
     searchLineLayout->addWidget(stopButton);
     searchLineLayout->addWidget( ignoreCaseCheck );
+    searchLineLayout->addWidget(regexSearchCheck);
     searchLineLayout->addWidget( searchRefreshCheck );
     searchLineLayout->addWidget( searchInfoLine, 1 );
 
@@ -823,6 +815,7 @@ void CrawlerWidget::setup()
     searchRefreshChangedHandler(
         config->isSearchAutoRefreshDefault() ? Qt::Checked : Qt::Unchecked );
     ignoreCaseCheck->setChecked( config->isSearchIgnoreCaseDefault() );
+    regexSearchCheck->setChecked(config->mainRegexpType() == ExtendedRegexp);
 
     // Connect the signals
     connect(filteredView, SIGNAL(activateSearchLineEdit()),
@@ -928,6 +921,12 @@ void CrawlerWidget::setup()
     connect( ignoreCaseCheck, &QPushButton::toggled, [=]( bool checked ) {
         emit ignoreCaseChanged( checked ? Qt::Checked : Qt::Unchecked );
     } );
+
+    connect(regexSearchCheck, &QPushButton::toggled, [=](bool checked) {
+        static std::shared_ptr<Configuration> config
+            = Persistent<Configuration>("settings");
+        config->setMainRegexpType(checked ? ExtendedRegexp : FixedString);
+    });
 
     // Switch between views
     connect( logMainView, SIGNAL( exitView() ),
@@ -1248,18 +1247,21 @@ CrawlerWidgetContext::CrawlerWidgetContext( const char* string )
         sizes_ = { 100, 400 };
     }
 
-    QRegularExpression case_refresh_regex( "IC(\\d+):AR(\\d+)" );
+    QRegularExpression case_refresh_regex( "IC(\\d+):RS(\\d+):AR(\\d+)" );
     match = case_refresh_regex.match( string );
     if ( match.hasMatch() ) {
         ignore_case_ = ( match.captured(1).toInt() == 1 );
-        auto_refresh_ = ( match.captured(2).toInt() == 1 );
+        regex_search_ = ( match.captured(2).toInt() == 1 );
+        auto_refresh_ = ( match.captured(3).toInt() == 1 );
 
-        LOG(logDEBUG) << "ignore_case_: " << ignore_case_ << " auto_refresh_: "
-            << auto_refresh_;
+        LOG(logDEBUG) << "ignore_case_: " << ignore_case_
+                      << " regex_search_: " << regex_search_
+                      << " auto_refresh_: " << auto_refresh_;
     }
     else {
         LOG(logWARNING) << "Unrecognised case/refresh: " << string;
         ignore_case_ = false;
+        regex_search_ = false;
         auto_refresh_ = false;
     }
 
@@ -1280,9 +1282,9 @@ std::string CrawlerWidgetContext::toString() const
 {
     char string[160];
 
-    snprintf( string, sizeof string, "S%d:%d:IC%d:AR%d:FF%d",
+    snprintf( string, sizeof string, "S%d:%d:IC%d:AR%d:RS%d:FF%d",
             sizes_[0], sizes_[1],
-            ignore_case_, auto_refresh_, follow_file_ );
+            ignore_case_, regex_search_, auto_refresh_, follow_file_ );
 
     return { string };
 }
