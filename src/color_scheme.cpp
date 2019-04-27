@@ -31,7 +31,8 @@
 TextColor::TextColor(const ConfigNode &node)
     : foreground(colorFromNode(node.element(0))),
       background(colorFromNode(node.element(1)))
-{}
+{
+}
 
 TextColor::TextColor(const std::initializer_list<QColor> &init_list)
 {

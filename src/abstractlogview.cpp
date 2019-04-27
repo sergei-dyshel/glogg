@@ -135,17 +135,19 @@ void AbstractLogView::drawColorizedText(QPainter& painter, int initialXPos,
         QString cutline = line.mid( token_range.start, token_range.length() );
         // LOG(logDEBUG) << token << " '" << cutline << "'";
         const int chunk_width = cutline.length() * fontWidth;
+        auto bgColor = colorScheme.scopeColor(token.colorScope).background;
+        bgColor.setAlpha(200);
         if ( xPos == initialXPos ) {
             // First chunk, we extend the left background a bit,
             // it looks prettier.
             painter.fillRect(xPos - leftExtraBackgroundPx, yPos,
                              chunk_width + leftExtraBackgroundPx, fontHeight,
-                             colorScheme.scopeColor(token.colorScope).background);
+                             bgColor);
         }
         else {
             // other chunks...
             painter.fillRect(xPos, yPos, chunk_width, fontHeight,
-                             colorScheme.scopeColor(token.colorScope).background);
+                             bgColor);
         }
         painter.setPen( colorScheme.scopeColor(token.colorScope).foreground );
         painter.drawText( xPos, yPos + fontAscent, cutline );
@@ -159,6 +161,8 @@ void AbstractLogView::drawColorizedText(QPainter& painter, int initialXPos,
     // Draw the empty block at the end of the line
     int blank_width = line_width - xPos;
 
+    auto bgColor = backgroundColor;
+    bgColor.setAlpha(200);
     if ( blank_width > 0 )
         painter.fillRect(xPos, yPos, blank_width, fontHeight, backgroundColor);
 }
@@ -262,6 +266,8 @@ AbstractLogView::AbstractLogView(const AbstractLogData* newLogData,
             this, SLOT( repaint() ) );
     connect( &followElasticHook_, SIGNAL( hooked( bool ) ),
             this, SIGNAL( followModeChanged( bool ) ) );
+    setAttribute(Qt::WA_TranslucentBackground);
+    // setStyleSheet("background-color:transparent;");
 }
 
 AbstractLogView::~AbstractLogView()
@@ -1522,6 +1528,7 @@ void AbstractLogView::drawTextArea( QPaintDevice* paint_device, int32_t )
     // LOG( logDEBUG ) << "pixmap size: " << textPixmap.width();
     // Repaint the viewport
     QPainter painter( paint_device );
+    painter.setCompositionMode(QPainter::CompositionMode_Source);
     // LOG( logDEBUG ) << "font: " << viewport()->font().family().toStdString();
     // LOG( logDEBUG ) << "font painter: " << painter.font().family().toStdString();
 
@@ -1618,6 +1625,9 @@ void AbstractLogView::drawTextArea( QPaintDevice* paint_device, int32_t )
     // used for mouse calculation etc...
     leftMarginPx_ = contentStartPosX + SEPARATOR_WIDTH;
 
+
+    auto &colorScheme = StructConfigStore::get().colorScheme();
+
     // Then draw each line
     for (int i = 0; i < nbLines; i++) {
         const LineNumber line_index = i + firstLine;
@@ -1635,7 +1645,6 @@ void AbstractLogView::drawTextArea( QPaintDevice* paint_device, int32_t )
         bool isSelection =
             selection_.getPortionForLine( line_index, &sel_start, &sel_end );
         bool isLineSelected = selection_.isLineSelected(line_index);
-        auto &colorScheme = StructConfigStore::get().colorScheme();
         Range selRange;
         if (isSelection)
             selRange = Range(sel_start, sel_end + 1);
@@ -1732,7 +1741,7 @@ void AbstractLogView::drawTextArea( QPaintDevice* paint_device, int32_t )
         // The lines don't cover the whole device
         painter.fillRect( contentStartPosX, bottomOfTextPx,
                 paintDeviceWidth - contentStartPosX,
-                paintDeviceHeight, palette.color( QPalette::Window ) );
+                paintDeviceHeight, colorScheme.text.background );
     }
 }
 

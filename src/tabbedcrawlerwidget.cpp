@@ -56,6 +56,7 @@ TabbedCrawlerWidget::TabbedCrawlerWidget() : QTabWidget(),
               subcontrol-position: left;\
              }" );
 #endif
+    myTabBar_.setAutoFillBackground(true);
     setTabBar( &myTabBar_ );
     myTabBar_.hide();
     disableTabFocus(this);

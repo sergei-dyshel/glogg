@@ -109,6 +109,7 @@ CrawlerWidget::CrawlerWidget( QWidget *parent )
     dataStatus_        = DataStatus::OLD_DATA;
 
     currentLineNumber_ = 0;
+    setAutoFillBackground(true);
 }
 
 // The top line is first one on the main display

@@ -184,6 +184,8 @@ MainWindow::MainWindow( std::unique_ptr<Session> session,
     central_widget->setLayout( main_layout );
 
     setCentralWidget( central_widget );
+
+    setAttribute(Qt::WA_TranslucentBackground);
 }
 
 void MainWindow::reloadStructConfig()
