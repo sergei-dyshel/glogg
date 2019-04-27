@@ -85,6 +85,8 @@ void Configuration::retrieveFromStorage( QSettings& settings )
             settings.value( "regexpType.quickfind", quickfindRegexpType_ ).toInt() );
     if ( settings.contains( "quickfind.incremental" ) )
         quickfindIncremental_ = settings.value( "quickfind.incremental" ).toBool();
+    quickfindIgnoreCase_
+        = settings.value("quickfind.ignoreCase", QVariant(false)).toBool();
 
     // "Advanced" settings
     if ( settings.contains( "polling.enabled" ) )
@@ -127,6 +129,7 @@ void Configuration::saveToStorage( QSettings& settings ) const
     settings.setValue( "regexpType.main", static_cast<int>( mainRegexpType_ ) );
     settings.setValue( "regexpType.quickfind", static_cast<int>( quickfindRegexpType_ ) );
     settings.setValue( "quickfind.incremental", quickfindIncremental_ );
+    settings.setValue("quickfind.ignoreCase", quickfindIgnoreCase_);
     settings.setValue( "polling.enabled", pollingEnabled_ );
     settings.setValue( "polling.intervalMs", pollIntervalMs_ );
     settings.setValue( "session.loadLast", loadLastSession_);

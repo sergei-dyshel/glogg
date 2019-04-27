@@ -21,6 +21,8 @@
 
 #include <QAction>
 #include <QPainter>
+#include <QAbstractButton>
+#include <QPushButton>
 
 void addColorIconToAction(QAction* action, const TextColor& color)
 {
@@ -40,4 +42,25 @@ void addColorIconToAction(QAction* action, const TextColor& color)
 void addColorIconToAction(QAction* action, const QColor& color)
 {
     addColorIconToAction(action, TextColor(color));
+}
+
+void setButtonToolTipWithShortcut(QAbstractButton& button,
+                                  const QString& toolTip)
+{
+    button.setToolTip(
+        QString( "%1 (%2)" )
+            .arg( toolTip )
+            .arg( button.shortcut().toString( QKeySequence::NativeText ) ) );
+}
+
+QPushButton* createCheckButton(const QString& tooltip, const QString& shortcut,
+                               const QString& iconPath)
+{
+    QPushButton* button = new QPushButton();
+    button->setCheckable(true);
+    button->setFlat(true);
+    button->setShortcut(QKeySequence(shortcut));
+    setButtonToolTipWithShortcut(*button, tooltip);
+    button->setIcon(QIcon(iconPath));
+    return button;
 }

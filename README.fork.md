@@ -7,6 +7,7 @@ Detailed list of changes
 - "Pin" (button to the right of edit box) frequent searches to the top of the history dropdown.
 - Search bar expression is parsed as `<include regex>|||<exclude regex>`.
 - Invalid expression is highlighted by yellow background.
+- Regex/fixed string toggle moved from options form to the panel.
 
 ## Keyboard/navigation improvements:
 - Pressing `t` in log view focuses search bar.
@@ -26,6 +27,7 @@ Detailed list of changes
 - Pressing `ESC` cancels search and focuses last used log view.
 - Cancelling quick find clears highlighting.
 - The bar remains visible during search.
+- Regexp and incremental toggles moved from options from to the panel and are now persistent (ignore case too).
 
 # Log view improvemnts:
 - Increase mark bullet size.

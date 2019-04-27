@@ -35,7 +35,6 @@ OptionsDialog::OptionsDialog( QWidget* parent ) : QDialog(parent)
 
     setupTabs();
     setupFontList();
-    setupRegexp();
 
     // Validators
     QValidator* polling_interval_validator_ = new QIntValidator(
@@ -46,14 +45,11 @@ OptionsDialog::OptionsDialog( QWidget* parent ) : QDialog(parent)
             this, SLOT( onButtonBoxClicked( QAbstractButton* ) ) );
     connect(fontFamilyBox, SIGNAL( currentIndexChanged(const QString& ) ),
             this, SLOT( updateFontSize( const QString& ) ));
-    connect(incrementalCheckBox, SIGNAL( toggled( bool ) ),
-            this, SLOT( onIncrementalChanged() ) );
     connect(pollingCheckBox, SIGNAL( toggled( bool ) ),
             this, SLOT( onPollingChanged() ) );
 
     updateDialogFromConfig();
 
-    setupIncremental();
     setupPolling();
 }
 
@@ -81,68 +77,9 @@ void OptionsDialog::setupFontList()
      }
 }
 
-// Populate the regexp ComboBoxes
-void OptionsDialog::setupRegexp()
-{
-    QStringList regexpTypes;
-
-    regexpTypes << tr("Extended Regexp") << tr("Fixed Strings");
-
-    mainSearchBox->addItems( regexpTypes );
-    quickFindSearchBox->addItems( regexpTypes );
-}
-
-// Enable/disable the QuickFind options depending on the state
-// of the "incremental" checkbox.
-void OptionsDialog::setupIncremental()
-{
-    if ( incrementalCheckBox->isChecked() ) {
-        quickFindSearchBox->setCurrentIndex(
-                getRegexpIndex( FixedString ) );
-        quickFindSearchBox->setEnabled( false );
-    }
-    else {
-        quickFindSearchBox->setEnabled( true );
-    }
-}
-
 void OptionsDialog::setupPolling()
 {
     pollIntervalLineEdit->setEnabled( pollingCheckBox->isChecked() );
-}
-
-// Convert a regexp type to its index in the list
-int OptionsDialog::getRegexpIndex( SearchRegexpType syntax ) const
-{
-    int index;
-
-    switch ( syntax ) {
-        case FixedString:
-            index = 1;
-            break;
-        default:
-            index = 0;
-            break;
-    }
-
-    return index;
-}
-
-// Convert the index of a regexp type to its type
-SearchRegexpType OptionsDialog::getRegexpTypeFromIndex( int index ) const
-{
-    SearchRegexpType type;
-
-    switch ( index ) {
-        case 1:
-            type = FixedString;
-            break;
-        default:
-            type = ExtendedRegexp;
-            break;
-    }
-
-    return type;
 }
 
 // Updates the dialog box using values in global Config()
@@ -161,14 +98,6 @@ void OptionsDialog::updateDialogFromConfig()
     int sizeIndex = fontSizeBox->findText( QString::number(fontInfo.pointSize()) );
     if ( sizeIndex != -1 )
         fontSizeBox->setCurrentIndex( sizeIndex );
-
-    // Regexp types
-    mainSearchBox->setCurrentIndex(
-            getRegexpIndex( config->mainRegexpType() ) );
-    quickFindSearchBox->setCurrentIndex(
-            getRegexpIndex( config->quickfindRegexpType() ) );
-
-    incrementalCheckBox->setChecked( config->isQuickfindIncremental() );
 
     // Polling
     pollingCheckBox->setChecked( config->pollingEnabled() );
@@ -208,12 +137,6 @@ void OptionsDialog::updateConfigFromDialog()
             (fontSizeBox->currentText()).toInt() );
     config->setMainFont(font);
 
-    config->setMainRegexpType(
-            getRegexpTypeFromIndex( mainSearchBox->currentIndex() ) );
-    config->setQuickfindRegexpType(
-            getRegexpTypeFromIndex( quickFindSearchBox->currentIndex() ) );
-    config->setQuickfindIncremental( incrementalCheckBox->isChecked() );
-
     config->setPollingEnabled( pollingCheckBox->isChecked() );
     uint32_t poll_interval = pollIntervalLineEdit->text().toUInt();
     if ( poll_interval < POLL_INTERVAL_MIN )
@@ -239,11 +162,6 @@ void OptionsDialog::onButtonBoxClicked( QAbstractButton* button )
         accept();
     else if ( role == QDialogButtonBox::RejectRole )
         reject();
-}
-
-void OptionsDialog::onIncrementalChanged()
-{
-    setupIncremental();
 }
 
 void OptionsDialog::onPollingChanged()

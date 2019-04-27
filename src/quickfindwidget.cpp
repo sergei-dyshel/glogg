@@ -22,15 +22,18 @@
 #include <QCoreApplication>
 #include <QToolButton>
 #include <QLabel>
-#include <QCheckBox>
+#include <QPushButton>
 #include <QComboBox>
 #include <QLineEdit>
 #include <QHBoxLayout>
 
+#include "persistentinfo.h"
 #include "configuration.h"
 #include "qfnotifications.h"
 
 #include "quickfindwidget.h"
+
+#include "qt_utils.h"
 
 const int QuickFindWidget::NOTIFICATION_TIMEOUT = 5000;
 
@@ -39,6 +42,7 @@ const QString QFNotification::REACHED_BOF = "Reached beginning of file, no occur
 
 QuickFindWidget::QuickFindWidget( QWidget* parent ) : QWidget( parent )
 {
+    setAutoFillBackground(true);
     // ui_.setupUi( this );
     // setFocusProxy(ui_.findEdit);
     // setProperty("topBorder", true);
@@ -55,25 +59,36 @@ QuickFindWidget::QuickFindWidget( QWidget* parent ) : QWidget( parent )
     editQuickFind_->setEditable( true );
     // FIXME: set MinimumSize might be to constraining
     editQuickFind_->setMinimumSize( QSize( 150, 0 ) );
+    editQuickFind_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
     editQuickFind_->setMaxCount( 100 );
-    layout->addWidget( editQuickFind_ );
+    layout->addWidget(editQuickFind_, 3);
 
-    ignoreCaseCheck_ = new QCheckBox( "Ignore &case" );
-    layout->addWidget( ignoreCaseCheck_ );
-
-    previousButton_ = setupToolButton( QLatin1String("Previous"),
+    previousButton_ = setupToolButton( QLatin1String(""),
             QLatin1String( ":/images/arrowup.png" ) );
     layout->addWidget( previousButton_ );
 
-    nextButton_ = setupToolButton( QLatin1String("Next"),
+    nextButton_ = setupToolButton( QLatin1String(""),
             QLatin1String( ":/images/arrowdown.png" ) );
     layout->addWidget( nextButton_ );
+
+    ignoreCaseCheck_
+        = createCheckButton("Ignore case", "Alt+C", ":/images/ignore_case.png");
+    layout->addWidget(ignoreCaseCheck_);
+
+    regexCheck_
+        = createCheckButton("Regex search", "Alt+R", ":/images/regex.png");
+    layout->addWidget(regexCheck_);
+
+    incrementalCheck_
+        = createCheckButton("Incremental", "Alt+I", ":/images/incremental.png");
+    layout->addWidget(incrementalCheck_);
 
     notificationText_ = new QLabel( "" );
     // FIXME: set MinimumSize might be too constraining
     int width = QFNotification::maxWidth( notificationText_ );
     notificationText_->setMinimumSize( width, 0 );
-    layout->addWidget( notificationText_ );
+    notificationText_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+    layout->addWidget( notificationText_, 2 );
 
     setMinimumWidth( minimumSizeHint().width() );
 
@@ -81,8 +96,9 @@ QuickFindWidget::QuickFindWidget( QWidget* parent ) : QWidget( parent )
     connect( closeButton_, SIGNAL( clicked() ), SLOT( closeHandler() ) );
     connect( editQuickFind_->lineEdit(), &QLineEdit::textEdited, this,
              &QuickFindWidget::textChanged );
-    connect( ignoreCaseCheck_, SIGNAL( stateChanged( int ) ),
-             this, SLOT( textChanged() ) );
+    connect(ignoreCaseCheck_, &QPushButton::toggled, [=]() { textChanged(); });
+    connect(regexCheck_, &QPushButton::toggled, [=]() { textChanged(); });
+    connect(incrementalCheck_, &QPushButton::toggled, [=]() { textChanged(); });
     /*
     connect( editQuickFind_. SIGNAL( textChanged( QString ) ), this,
             SLOT( updateButtons() ) );
@@ -99,6 +115,11 @@ QuickFindWidget::QuickFindWidget( QWidget* parent ) : QWidget( parent )
     notificationTimer_->setSingleShot( true );
     connect( notificationTimer_, SIGNAL( timeout() ),
             this, SLOT( notificationTimeout() ) );
+
+    auto config = Persistent<Configuration>( "settings" );
+    ignoreCaseCheck_->setChecked(config->quickfindIgnoreCase());
+    regexCheck_->setChecked(config->quickfindRegexpType() == ExtendedRegexp);
+    incrementalCheck_->setChecked(config->isQuickfindIncremental());
 }
 
 void QuickFindWidget::userActivate()
@@ -194,6 +215,12 @@ void QuickFindWidget::notificationTimeout()
 
 void QuickFindWidget::textChanged()
 {
+    auto config = Persistent<Configuration>( "settings" );
+    config->setQuickfindIgnoreCase(ignoreCaseCheck_->isChecked());
+    config->setQuickfindRegexpType(regexCheck_->isChecked() ? ExtendedRegexp
+                                                            : FixedString);
+    config->setQuickfindIncremental(incrementalCheck_->isChecked());
+
     emit patternUpdated( editQuickFind_->currentText(), isIgnoreCase() );
 }
 
@@ -215,5 +242,5 @@ QToolButton* QuickFindWidget::setupToolButton(
 
 bool QuickFindWidget::isIgnoreCase() const
 {
-    return ( ignoreCaseCheck_->checkState() == Qt::Checked );
+    return ignoreCaseCheck_->isChecked();
 }

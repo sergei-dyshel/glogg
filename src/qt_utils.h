@@ -23,6 +23,9 @@
 
 #include <QWidget>
 
+class QAbstractButton;
+class QPushButton;
+
 inline void disableTabFocus(QWidget* widget)
 {
     widget->setFocusPolicy(
@@ -38,3 +41,9 @@ template <typename T> void disableTabFocusOnChildren(QWidget* widget)
 void addColorIconToAction(QAction* action, const TextColor& color);
 
 void addColorIconToAction(QAction* action, const QColor &color);
+
+void setButtonToolTipWithShortcut(QAbstractButton& button,
+                                  const QString& toolTip);
+
+QPushButton* createCheckButton(const QString& tooltip, const QString& shortcut,
+                               const QString& iconPath);
