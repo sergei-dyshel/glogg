@@ -156,7 +156,7 @@ void SyntaxRule::apply(const QString &line, SyntaxParsingState& state) const
             }
             return;
     }
-    throw ASSERT << "Invalid search type" << searchType_;
+    throw ASSERT_HERE << "Invalid search type" << searchType_;
 }
 
 void SyntaxRule::processMatch(const QRegularExpressionMatch &match,

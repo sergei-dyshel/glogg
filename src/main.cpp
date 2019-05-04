@@ -184,7 +184,7 @@ int main(int argc, char *argv[])
         StructConfig config(configFiles, true /* run tests */,
                             true /* stop on error */);
         if (config.checkForIssues())
-            throw ASSERT << "Issues found";
+            throw ASSERT_HERE << "Issues found";
         return 0;
     }
 

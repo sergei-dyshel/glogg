@@ -74,7 +74,7 @@ static QString getBuiltinDir()
         if (!curDir.cdUp())
             break;
     }
-    throw ASSERT << "Could not detect source/installation root";
+    throw ASSERT_HERE << "Could not detect source/installation root";
 }
 
 StructConfigStore::StructConfigStore()
@@ -124,7 +124,7 @@ QStringList StructConfigStore::colorSchemeNames() const
 void StructConfigStore::setColorScheme(const QString &name)
 {
     if (name != DEFAULT_COLOR_SCHEME && !config_.colorSchemes().count(name))
-        throw ASSERT << "Color scheme" << name << "not found";
+        throw ASSERT_HERE << "Color scheme" << name << "not found";
     colorSchemeName_ = name;
 }
 

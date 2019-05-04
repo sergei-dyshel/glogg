@@ -100,14 +100,14 @@ struct Range final {
     void assertValid()
     {
         if (end < start)
-            throw ASSERT << "Range end " << end
-                                << " is smaller than range start " << start;
+            throw ASSERT_HERE << "Range end " << end
+                              << " is smaller than range start " << start;
     }
 
     void assertContains(unsigned val)
     {
         if (!contains(val))
-            throw ASSERT << *this << " does not contain " << val;
+            throw ASSERT_HERE << *this << " does not contain " << val;
     }
 }; // Range
 

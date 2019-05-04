@@ -153,8 +153,8 @@ void AbstractLogView::drawColorizedText(QPainter& painter, int initialXPos,
     }
 
     if (sum_length > range.length())
-      throw ASSERT << "Total length of tokens " << sum_length
-                   << " is bigger than given range " << range;
+        throw ASSERT_HERE << "Total length of tokens " << sum_length
+                          << " is bigger than given range " << range;
 
     // Draw the empty block at the end of the line
     int blank_width = line_width - xPos;

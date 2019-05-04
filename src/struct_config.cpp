@@ -127,6 +127,6 @@ void StructConfig::scanDirsAndFiles(const QStringList &dirsAndFiles,
         else if (QDir::match(SYNTAX_GLOB_PATTERN, path))
             files.syntaxFiles.append(path);
         else
-            throw ASSERT << "File" << path << "not recognized";
+            throw ASSERT_HERE << "File" << path << "not recognized";
     }
 }

@@ -23,7 +23,13 @@
 
 #include <exception>
 
-#define ASSERT AssertionFailure(HERE)
+#define ASSERT_HERE AssertionFailure(HERE)
+
+#define ASSERT(expr)                                                           \
+    do {                                                                       \
+        if (!(expr))                                                           \
+            throw ASSERT_HERE << "Assertion" << #expr << "failed";             \
+    } while (0)
 
 #define DERIVE_EXCEPTION(derived, base)                                        \
     class derived : public base {                                              \

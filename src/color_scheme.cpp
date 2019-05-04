@@ -37,7 +37,7 @@ TextColor::TextColor(const std::initializer_list<QColor> &init_list)
 {
     auto iter = init_list.begin();
     if (iter == init_list.end())
-        throw ASSERT
+        throw ASSERT_HERE
             << "Initializer list for TextColor must be of length 1 or 2";
     foreground = *iter;
     ++iter;
@@ -46,7 +46,7 @@ TextColor::TextColor(const std::initializer_list<QColor> &init_list)
     background = *iter;
     ++iter;
     if (iter != init_list.end())
-        throw ASSERT
+        throw ASSERT_HERE
             << "Initializer list for TextColor must be of length 1 or 2";
 }
 
