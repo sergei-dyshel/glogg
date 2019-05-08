@@ -29,7 +29,7 @@ ConfigNode::ConfigNode(const YAML::Node &node, const QString &path)
 ConfigError::ConfigError(const Location &location, const LogContext &context)
     : Exception(context)
 {
-    QDEBUG_COMPAT(stream_.d);
+    QDEBUG_COMPAT(stream_.qdebug());
     stream_ << location << ":";
 }
 

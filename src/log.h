@@ -27,6 +27,7 @@
 #include <string>
 #include <unordered_map>
 #include <set>
+#include <stack>
 
 #include <QDebug>
 #include <QFile>
@@ -55,8 +56,23 @@ enum TLogLevel {logNoLevel, logERROR, logWARNING, logINFO, logDEBUG, logTRACE};
 #define WARN NEW_LOG(logWARNING)
 #define ERROR NEW_LOG(logERROR)
 
+#define LOG_EXPR_AS(name, expr)                                                \
+    QD_PUSH_STATE << NOSPACE << name "=" << (expr) << QD_POP_STATE
+
+#define LOG_EXPR(expr) LOG_EXPR_AS(#expr, expr)
+
+#define LOG_MEMBER(this, member) LOG_EXPR_AS(#member, (this)->member)
+
+#define LOG_WRAP(open, expr, close)                                            \
+    QD_PUSH_STATE << NOSPACE << open << (expr) << close << QD_POP_STATE
+
+#define LOG_IN_BRACKETS(expr) LOG_WRAP("[", expr, "]")
+
+#define DEBUG_THIS DEBUG << LOG_IN_BRACKETS(static_cast<void*>(this))
+#define INFO_THIS DEBUG << LOG_IN_BRACKETS(static_cast<void*>(this))
+
 #define QDEBUG_DEFINE_OPERATOR(type, expr)                                     \
-    inline QDebug operator<<(QDebug debug, const type &val)                    \
+    inline QDebug &operator<<(QDebug &debug, const type &val)                  \
     {                                                                          \
         return debug << expr;                                                  \
     }
@@ -130,9 +146,16 @@ enum QDebugManip {
     SPACE,
 };
 
+enum LogStreamManip {
+    QD_PUSH_STATE,
+    QD_POP_STATE
+};
+
 class LogStream {
   public:
-    QDebug d;
+
+    LogStream(const LogStream &);
+    LogStream &operator=(const LogStream &) = delete;
 
     LogStream(const LogContext &context);
     LogStream &compat();
@@ -140,7 +163,11 @@ class LogStream {
 
     const QString &message() const { return str_; }
 
-    template <typename T> LogStream &operator<<(const T &val);
+    LogStream &operator<<(LogStreamManip manip);
+    template <typename T>
+    friend LogStream &operator<<(LogStream &, const T &val);
+
+    QDebug &qdebug() { return d; }
 
   protected:
     LogContext context_;
@@ -149,7 +176,10 @@ class LogStream {
     static bool isPatternSet_;
     static const char *QT_PATTERN;
 
+    std::stack<std::shared_ptr<QDebugStateSaver>> stateStack;
+
     QString str_;
+    QDebug d;
 };
 
 class Log final : public LogStream {
@@ -158,6 +188,8 @@ class Log final : public LogStream {
     ~Log();
 
     static void configure(TLogLevel level, const QString &fileName = QString());
+
+    template <typename T> Log &operator<<(const T &val);
 
   private:
     static TLogLevel level_;
@@ -178,15 +210,23 @@ QString ellipsize(const QString &str, int len = 30);
 
 // Implementation
 
-template <typename T> LogStream &LogStream::operator<<(const T &val)
+template <typename T> LogStream &operator<<(LogStream &stream, const T &val)
 {
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Waddress"
 #pragma GCC diagnostic ignored "-Wnonnull-compare"
-    d = d << val;
+    stream.d << val;
 #pragma GCC diagnostic pop
+    return stream;
+}
+
+template <typename T> Log &Log::operator<<(const T &val)
+{
+    static_cast<LogStream &>(*this) << val;
     return *this;
 }
+
+QDebug &operator<<(QDebug &, LogStreamManip) = delete;
 
 QDEBUG_DEFINE_OPERATOR(std::string, QString::fromStdString(val))
 

@@ -30,7 +30,7 @@ std::string LogContext::fileName(const char *file)
 }
 
 LogStream::LogStream(const LogContext &context)
-    : d(&str_), context_(context), str_("")
+    : context_(context), str_(""), d(&str_)
 {}
 
 LogStream &LogStream::compat()
@@ -41,6 +41,23 @@ LogStream &LogStream::compat()
 }
 
 bool LogStream::isPatternSet_ = false;
+
+LogStream::LogStream(const LogStream &other)
+    : context_(other.context_), stateStack(), str_(other.str_), d(other.d)
+{}
+
+LogStream &LogStream::operator<<(LogStreamManip manip)
+{
+    switch (manip) {
+        case QD_PUSH_STATE:
+            stateStack.push(std::make_shared<QDebugStateSaver>(d));
+            break;
+        case QD_POP_STATE:
+            stateStack.pop();
+            break;
+    }
+    return *this;
+}
 
 QString LogStream::fullMessage() const
 {
