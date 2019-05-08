@@ -10,15 +10,19 @@ RELEASE := build/release
 
 DEBUG_TESTS ?= 1
 
-all:
+build_all:
 ifneq (,$(wildcard $(DEBUG)))
-	$(MAKE) debug
+	$(MAKE) build_debug
 endif
 ifneq (,$(wildcard $(RELEASE)))
-	$(MAKE) release
+	$(MAKE) build_release
 endif
 
-MAKE := $(MAKE) --no-print-directory
+ifdef g
+GDB_PREFIX := gdb -ex run --args
+endif
+
+MAKE := $(MAKE) --no-print-directory -j$(shell nproc)
 
 configure_debug:
 	mkdir -p $(DEBUG)
@@ -32,18 +36,22 @@ configure_release:
 
 configure: configure_debug configure_release
 
-debug:
+build_debug:
 	$(MAKE) -C $(DEBUG)
 	[ -f $(DEBUG)/tests/glogg_syntax_tests ] && $(DEBUG)/tests/glogg_syntax_tests --quiet
 	./validate-yaml.py colors.schema.json config/*.glogg-colors.yaml
 	./validate-yaml.py syntax.schema.json config/*.glogg-syntax.yaml
 	$(DEBUG)/glogg --check-config ./config
 
+run_debug: build_debug
+	-pkill -f $(DEBUG)/glogg
+	$(GDB_PREFIX) $(DEBUG)/glogg --server=debug -t -ddd sample/* -l log
+
 syntax_tests:
-	$(MAKE) -j$(shell nproc) -C $(DEBUG)/tests glogg_syntax_tests
+	$(MAKE) -C $(DEBUG)/tests glogg_syntax_tests
 	$(DEBUG)/tests/glogg_syntax_tests --gtest_filter="*$(f)*" -ddd
 
-release:
+build_release:
 	$(MAKE) -C $(RELEASE)
 
 distclean_debug:
