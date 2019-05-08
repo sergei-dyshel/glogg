@@ -1,0 +1,112 @@
+(gdb) thread apply all bt
+
+Thread 6 (process 26705):
+#0  0x00000000 in ?? ()
+#1  0x014547ee in nsViewManager::DispatchEvent (this=0xab80c558, aEvent=0xbfe96b0c, aStatus=0xbfe96a80)
+    at nsViewManager.cpp:1079
+#2  0x0144dd16 in HandleEvent (aEvent=0xbfe96b0c) at nsView.cpp:168
+#3  0x01910687 in nsCommonWidget::DispatchEvent (this=0xae59e188, aEvent=0xbfe96b0c, aStatus=@0xbfe96c00)
+    at nsCommonWidget.cpp:158
+#4  0x0190c10f in nsWindow::OnExposeEvent (this=0xae59e188, aWidget=0x8a95630, aEvent=0xbfe97184)
+    at nsWindow.cpp:1766
+#5  0x0190cb16 in expose_event_cb (widget=0x8a95630, event=0xbfe97184) at nsWindow.cpp:4532
+#6  0x050f9060 in _gtk_marshal_BOOLEAN__BOXED (closure=0x90e2d88, return_value=0xbfe96db0, n_param_values=2, 
+    param_values=0xbfe96e8c, invocation_hint=0xbfe96d9c, marshal_data=0x190cad0) at gtkmarshalers.c:84
+#7  0x007dcf0b in IA__g_closure_invoke (closure=0x90e2d88, return_value=0xbfe96db0, n_param_values=2, 
+    param_values=0xbfe96e8c, invocation_hint=0xbfe96d9c) at gclosure.c:490
+#8  0x007ede83 in signal_emit_unlocked_R (node=0x892c2f0, detail=0, instance=0x8a95630, 
+    emission_return=0xbfe9704c, instance_and_params=0xbfe96e8c) at gsignal.c:2438
+#9  0x007ef147 in IA__g_signal_emit_valist (instance=0x8a95630, signal_id=50, detail=0, 
+    var_args=0xbfe970d0 "�p��\204q��0V�\b�\031!\0050V�\b`E\222\b") at gsignal.c:2207
+#10 0x007ef539 in IA__g_signal_emit (instance=0x8a95630, signal_id=50, detail=0) at gsignal.c:2241
+#11 0x0520d5d8 in gtk_widget_event_internal (widget=0x8a95630, event=0xbfe97184) at gtkwidget.c:3913
+#12 0x050f37e5 in IA__gtk_main_do_event (event=0xbfe97184) at gtkmain.c:1384
+#13 0x0034c7ff in gdk_window_process_updates_internal (window=0xad900810) at gdkwindow.c:2324
+#14 0x0034ca47 in IA__gdk_window_process_all_updates () at gdkwindow.c:2387
+#15 0x0034cac5 in gdk_window_update_idle (data=0x0) at gdkwindow.c:2245
+#16 0x0075d5e1 in g_idle_dispatch (source=0xab855978, callback=0xb5ba6920, user_data=0x0) at gmain.c:3926
+#17 0x0075f342 in IA__g_main_context_dispatch (context=0x890d248) at gmain.c:2045
+#18 0x0076231f in g_main_context_iterate (context=0x890d248, block=0, dispatch=1, self=0x88eee80)
+    at gmain.c:2677
+#19 0x00762885 in IA__g_main_context_iteration (context=0x890d248, may_block=0) at gmain.c:2736
+#20 0x0190e965 in nsAppShell::ProcessNextNativeEvent (this=0x89df0d0, mayWait=0) at nsAppShell.cpp:144
+#21 0x0192abdc in nsBaseAppShell::DoProcessNextNativeEvent (this=0x89df0d0, mayWait=0) at nsBaseAppShell.cpp:151
+#22 0x0192b0b4 in nsBaseAppShell::OnProcessNextEvent (this=0x89df0d0, thr=0x8937730, mayWait=1, 
+    recursionDepth=0) at nsBaseAppShell.cpp:278
+#23 0x01a3c110 in nsThread::ProcessNextEvent (this=0x8937730, mayWait=1, result=0xbfe973e4) at nsThread.cpp:497
+#24 0x019fa893 in NS_ProcessNextEvent_P (thread=0x1, mayWait=1) at nsThreadUtils.cpp:227
+#25 0x0192ad67 in nsBaseAppShell::Run (this=0x89df0d0) at nsBaseAppShell.cpp:170
+#26 0x01730daf in nsAppStartup::Run (this=0x8a9b700) at nsAppStartup.cpp:181
+---Type <return> to continue, or q <return> to quit---
+#27 0x00efd071 in XRE_main (argc=1, argv=0xbfe9abb4, aAppData=0x88ee990) at nsAppRunner.cpp:3174
+#28 0x080490a2 in __gxx_personality_v0 ()
+#29 0x0048adec in __libc_start_main () from /lib/libc.so.6
+#30 0x08048c51 in __gxx_personality_v0 ()
+
+Thread 5 (process 26708):
+#0  0x0099a402 in __kernel_vsyscall ()
+#1  0x0053c033 in poll () from /lib/libc.so.6
+#2  0x04a9e3a9 in PR_Poll () from /usr/lib/libnspr4.so
+#3  0x00f7cf1f in nsSocketTransportService::Poll (this=0x898c780, wait=1, interval=0xb7d601f8)
+    at nsSocketTransportService2.cpp:349
+#4  0x00f7d9e1 in nsSocketTransportService::DoPollIteration (this=0x898c780, wait=1)
+    at nsSocketTransportService2.cpp:644
+#5  0x00f7dce3 in nsSocketTransportService::OnProcessNextEvent (this=0x898c780, thread=0x89b2040, mayWait=1, 
+    depth=1) at nsSocketTransportService2.cpp:523
+#6  0x01a3c110 in nsThread::ProcessNextEvent (this=0x89b2040, mayWait=1, result=0xb7d602a4) at nsThread.cpp:497
+#7  0x019fa893 in NS_ProcessNextEvent_P (thread=0x4, mayWait=1) at nsThreadUtils.cpp:227
+#8  0x00f7ddb2 in nsSocketTransportService::Run (this=0x898c780) at nsSocketTransportService2.cpp:565
+#9  0x01a3c16f in nsThread::ProcessNextEvent (this=0x89b2040, mayWait=1, result=0xb7d60354) at nsThread.cpp:510
+#10 0x019fa893 in NS_ProcessNextEvent_P (thread=0x4, mayWait=1) at nsThreadUtils.cpp:227
+#11 0x01a3c3c0 in nsThread::ThreadFunc (arg=0x89b2040) at nsThread.cpp:254
+#12 0x04aa26ed in PR_JoinThread () from /usr/lib/libnspr4.so
+#13 0x005ee45b in start_thread () from /lib/libpthread.so.0
+#14 0x00545c4e in clone () from /lib/libc.so.6
+
+Thread 4 (process 26709):
+#0  0x0099a402 in __kernel_vsyscall ()
+#1  0x005f24dc in pthread_cond_timedwait@@GLIBC_2.3.2 () from /lib/libpthread.so.0
+#2  0x04a9b856 in PRP_NakedNotify () from /usr/lib/libnspr4.so
+#3  0x04a9c694 in PR_WaitCondVar () from /usr/lib/libnspr4.so
+#4  0x01a40aed in TimerThread::Run (this=0x89381d8) at TimerThread.cpp:345
+#5  0x01a3c16f in nsThread::ProcessNextEvent (this=0x8ae0380, mayWait=1, result=0xb735f354) at nsThread.cpp:510
+#6  0x019fa893 in NS_ProcessNextEvent_P (thread=0x0, mayWait=1) at nsThreadUtils.cpp:227
+#7  0x01a3c3c0 in nsThread::ThreadFunc (arg=0x8ae0380) at nsThread.cpp:254
+#8  0x04aa26ed in PR_JoinThread () from /usr/lib/libnspr4.so
+#9  0x005ee45b in start_thread () from /lib/libpthread.so.0
+#10 0x00545c4e in clone () from /lib/libc.so.6
+
+---Type <return> to continue, or q <return> to quit---
+Thread 3 (process 26713):
+#0  0x0099a402 in __kernel_vsyscall ()
+#1  0x005f2256 in pthread_cond_wait@@GLIBC_2.3.2 () from /lib/libpthread.so.0
+#2  0x04a9c726 in PR_WaitCondVar () from /usr/lib/libnspr4.so
+#3  0x0174cbf4 in nsSSLThread::Run (this=0x8d55dc0) at nsSSLThread.cpp:964
+#4  0x0174c1a0 in nsPSMBackgroundThread::nsThreadRunner (arg=0x8d55dc0) at nsPSMBackgroundThread.cpp:44
+#5  0x04aa26ed in PR_JoinThread () from /usr/lib/libnspr4.so
+#6  0x005ee45b in start_thread () from /lib/libpthread.so.0
+#7  0x00545c4e in clone () from /lib/libc.so.6
+
+Thread 2 (process 26714):
+#0  0x0099a402 in __kernel_vsyscall ()
+#1  0x005f2256 in pthread_cond_wait@@GLIBC_2.3.2 () from /lib/libpthread.so.0
+#2  0x04a9c726 in PR_WaitCondVar () from /usr/lib/libnspr4.so
+#3  0x0174e1a0 in nsCertVerificationThread::Run (this=0x8d9aaf0) at nsCertVerificationThread.cpp:138
+#4  0x0174c1a0 in nsPSMBackgroundThread::nsThreadRunner (arg=0x8d9aaf0) at nsPSMBackgroundThread.cpp:44
+#5  0x04aa26ed in PR_JoinThread () from /usr/lib/libnspr4.so
+#6  0x005ee45b in start_thread () from /lib/libpthread.so.0
+#7  0x00545c4e in clone () from /lib/libc.so.6
+
+Thread 1 (process 27536):
+#0  0x0099a402 in __kernel_vsyscall ()
+#1  0x005f24dc in pthread_cond_timedwait@@GLIBC_2.3.2 () from /lib/libpthread.so.0
+#2  0x04a9b856 in PRP_NakedNotify () from /usr/lib/libnspr4.so
+#3  0x04a9c694 in PR_WaitCondVar () from /usr/lib/libnspr4.so
+#4  0x00f89f67 in nsHostResolver::GetHostToLookup (this=0x89b6aa0, result=0xb1734388) at nsHostResolver.cpp:595
+#5  0x00f8a424 in nsHostResolver::ThreadFunc (arg=0x89b6aa0) at nsHostResolver.cpp:690
+#6  0x04aa26ed in PR_JoinThread () from /usr/lib/libnspr4.so
+#7  0x005ee45b in start_thread () from /lib/libpthread.so.0
+#8  0x00545c4e in clone () from /lib/libc.so.6
+(gdb) 
+
+

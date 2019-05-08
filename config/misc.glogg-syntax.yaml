@@ -16,3 +16,42 @@ python_traceback:
       - [spam.py, filename]
       - ['3', linenum]
       - [<module>, function]
+
+strace:
+  rules:
+    - match: '^(?:(?<timestamp>\d{2}:\d{2}:\d{2}(?:\.\d{6})?) )?(?<syscall>\w+)\((?<body>.*)\)\s+=\s+(?<rc>[-\w]+)(?: (?<errno>\w+) \([^\)]+\))?(?: <(?<duration>\d+\.\d+)>)?$'
+      colorize:
+        syscall: function
+        errno: error
+  tests:
+    '22:58:12.021512 access("/etc/system-fips", F_OK) = -1 ENOENT (No such file or directory) <0.000021>':
+      - ['22:58:12.021512', timestamp]
+      - [access, function]
+      - ['"/etc/system-fips", F_OK', body]
+      - ['-1', rc]
+      - [ENOENT, error]
+      - ['0.000021', duration]
+
+gdb_backtrace:
+  rules:
+    - match: '^(?:#\d+ +(?<addr>[x0-9a-f]+) in (?<function>[\w:]+) \(.*?)?.*?(?: at (?<filename>[\w.-]+):(?<linenum>\d+)| from (?<filename1>[\w.\/-]+))?$'
+      colorize:
+          addr: timestamp
+          filename1: filename
+  tests:
+    '#17 0x0075f342 in IA__g_main_context_dispatch (context=0x890d248) at gmain.c:2045':
+      - ['0x0075f342', timestamp]
+      - [IA__g_main_context_dispatch, function]
+      - [gmain.c, filename]
+      - ['2045', linenum]
+
+journald:
+  rules:
+    - match: '^(?<timestamp>\w+ \d+ \d+:\d+:\d+) (?<hostname>[\w.-]+) (?<process>[\w.-]+)\[(?<pid>\d+)\]: (?<message>.*)'
+  tests:
+    'May 08 09:01:18 sergei-laptop NetworkManager[984]: <info>  [1557295278.1490] dhcp4 (eno1):   address 172.16.12.144':
+      - ['May 08 09:01:18', timestamp]
+      - [sergei-laptop, hostname]
+      - [NetworkManager, process]
+      - ['984', pid]
+      - ['<info>  [1557295278.1490] dhcp4 (eno1):   address 172.16.12.144', message]
