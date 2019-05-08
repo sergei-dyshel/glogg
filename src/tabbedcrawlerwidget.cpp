@@ -25,18 +25,23 @@
 #include <QInputDialog>
 #include <QWidgetAction>
 #include <QLabel>
+#include <QDrag>
+#include <QMimeData>
+#include <QApplication>
+#include <QClipboard>
 
 #include "crawlerwidget.h"
 #include "externalcom.h"
+#include "tab_info.h"
 
 #include "log.h"
 #include "qt_utils.h"
 
-TabbedCrawlerWidget::TabbedCrawlerWidget() : QTabWidget(),
+TabbedCrawlerWidget::TabbedCrawlerWidget(QWidget *parent) : QTabWidget(parent),
     olddata_icon_( ":/images/olddata_icon.png" ),
     newdata_icon_( ":/images/newdata_icon.png" ),
     newfiltered_icon_( ":/images/newfiltered_icon.png" ),
-    myTabBar_()
+    myTabBar_(this)
 {
 #ifdef WIN32
     myTabBar_.setStyleSheet( "QTabBar::tab {\
@@ -57,9 +62,18 @@ TabbedCrawlerWidget::TabbedCrawlerWidget() : QTabWidget(),
              }" );
 #endif
     setTabBar( &myTabBar_ );
-    myTabBar_.hide();
     disableTabFocus(this);
+    setAcceptDrops(true);
     disableTabFocusOnChildren<QToolButton>(&myTabBar_);
+
+    connect(&myTabBar_, &QTabBar::tabCloseRequested, this,
+            &TabbedCrawlerWidget::tabCloseRequested);
+    connect(&myTabBar_, &TabBar::popupMenuRequested, this,
+            &TabbedCrawlerWidget::showTabPopupMenu);
+    connect(&myTabBar_, &TabBar::dragStarted, this,
+            &TabbedCrawlerWidget::onTabDragStarted);
+    connect(&myTabBar_, &TabBar::dragAndDrop, this,
+            &TabbedCrawlerWidget::dragAndDrop);
 }
 
 // I know hiding non-virtual functions from the base class is bad form
@@ -67,15 +81,17 @@ TabbedCrawlerWidget::TabbedCrawlerWidget() : QTabWidget(),
 // QTabBar with all signals and all just to implement this very simple logic.
 // Maybe one day that should be done better...
 
-int TabbedCrawlerWidget::addTab( QWidget* page, const QString& label )
+int TabbedCrawlerWidget::insertTab(int tabIndex, QWidget* page,
+                                   const QString& label, bool setCurrent)
 {
-    int index = QTabWidget::addTab( page, label );
+    int index = QTabWidget::insertTab(tabIndex, page, label );
 
     if ( auto crawler = dynamic_cast<CrawlerWidget*>( page ) ) {
         // Mmmmhhhh... new Qt5 signal syntax create tight coupling between
         // us and the sender, baaaaad....
 
         // Listen for a changing data status:
+        disconnect(crawler, &CrawlerWidget::dataStatusChanged, 0, 0);
         connect( crawler, &CrawlerWidget::dataStatusChanged,
                 [ this, index ]( DataStatus status ) { setTabDataStatus( index, status ); } );
     }
@@ -86,12 +102,12 @@ int TabbedCrawlerWidget::addTab( QWidget* page, const QString& label )
     icon_label->setAlignment( Qt::AlignCenter );
     myTabBar_.setTabButton( index, QTabBar::RightSide, icon_label );
 
-    LOG(logDEBUG) << "addTab, count = " << count();
+    LOG(logDEBUG) << "insertTab, count = " << count();
     LOG(logDEBUG) << "width = " << olddata_icon_.pixmap( 11, 12 ).devicePixelRatio();
 
-    if ( count() > 1 )
-        myTabBar_.show();
-
+    if (setCurrent)
+        setCurrentIndex(index);
+    allowDrops_ = false;
     return index;
 }
 
@@ -99,66 +115,134 @@ void TabbedCrawlerWidget::removeTab( int index )
 {
     QTabWidget::removeTab( index );
 
-    if ( count() <= 1 )
-        myTabBar_.hide();
+    if (count() == 0)
+        allowDrops_ = true;
 }
 
-void TabbedCrawlerWidget::mouseReleaseEvent( QMouseEvent *event)
+void TabbedCrawlerWidget::onTabDragStarted(int tabIndex)
 {
-    LOG(logDEBUG) << "TabbedCrawlerWidget::mouseReleaseEvent";
+    auto drag = new QDrag(this);
+    TabInfo tab;
+    tab.pid = QApplication::applicationPid();
+    tab.tabBar = reinterpret_cast<qint64>(&myTabBar_);
+    tab.tabText = myTabBar_.tabText(tabIndex);
+    tab.tabIndex = tabIndex;
+    auto crawler = dynamic_cast<CrawlerWidget*>(widget(tabIndex));
+    tab.filename = crawler->logData()->attachedFilename();
+    INFO << "Starting tab drag" << tab;
 
-    int tab = this->myTabBar_.tabAt( event->pos() );
-    if (-1 == tab)
-        return;
+    drag->setMimeData(tab.toMimeData());
+    drag->setPixmap(myTabBar_.grab(myTabBar_.tabRect(tabIndex)));
+    drag->setHotSpot(QPoint(0, 0));
 
-    if (event->button() == Qt::MidButton)
-    {
-        emit tabCloseRequested( tab );
+    auto dropAction
+        = drag->exec(Qt::MoveAction | Qt::CopyAction, Qt::MoveAction);
+    INFO << "dropAction" << dropAction;
+}
+
+void TabbedCrawlerWidget::closeTabs(int begin, int end)
+{
+    int index = begin;
+    for (int i = begin; i < end; ++i)
+        if (!myTabBar_.isPinned(index))
+            emit tabCloseRequested(index);
+        else
+            ++index;
+}
+
+void TabbedCrawlerWidget::showTabPopupMenu(const QPoint &pos, int tab)
+{
+    QMenu menu(this);
+
+    menu.addAction("Close", [=]() { emit tabCloseRequested(tab); });
+
+    if (myTabBar_.isPinned(tab))
+        menu.addAction("Unpin", [=]() { myTabBar_.setPinned(tab, false); });
+    else
+        menu.addAction("Pin", [=]() { myTabBar_.setPinned(tab, true); });
+
+    menu.addAction("Rename", [=]() {
+        auto old_name = myTabBar_.tabText(tab);
+        bool ok;
+        auto new_name
+            = QInputDialog::getText( this, "Rename tab", "Enter new name",
+                                        QLineEdit::Normal, old_name, &ok );
+        if (ok)
+            myTabBar_.setTabText( tab, new_name );
+    });
+
+    menu.addAction("Duplicate", [=]() { emit duplicateTab(tab); });
+
+    auto color_submenu = menu.addMenu("Change color...");
+    std::list<QColor> colors
+        = {Qt::red,      Qt::blue,     Qt::green,       Qt::cyan,
+           Qt::magenta,  Qt::yellow,   Qt::darkRed,     Qt::darkGreen,
+           Qt::darkBlue, Qt::darkCyan, Qt::darkMagenta, Qt::darkYellow};
+    for (auto color : colors) {
+        auto action = color_submenu->addAction(
+            "", [=]() { myTabBar_.setTabTextColor(tab, color); });
+        addColorIconToAction(action, color);
     }
-    else if (event->button() == Qt::RightButton)
-    {
-        QMenu menu(this);
-        auto rename_action = menu.addAction("Rename");
-        auto close_previous_action = menu.addAction("Close previous");
-        if (externalCommunicator) {
-            auto servers = externalCommunicator->otherServerNames();
-            if (!servers.isEmpty()) {
-                auto copy_submenu = menu.addMenu("Copy to...");
-                auto move_submenu = menu.addMenu("Move to...");
-                for (auto name : servers) {
-                    auto copy_action = copy_submenu->addAction(name);
-                    connect(copy_action, &QAction::triggered,
-                            [=]() { emit openInAnotherServer(tab, name); });
-                    auto move_action = move_submenu->addAction(name);
-                    connect(move_action, &QAction::triggered, [=]() {
-                        emit openInAnotherServer(tab, name);
-                        emit tabCloseRequested(tab);
-                    });
-                }
+
+    menu.addAction("Copy path", [=]() {
+        QApplication::clipboard()->setText(
+            dynamic_cast<CrawlerWidget*>(widget(tab))
+                ->logData()
+                ->attachedFilename());
+    });
+
+    menu.addSeparator();
+
+    menu.addAction("Close all", [=]() {
+        closeTabs(0, count()); });
+    menu.addAction("Close all before", [=]() {
+        closeTabs(0, tab); })
+        ->setEnabled(tab > 0);
+    menu.addAction("Close all after", [=]() {
+        closeTabs(tab + 1, count()); })
+        ->setEnabled(tab < count() - 1);
+
+    int numPinned = 0;
+    for (int i = 0; i < count(); ++i)
+        if (myTabBar_.isPinned(i))
+            ++numPinned;
+
+    menu.addAction("Pin all",
+                   [=]() {
+                       for (int i = 0; i < count(); ++i)
+                           myTabBar_.setPinned(i, true);
+                   })
+        ->setEnabled(numPinned < count());
+    menu.addAction("Unpin all",
+                   [=]() {
+                       for (int i = 0; i < count(); ++i)
+                           myTabBar_.setPinned(i, false);
+                   })
+        ->setEnabled(numPinned > 0);
+
+    menu.addSeparator();
+    menu.addAction("Move to start", [=]() { myTabBar_.moveTab(tab, 0); })
+        ->setEnabled(tab > 0);
+    menu.addAction("Move to end", [=]() { myTabBar_.moveTab(tab, count()); })
+        ->setEnabled(tab < count() - 1);
+
+    if (externalCommunicator) {
+        auto servers = externalCommunicator->otherServerNames();
+        if (!servers.isEmpty()) {
+            auto copy_submenu = menu.addMenu("Copy to other instance ...");
+            auto move_submenu = menu.addMenu("Move to other instance ...");
+            for (auto name : servers) {
+                copy_submenu->addAction(
+                    name, [=]() { emit openInAnotherServer(tab, name); });
+                move_submenu->addAction(name, [=]() {
+                    emit openInAnotherServer(tab, name);
+                    emit tabCloseRequested(tab);
+                });
             }
         }
-        auto color_submenu = menu.addMenu("Change color...");
-        QStringList colors = {"red", "blue"};
-        for (auto color : colors) {
-            auto action = color_submenu->addAction(
-                "", [=]() { myTabBar_.setTabTextColor(tab, color); });
-            addColorIconToAction(action, color);
-        }
-        auto action = menu.exec(mapToGlobal(event->pos()));
-        if (action == rename_action) {
-            auto old_name = myTabBar_.tabText(tab);
-            bool ok;
-            auto new_name
-                = QInputDialog::getText( this, "Rename tab", "Enter new name",
-                                         QLineEdit::Normal, old_name, &ok );
-            if ( ok )
-                myTabBar_.setTabText( tab, new_name );
-        }
-        else if (action == close_previous_action) {
-            for (int prevTab = 0; prevTab < tab; ++prevTab)
-                emit tabCloseRequested(0);
-        }
     }
+
+    menu.exec(mapToGlobal(pos));
 }
 
 void TabbedCrawlerWidget::keyPressEvent( QKeyEvent* event )
@@ -224,4 +308,44 @@ void TabbedCrawlerWidget::setTabDataStatus( int index, DataStatus status )
         icon_label->setPixmap ( icon->pixmap(12,12) );
 
     }
+}
+
+void TabbedCrawlerWidget::dragEnterEvent(QDragEnterEvent* event)
+{
+    if (!allowDrops_)
+        return;
+    ASSERT(count() == 0);
+
+    TabInfo tab;
+    if (!TabInfo::tryDecodeMimeData(event->mimeData(), &tab))
+        return;
+
+    if (myTabBar_.sameTabBar(tab)) {
+        DEBUG_THIS << "Can not drop on same tab widget";
+        return;
+    }
+    DEBUG_THIS;
+    myTabBar_.insertDropTab(myTabBar_.count(), tab);
+    event->accept();
+}
+
+void TabbedCrawlerWidget::dragLeaveEvent(QDragLeaveEvent*)
+{
+    DEBUG_THIS;
+    myTabBar_.removeDropTab();
+}
+
+void TabbedCrawlerWidget::dropEvent(QDropEvent *event)
+{
+    DEBUG_THIS;
+
+    TabInfo tab;
+    bool tabDecoded = TabInfo::tryDecodeMimeData(event->mimeData(), &tab);
+    ASSERT(tabDecoded);
+
+    INFO << tab;
+    ASSERT(!myTabBar_.sameTabBar(tab));
+
+    int tabIndex = myTabBar_.removeDropTab();
+    emit dragAndDrop(tabIndex, tab);
 }

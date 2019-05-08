@@ -24,6 +24,7 @@
 #include <QTabBar>
 
 #include "loadingstatus.h"
+#include "tab_bar.h"
 
 class CrawlerWidget;
 
@@ -35,31 +36,43 @@ class TabbedCrawlerWidget : public QTabWidget
 {
   Q_OBJECT
     public:
-      TabbedCrawlerWidget();
+      TabbedCrawlerWidget(QWidget *parent);
       virtual ~TabbedCrawlerWidget() {}
 
-      // "Overridden" addTab/removeTab that automatically
+      // "Overridden" insertTab/removeTab that automatically
       // show/hide the tab bar
       // The tab is created with the 'old data' icon.
-      int addTab( QWidget* page, const QString& label );
+      int insertTab(int index, QWidget *page, const QString &label,
+                    bool setCurrent = false);
       void removeTab( int index );
 
       // Set the data status (icon) for the tab number 'index'
       void setTabDataStatus( int index, DataStatus status );
 
+      TabBar &tabBar() { return myTabBar_; }
+
     signals:
       void openInAnotherServer(int tab, QString server);
+      void dragAndDrop(int dropTabIndex, const TabInfo &tab);
+      void duplicateTab(int tabIndex);
 
     protected:
-      void keyPressEvent( QKeyEvent* event );
-      void mouseReleaseEvent( QMouseEvent *event);
+      void keyPressEvent( QKeyEvent* event ) override;
+      void dragEnterEvent(QDragEnterEvent *event) override;
+      void dragLeaveEvent(QDragLeaveEvent *event) override;
+      void dropEvent(QDropEvent *event) override;
 
     private:
+      void showTabPopupMenu(const QPoint &pos, int tabindex);
+      void onTabDragStarted(int tabIndex);
+      void closeTabs(int begin, int end);
+
       const QIcon olddata_icon_;
       const QIcon newdata_icon_;
       const QIcon newfiltered_icon_;
 
-      QTabBar myTabBar_;
+      TabBar myTabBar_;
+      bool allowDrops_ = true;
 };
 
 #endif

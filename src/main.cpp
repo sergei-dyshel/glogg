@@ -40,7 +40,6 @@ using namespace std;
 #include "filterset.h"
 #include "recentfiles.h"
 #include "session.h"
-#include "mainwindow.h"
 #include "savedsearches.h"
 #include "loadingstatus.h"
 
@@ -59,8 +58,6 @@ static void print_version();
 
 int main(int argc, char *argv[])
 {
-    GloggApp app(argc, argv);
-
     QStringList filenames;
 
     // Configuration
@@ -240,9 +237,6 @@ int main(int argc, char *argv[])
             // between the declaration of externalInstance and here,
             // is it a problem?
             externalCommunicator->startServer(serverName);
-            if (!externalCommunicator->isDefaultServer())
-                app.setApplicationName(app.applicationName() + "."
-                                    + externalCommunicator->serverName());
         }
     }
 
@@ -253,8 +247,6 @@ int main(int argc, char *argv[])
     GetPersistentInfo().migrateAndInit();
     GetPersistentInfo().registerPersistable(
             std::make_shared<SessionInfo>(), QString( "session" ) );
-    GetPersistentInfo().registerPersistable(
-            std::make_shared<Configuration>(), QString( "settings" ) );
     GetPersistentInfo().registerPersistable(
             std::make_shared<FilterSet>(), QString( "filterSet" ) );
     GetPersistentInfo().registerPersistable(
@@ -272,17 +264,26 @@ int main(int argc, char *argv[])
     AllowSetForegroundWindow(ASFW_ANY);
 #endif
 
+    std::shared_ptr<Session> session( new Session(temp_session) );
+    GloggApp app(argc, argv, session, externalCommunicator);
+
+    if (externalCommunicator && !externalCommunicator->isDefaultServer())
+        app.setApplicationName(app.applicationName() + "."
+                               + externalCommunicator->serverName());
+
     // We support high-dpi (aka Retina) displays
     app.setAttribute( Qt::AA_UseHighDpiPixmaps );
 
     // No icon in menus
     app.setAttribute( Qt::AA_DontShowIconsInMenus );
 
+    // Must come after App init
+    GetPersistentInfo().registerPersistable(
+            std::make_shared<Configuration>(), QString( "settings" ) );
     // FIXME: should be replaced by a two staged init of MainWindow
     GetPersistentInfo().retrieve( QString( "settings" ) );
 
-    std::unique_ptr<Session> session( new Session(temp_session) );
-    MainWindow mw( std::move( session ), externalCommunicator );
+    auto &mw = app.newWindow();
 
     // Geometry
     mw.reloadGeometry();

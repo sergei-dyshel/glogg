@@ -52,19 +52,18 @@
 #include "externalcom.h"
 #include "struct_config_store.h"
 #include "qt_utils.h"
+#include "tab_info.h"
 
 // Returns the size in human readable format
 static QString readableSize( qint64 size );
 
-MainWindow::MainWindow( std::unique_ptr<Session> session,
-        std::shared_ptr<ExternalCommunicator> external_communicator ) :
-    session_( std::move( session )  ),
-    externalCommunicator_( external_communicator ),
+MainWindow::MainWindow(std::shared_ptr<Session> session ) :
+    session_( session ),
     recentFiles_( Persistent<RecentFiles>( "recentFiles" ) ),
     mainIcon_(),
     signalMux_(),
     quickFindMux_( session_->getQuickFindPattern() ),
-    mainTabWidget_()
+    mainTabWidget_(this)
 #ifdef GLOGG_SUPPORTS_VERSION_CHECKING
     ,versionChecker_()
 #endif
@@ -137,6 +136,12 @@ MainWindow::MainWindow( std::unique_ptr<Session> session,
     connect(&mainTabWidget_, &TabbedCrawlerWidget::openInAnotherServer, this,
             &MainWindow::openInAnotherServer);
 
+    connect(&mainTabWidget_, &TabbedCrawlerWidget::dragAndDrop, this,
+            &MainWindow::onTabDragAndDrop);
+
+    connect(&mainTabWidget_, &TabbedCrawlerWidget::duplicateTab, this,
+            &MainWindow::onDuplicateTab);
+
     // Establish the QuickFindWidget and mux ( to send requests from the
     // QFWidget to the right window )
     connect( &quickFindWidget_, SIGNAL( patternConfirmed( const QString&, bool ) ),
@@ -161,8 +166,6 @@ MainWindow::MainWindow( std::unique_ptr<Session> session,
              &quickFindWidget_, SLOT( clearNotification() ) );
 
     // Actions from external instances
-    connect( externalCommunicator_.get(), SIGNAL( loadFile( const QString& ) ),
-             this, SLOT( loadFileNonInteractive( const QString& ) ) );
     connect( qApp, SIGNAL( loadFile( const QString& ) ),
              this, SLOT( loadFileNonInteractive( const QString& ) ) );
 
@@ -242,7 +245,7 @@ void MainWindow::reloadSession()
 
         assert( crawler_widget );
 
-        mainTabWidget_.addTab( crawler_widget, tab_name );
+        mainTabWidget_.insertTab(-1, crawler_widget, tab_name);
     }
 
     if ( current_file_index >= 0 )
@@ -291,6 +294,9 @@ void MainWindow::createActions()
     std::shared_ptr<Configuration> config =
         Persistent<Configuration>( "settings" );
 
+    newWindowAction = new QAction(tr("&New window"), this);
+    newWindowAction->setShortcut(QKeySequence::New);
+    connect(newWindowAction, &QAction::triggered, [=] { emit newWindow(); });
     openAction = new QAction(tr("&Open..."), this);
     openAction->setShortcut(QKeySequence::Open);
     openAction->setIcon( QIcon( ":/images/open14.png" ) );
@@ -317,7 +323,7 @@ void MainWindow::createActions()
     exitAction = new QAction(tr("E&xit"), this);
     exitAction->setShortcut(tr("Ctrl+Q"));
     exitAction->setStatusTip(tr("Exit the application"));
-    connect( exitAction, SIGNAL(triggered()), this, SLOT(close()) );
+    connect(exitAction, &QAction::triggered, this, &MainWindow::exitRequested);
 
     copyAction = new QAction(tr("&Copy"), this);
     copyAction->setShortcut(QKeySequence::Copy);
@@ -412,6 +418,7 @@ void MainWindow::createActions()
 void MainWindow::createMenus()
 {
     fileMenu = menuBar()->addMenu( tr("&File") );
+    fileMenu->addAction( newWindowAction);
     fileMenu->addAction( openAction );
     fileMenu->addAction( closeAction );
     fileMenu->addAction( closeAllAction );
@@ -746,6 +753,11 @@ void MainWindow::currentTabChanged( int index )
     {
         CrawlerWidget* crawler_widget = dynamic_cast<CrawlerWidget*>(
                 mainTabWidget_.widget( index ) );
+
+        // ignore drop tab
+        if (!crawler_widget)
+            return;
+
         signalMux_.setCurrentDocument( crawler_widget );
         quickFindMux_.registerSelector( crawler_widget );
 
@@ -870,14 +882,15 @@ void MainWindow::keyPressEvent( QKeyEvent* keyEvent )
 // Create a CrawlerWidget for the passed file, start its loading
 // and update the title bar.
 // The loading is done asynchronously.
-bool MainWindow::loadFile( const QString& fileName )
+bool MainWindow::loadFile(const QString& fileName, const QString& tabName,
+                          int tabIndex, bool allowDuplicate)
 {
     LOG(logDEBUG) << "loadFile ( " << fileName.toStdString() << " )";
 
     // First check if the file is already open...
     CrawlerWidget* existing_crawler = dynamic_cast<CrawlerWidget*>(
             session_->getViewIfOpen( fileName.toStdString() ) );
-    if ( existing_crawler ) {
+    if (existing_crawler && !allowDuplicate) {
         // ... and switch to it.
         mainTabWidget_.setCurrentWidget( existing_crawler );
 
@@ -900,8 +913,9 @@ bool MainWindow::loadFile( const QString& fileName )
         // tab during loading. (maybe FIXME)
         //mainTabWidget_.setEnabled( false );
 
-        int index = mainTabWidget_.addTab(
-                crawler_widget, strippedName( fileName ) );
+        int index = mainTabWidget_.insertTab(
+            tabIndex, crawler_widget,
+            tabName.isEmpty() ? strippedName(fileName) : tabName);
 
         // Setting the new tab, the user will see a blank page for the duration
         // of the loading, with no way to switch to another tab
@@ -1108,4 +1122,41 @@ void MainWindow::repaintLogViews()
 {
     if (currentCrawlerWidget())
         currentCrawlerWidget()->repaintLogViews();
+}
+
+bool MainWindow::event(QEvent *event)
+{
+    if (event->type() == QEvent::WindowActivate)
+        emit windowActivated();
+    return QMainWindow::event(event);
+}
+
+void MainWindow::onTabDragAndDrop(int dropTabIndex, const TabInfo &tab)
+{
+    DEBUG_THIS << LOG_EXPR(dropTabIndex) << tab;
+    if (QApplication::applicationPid() != tab.pid) {
+        DEBUG << "Dropping file from other process";
+        loadFile(tab.filename, tab.tabText, dropTabIndex);
+        return;
+    }
+    DEBUG << "Dropping tab from other window";
+    auto *otherTabBar = reinterpret_cast<TabBar*>(tab.tabBar);
+    auto otherTabWidget
+        = dynamic_cast<TabbedCrawlerWidget*>(otherTabBar->parent());
+    ASSERT(otherTabWidget);
+    auto* crawler = otherTabWidget->widget(tab.tabIndex);
+    otherTabWidget->removeTab(tab.tabIndex);
+    ASSERT(crawler);
+    mainTabWidget_.insertTab(dropTabIndex, crawler, tab.tabText,
+                             true /* setCurrent */);
+}
+
+void MainWindow::onDuplicateTab(int tabIndex)
+{
+    DEBUG_THIS << LOG_EXPR(tabIndex);
+    auto* crawler
+        = dynamic_cast<CrawlerWidget*>(mainTabWidget_.widget(tabIndex));
+    ASSERT(crawler);
+    loadFile(crawler->logData()->attachedFilename(), QString(), -1,
+             true /* allowDuplicate */);
 }

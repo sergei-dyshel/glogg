@@ -20,6 +20,13 @@
 #ifndef GLOGGAPP_H
 #define GLOGGAPP_H
 
+#include "externalcom.h"
+#include "mainwindow.h"
+#include "session.h"
+
+#include <memory>
+#include <list>
+
 #include <QApplication>
 
 // Subclass QApplication to add a custom event handler
@@ -27,8 +34,19 @@ class GloggApp : public QApplication
 {
     Q_OBJECT
   public:
-    GloggApp( int &argc, char **argv ) : QApplication( argc, argv )
-    {}
+    GloggApp(int& argc, char** argv, std::shared_ptr<Session> session,
+             std::shared_ptr<ExternalCommunicator> externalCom)
+        : QApplication(argc, argv), session_(session)
+    {
+        connect(externalCom.get(), &ExternalCommunicator::loadFile,
+                [=](const QString& filename) {
+                    lastActiveWindow().loadFileNonInteractive(filename);
+                });
+    }
+
+    MainWindow &newWindow();
+
+    MainWindow &lastActiveWindow() { return *lastActiveWindow_; }
 
   signals:
     void loadFile( const QString& file_name );
@@ -37,6 +55,13 @@ class GloggApp : public QApplication
 #ifdef __APPLE__
     virtual bool event( QEvent* event );
 #endif
+
+  private:
+    void onWindowActivated(MainWindow &window);
+
+    std::shared_ptr<Session> session_;
+    std::list<MainWindow> windows_;
+    MainWindow *lastActiveWindow_ = nullptr;
 };
 
 #endif

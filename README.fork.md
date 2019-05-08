@@ -14,13 +14,18 @@ Detailed list of changes
 - `tab` always moves focus to log view.
 - Move splitter with `-/+` and with larger step.
 
+## Multiple windows support:
+- Drag and drop tabs between windows in same process or different processes.
+
 ## Tabbar improvements:
 - Next/previous tab with `Ctrl+PgUp/PgDown`.
 - Draw red border around main/filtered log view.
 - Restore tab labels to default size.
 - Allow renaming tabs (persistent).
 - Allow changing tab label background color.
-- New context menu action to close previous tabs.
+- Allow pinning tabs.
+- Bulk deletion of tabs.
+- Allow copying tab's file path to clipboard.
 - New context menu action to open tab's file in other instance.
 
 ## Quick find bar improvments:

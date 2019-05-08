@@ -43,7 +43,6 @@ class QAction;
 class Session;
 class RecentFiles;
 class MenuActionToolTipBehavior;
-class ExternalCommunicator;
 
 // Main window of the application, creates menus, toolbar and
 // the CrawlerWidget
@@ -53,9 +52,7 @@ class MainWindow : public QMainWindow
 
   public:
     // Constructor
-    // The ownership of the session is transferred to us
-    MainWindow( std::unique_ptr<Session> session,
-            std::shared_ptr<ExternalCommunicator> external_communicator );
+    MainWindow(std::shared_ptr<Session> session);
 
     // Re-install the geometry stored in config file
     // (should be done before 'Widget::show()')
@@ -68,12 +65,18 @@ class MainWindow : public QMainWindow
     // version checking etc...
     void startBackgroundTasks();
 
+  public slots:
+    // Load a file in a new tab (non-interactive)
+    // (for use from e.g. IPC)
+    void loadFileNonInteractive( const QString& file_name );
+
   protected:
-    void closeEvent( QCloseEvent* event );
+    void closeEvent( QCloseEvent* event ) override;
     // Drag and drop support
-    void dragEnterEvent( QDragEnterEvent* event );
-    void dropEvent( QDropEvent* event );
-    void keyPressEvent( QKeyEvent* keyEvent );
+    void dragEnterEvent( QDragEnterEvent* event ) override;
+    void dropEvent( QDropEvent* event ) override;
+    void keyPressEvent( QKeyEvent* keyEvent ) override;
+    bool event(QEvent *event) override;
 
   private slots:
     void open();
@@ -123,12 +126,11 @@ class MainWindow : public QMainWindow
     // and confirm it.
     void changeQFPattern( const QString& newPattern );
 
-    // Load a file in a new tab (non-interactive)
-    // (for use from e.g. IPC)
-    void loadFileNonInteractive( const QString& file_name );
-
     // Notify the user a new version is available
     void newVersionNotification( const QString& new_version );
+
+    void onTabDragAndDrop(int dropTabIndex, const TabInfo &tab);
+    void onDuplicateTab(int tabIndex);
 
   signals:
     // Is emitted when new settings must be used
@@ -140,6 +142,9 @@ class MainWindow : public QMainWindow
     void enteringQuickFind();
     // Emitted when the quickfind bar is closed.
     void exitingQuickFind();
+    void newWindow();
+    void windowActivated();
+    void exitRequested();
 
   private:
     void createActions();
@@ -150,7 +155,8 @@ class MainWindow : public QMainWindow
     void createRecentFileToolTipTimer();
     void readSettings();
     void writeSettings();
-    bool loadFile( const QString& fileName );
+    bool loadFile(const QString &fileName, const QString &tabName = QString(),
+                  int tabIndex = -1, bool allowDuplicate = false);
     void updateTitleBar( const QString& file_name );
     void updateRecentFileActions();
     QString strippedName( const QString& fullFileName ) const;
@@ -161,8 +167,7 @@ class MainWindow : public QMainWindow
     void reloadStructConfig();
     void repaintLogViews();
 
-    std::unique_ptr<Session> session_;
-    std::shared_ptr<ExternalCommunicator> externalCommunicator_;
+    std::shared_ptr<Session> session_;
     std::shared_ptr<RecentFiles> recentFiles_;
     QString loadingFileName;
 
@@ -191,6 +196,7 @@ class MainWindow : public QMainWindow
     QLabel* lineNbField;
     QToolBar *toolBar;
 
+    QAction *newWindowAction;
     QAction *openAction;
     QAction *closeAction;
     QAction *closeAllAction;

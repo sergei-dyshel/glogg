@@ -41,6 +41,8 @@ set(SOURCES
     settings.cpp
     qt_utils.cpp
     highlights.cpp
+    tab_bar.cpp
+    tab_info.cpp
 )
 
 set(COMMON_SRC

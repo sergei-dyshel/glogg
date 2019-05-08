@@ -83,6 +83,8 @@ class CrawlerWidget : public QSplitter,
 
     void repaintLogViews();
 
+    const LogData *logData() const { return logData_; }
+
   public slots:
     // Stop the asynchoronous loading of the file if one is in progress
     // The file is identified by the view attached to it.

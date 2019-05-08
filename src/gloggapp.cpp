@@ -32,3 +32,23 @@ bool GloggApp::event( QEvent *event )
     return QApplication::event(event);
 }
 #endif
+
+MainWindow &GloggApp::newWindow()
+{
+    windows_.emplace_front(session_);
+    auto &window = windows_.front();
+    lastActiveWindow_ = &window;
+    DEBUG << "Window" << &window << "created";
+    connect(&window, &MainWindow::newWindow, [=]() { newWindow().show(); });
+    connect(&window, &MainWindow::windowActivated,
+            [=, &window]() { onWindowActivated(window); });
+    connect(&window, &MainWindow::exitRequested, this, &QCoreApplication::quit);
+    return window;
+}
+
+void GloggApp::onWindowActivated(MainWindow &window)
+{
+    DEBUG << "Window" << &window << "activated";
+    lastActiveWindow_ = &window;
+}
+

@@ -552,3 +552,10 @@ void LogData::reOpenFile()
     QMutexLocker locker( &fileMutex_ );
     attached_file_ = std::move( reopened );      // This will close the old one and open the new
 }
+
+QString LogData::attachedFilename() const
+{
+    if (attached_file_)
+        return attached_file_->fileName();
+    return QString();
+}

@@ -17,17 +17,24 @@
  * along with glogg.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#pragma once
+#include <log.h>
 
-namespace YAML {
-    class Node;
-}
+#include <QMimeData>
+#include <QString>
+#include <QByteArray>
 
-class Highlights;
-class StructConfig;
-class Settings;
-class TabInfo;
+struct TabInfo {
+    qint64 pid;
+    qint64 tabBar;
+    QString tabText;
+    int tabIndex;
+    QString filename;
 
-class QString;
-class QMenu;
-class QAction;
+    QMimeData *toMimeData() const;
+    static bool tryDecodeMimeData(const QMimeData *data,
+                                  TabInfo *outTab = nullptr);
+
+    static const QString MIME_TYPE;
+};
+
+LogStream &operator<<(LogStream &stream, const TabInfo &tab);
