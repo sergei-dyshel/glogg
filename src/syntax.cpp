@@ -340,6 +340,19 @@ bool Syntax::runTest(const QString &line, const ConfigNode &node)
            << expectedTokens << END_MAP;
         ERROR << "Syntax test" << node.location() << "failed:" << NOQUOTE
               << ss.toString();
+        if (strTokens.size() != expectedTokens.size())
+            ERROR << "Number of tokens does not match:" << strTokens.size()
+                  << "vs" << expectedTokens.size();
+        else {
+            auto token1 = strTokens.begin();
+            auto token2 = expectedTokens.begin();
+            while (token1 != strTokens.end()) {
+                if (*token1 != *token2)
+                    ERROR << "Tokens does not match:" << *token1 << "vs"
+                          << *token2;
+                ++token1, ++token2;
+            }
+        }
         return false;
     }
     DEBUG << "Syntax test passed:" << node.location();
