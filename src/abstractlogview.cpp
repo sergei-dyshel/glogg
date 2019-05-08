@@ -399,17 +399,15 @@ void AbstractLogView::configureHighlightPopup()
 
     if (highlights_.hasPattern(selection))
         unhighlightSelAction_->setEnabled(true);
-    else {
-        highlightMenu_->setEnabled(true);
-        highlightMenu_->clear();
-        for (unsigned i = 0; i < ColorScheme::HIGHLIGHT_COUNT; ++i) {
-            auto name = highlights_.getPatterns(i).join("|");
-            auto action = highlightMenu_->addAction(name, [=]() {
-                highlights_.addPattern(selection, i);
-                emit hightlighsUpdated();
-            });
-            addColorIconToAction(action, colorScheme.highlightColor(i));
-        }
+    highlightMenu_->setEnabled(true);
+    highlightMenu_->clear();
+    for (unsigned i = 0; i < ColorScheme::HIGHLIGHT_COUNT; ++i) {
+        auto name = highlights_.getPatterns(i).join("|");
+        auto action = highlightMenu_->addAction(name, [=]() {
+            highlights_.addPattern(selection, i);
+            emit hightlighsUpdated();
+        });
+        addColorIconToAction(action, colorScheme.highlightColor(i));
     }
 }
 
