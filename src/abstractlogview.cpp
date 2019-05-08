@@ -639,12 +639,13 @@ void AbstractLogView::keyPressEvent( QKeyEvent* keyEvent )
                     findPreviousSelected();
                     break;
                 case 'm':
-                    {
-                        qint64 line = selection_.selectedLine();
-                        if ( line >= 0 )
-                            emit markLine( line );
-                        break;
-                    }
+                    emit markLines(selection_.wholeLineRange(),
+                                   true /* add mark */);
+                    break;
+                case 'M':
+                    emit markLines(selection_.wholeLineRange(),
+                                   false /* remove mark */);
+                    break;
                 case 't':
                     emit activateSearchLineEdit();
                     break;
