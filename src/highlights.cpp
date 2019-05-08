@@ -101,7 +101,6 @@ std::multimap<unsigned, QString> Highlights::getAllPatterns() const
     std::multimap<unsigned, QString> result;
     for (unsigned i = 0; i < patterns_.size(); ++i)
         for (const auto &pattern : patterns_.at(i)) {
-            DEBUG << "TEMP:" << pattern;
             result.emplace(i, pattern);
         }
     return result;

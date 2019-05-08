@@ -108,7 +108,7 @@ class ColorScheme final {
 
     void generateColorsMap();
 
-    std::vector<QColor> highlight_;
+    std::vector<TextColor> highlight_;
 
     QString name_;
     Location location_;

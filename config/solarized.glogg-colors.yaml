@@ -20,14 +20,18 @@ Solarized dark:
   selection: [base03, base1]
   quickFind: [base01, base2]
   highlight:
-    - magenta
-    - violet
-    - orange
-    - blue
+    - [base03, magenta]
+    - [base03, violet]
+    - [base03, orange]
+    - [base03, blue]
   user:
+    timestamp: violet
     function: blue
+    hostname: blue
     filename: green
+    process: green
     linenum: cyan
+    pid: cyan
     # log levels
     error: red
     warning: yellow

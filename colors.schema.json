@@ -42,8 +42,8 @@
             "highlight": {
                 "description": "Pattern highlight",
                 "type": "array",
-                "items": {"type": "string"},
-                "default": ["", "", "", ""],
+                "items": {"$ref": "#/definitions/textColor"},
+                "default": [[], [], [], []],
                 "minItems": 4,
                 "maxItems": 4
             },

@@ -67,8 +67,9 @@ const QString ColorScheme::HIGHLIGHT("highlight");
 const unsigned ColorScheme::HIGHLIGHT_COUNT = 4;
 
 ColorScheme::ColorScheme(const QString &name, const Location &location)
-    : highlight_{"red", "blue", "green", "yellow"}, name_(name),
-      location_(location)
+    : highlight_{TextColor("red"), TextColor("blue"), TextColor("green"),
+                 TextColor("yellow")},
+      name_(name), location_(location)
 {
     const QPalette palette;
 
@@ -129,7 +130,7 @@ void ColorScheme::addScopes(const ConfigNode &node,
             throw hlNode.error(HERE)
                 << "Must define" << HIGHLIGHT_COUNT << "highlight colors";
         for (unsigned i = 0;i < HIGHLIGHT_COUNT; ++i)
-            highlight_[i] = readColor(hlNode.element(i), &defs);
+            highlight_[i] = readTextColor(hlNode.element(i), defs);
     }
     if (node.hasMember("user")) {
         for (const auto &member : node.requiredMember("user").members())
@@ -231,7 +232,7 @@ QString ColorScheme::highlightScope(unsigned i) const
 
 TextColor ColorScheme::highlightColor(unsigned i) const
 {
-    return withTextBackground(highlight_.at(i));
+    return highlight_.at(i);
 }
 
 void ColorScheme::generateColorsMap()
