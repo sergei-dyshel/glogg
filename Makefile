@@ -22,7 +22,7 @@ ifdef g
 GDB_PREFIX := gdb -ex run --args
 endif
 
-MAKE := $(MAKE) --no-print-directory -j$(shell nproc)
+MAKE := $(MAKE) --no-print-directory
 
 configure_debug:
 	mkdir -p $(DEBUG)

@@ -27,6 +27,16 @@ SET(YAML_CPP_BUILD_CONTRIB OFF CACHE BOOL "" FORCE)
 add_subdirectory(3rdparty/yaml-cpp EXCLUDE_FROM_ALL)
 list(APPEND LIBS yaml-cpp)
 
+# google re2
+SET(RE2_BUILD_TESTING OFF CACHE BOOL "" FORCE)
+add_subdirectory(3rdparty/re2 EXCLUDE_FROM_ALL)
+include_directories(3rdparty/re2)
+# list(APPEND LIBS re2)
+
+# google bench
+SET(BENCHMARK_ENABLE_TESTING OFF CACHE BOOL "" FORCE)
+SET(BENCHMARK_ENABLE_GTEST_TESTS OFF CACHE BOOL "" FORCE)
+add_subdirectory(3rdparty/googlebench EXCLUDE_FROM_ALL)
 
 # dbus
 find_package(Qt5DBus REQUIRED)
@@ -56,6 +66,18 @@ add_executable(glogg
 )
 
 target_link_libraries(glogg ${LIBS} glogg_core glogg_syntax pthread Qt5::Widgets Boost::program_options)
+
+add_executable(bench
+    src/bench.cpp
+)
+
+target_link_libraries(bench benchmark re2 Qt5::Widgets)
+
+add_executable(bench_grep
+    src/bench_grep.cpp
+)
+
+target_link_libraries(bench_grep re2 Qt5::Widgets pthread)
 
 include(GNUInstallDirs)
 

@@ -42,7 +42,6 @@ target_link_libraries(glogg_itests glogg_core glogg_syntax gtest_main ${LIBS})
 add_executable(glogg_ptests
     logdataPerfTest.cpp
     logfiltereddataPerfTest.cpp
-    itests.cpp
 )
 
 target_link_libraries(glogg_ptests glogg_core glogg_syntax ${LIBS})
