@@ -18,7 +18,7 @@ def main():
     docs = sys.argv[2:]
     schema = json.load(open(schema_path))
     for doc in docs:
-        doc = yaml.load(open(doc))
+        doc = yaml.load(open(doc), Loader=yaml.FullLoader)
         jsonschema.validate(instance=doc, schema=schema)
 
 if __name__ == '__main__':
