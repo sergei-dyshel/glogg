@@ -14,20 +14,20 @@
     <file>images/newdata_icon@2x.png</file>
     <file>images/newfiltered_icon.png</file>
     <file>images/newfiltered_icon@2x.png</file>
-    <file>images/stop14.png</file>
-    <file>images/search.png</file>
-    <file>images/ignore_case.png</file>
-    <file>images/auto_refresh.png</file>
-    <file>images/pin.png</file>
-    <file>images/unpin.png</file>
+    <file>images/stop.svg</file>
+    <file>images/search.svg</file>
+    <file>images/ignore_case.svg</file>
+    <file>images/auto_refresh.svg</file>
+    <file>images/pin.svg</file>
+    <file>images/unpin.svg</file>
     <file>images/plus.png</file>
     <file>images/minus.png</file>
     <file>images/down.png</file>
     <file>images/up.png</file>
-    <file>images/arrowdown.png</file>
-    <file>images/arrowup.png</file>
-    <file>images/darkclosebutton.png</file>
-    <file>images/regex.png</file>
-    <file>images/incremental.png</file>
+    <file>images/arrowdown.svg</file>
+    <file>images/arrowup.svg</file>
+    <file>images/close.svg</file>
+    <file>images/incremental.svg</file>
+    <file>images/regex.svg</file>
 </qresource>
 </RCC>
