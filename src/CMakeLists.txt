@@ -62,14 +62,25 @@ set(SYNTAX_SRC
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
-# inotify
-list(APPEND SOURCES platformfilewatcher.cpp inotifywatchtowerdriver.cpp
-    watchtower.cpp watchtowerlist.cpp)
-string(APPEND CMAKE_CXX_FLAGS " -DGLOGG_SUPPORTS_INOTIFY")
 set(UI optionsdialog.ui filtersdialog.ui)
 
-# dbus
-list(APPEND SOURCES dbusexternalcom.cpp)
+# inotify/kqueue
+if(UNIX AND NOT APPLE)
+    list(APPEND SOURCES platformfilewatcher.cpp inotifywatchtowerdriver.cpp
+        watchtower.cpp watchtowerlist.cpp)
+    string(APPEND CMAKE_CXX_FLAGS " -DGLOGG_SUPPORTS_INOTIFY")
+elseif(APPLE)
+    list(APPEND SOURCES platformfilewatcher.cpp kqueuewatchtowerdriver.cpp
+        watchtower.cpp watchtowerlist.cpp)
+    string(APPEND CMAKE_CXX_FLAGS " -DGLOGG_SUPPORTS_KQUEUE")
+endif()
+
+# dbus/ipc
+if(USE_DBUS)
+    list(APPEND SOURCES dbusexternalcom.cpp)
+elseif(APPLE)
+    list(APPEND SOURCES socketexternalcom.cpp)
+endif()
 
 add_library(glogg_common
     ${COMMON_SRC}
