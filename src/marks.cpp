@@ -49,13 +49,13 @@ void Marks::addMark( qint64 line, QChar mark )
     }
 
     // 'mark' is not used yet
-    mark = mark;
+    Q_UNUSED(mark);
 }
 
 qint64 Marks::getMark( QChar mark ) const
 {
     // 'mark' is not used yet
-    mark = mark;
+    Q_UNUSED(mark);
 
     return 0;
 }
@@ -69,7 +69,7 @@ bool Marks::isLineMarked( qint64 line ) const
 void Marks::deleteMark( QChar mark )
 {
     // 'mark' is not used yet
-    mark = mark;
+    Q_UNUSED(mark);
 }
 
 void Marks::deleteMark( qint64 line )

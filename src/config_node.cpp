@@ -136,9 +136,9 @@ std::map<QString, ConfigNode> ConfigNode::members() const
 {
     assertIsObject();
     std::map<QString, ConfigNode> result;
-    for (const auto &node : node_) {
-        auto key = QString::fromStdString(node.first.as<std::string>());
-        result.emplace(key, ConfigNode(node.second, path_));
+    for (auto iter = node_.begin(); !(iter == node_.end()); ++iter) {
+        auto key = QString::fromStdString(iter->first.as<std::string>());
+        result.emplace(key, ConfigNode(iter->second, path_));
     }
     return result;
 }

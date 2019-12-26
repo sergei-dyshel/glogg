@@ -317,7 +317,7 @@ void WatchTower<Driver>::run()
 }
 
 namespace {
-    bool isSymLink( const std::string& file_name )
+    static inline bool isSymLink( const std::string& file_name )
     {
 #ifndef _WIN32
         struct stat buf;

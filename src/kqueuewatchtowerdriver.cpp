@@ -101,6 +101,7 @@ KQueueWatchTowerDriver::FileId KQueueWatchTowerDriver::addFile(
 KQueueWatchTowerDriver::SymlinkId KQueueWatchTowerDriver::addSymlink(
         const std::string& file_name )
 {
+    Q_UNUSED(file_name);
     /*
     int symlink_wd = inotify_add_watch( inotify_fd_, file_name.c_str(),
             IN_DONT_FOLLOW | IN_DELETE_SELF | IN_MODIFY | IN_MOVE_SELF );
@@ -115,7 +116,7 @@ KQueueWatchTowerDriver::SymlinkId KQueueWatchTowerDriver::addSymlink(
 KQueueWatchTowerDriver::DirId KQueueWatchTowerDriver::addDir(
         const std::string& file_name )
 {
-    /* 
+    /*
     int dir_wd = inotify_add_watch( inotify_fd_, file_name.c_str(),
             IN_CREATE | IN_MOVE | IN_ONLYDIR );
     LOG(logDEBUG) << "INotifyWatchTower::addFile dir " << file_name
@@ -160,6 +161,7 @@ void KQueueWatchTowerDriver::removeFile(
 
 void KQueueWatchTowerDriver::removeSymlink( const SymlinkId& symlink_id )
 {
+    Q_UNUSED(symlink_id);
     /*
     if ( symlink_id.wd_ >= 0 )
         inotify_rm_watch( inotify_fd_, symlink_id.wd_ );
@@ -168,6 +170,7 @@ void KQueueWatchTowerDriver::removeSymlink( const SymlinkId& symlink_id )
 
 void KQueueWatchTowerDriver::removeDir( const DirId& dir_id )
 {
+    Q_UNUSED(dir_id);
     /*
    LOG(logDEBUG) << "INotifyWatchTower::removeDir removing inotify wd " << dir_id.wd_;
 
@@ -187,6 +190,7 @@ KQueueWatchTowerDriver::waitAndProcessEvents(
     struct kevent event;
     struct timespec timeout = { timeout_ms / 1000, (timeout_ms % 1000) * 1000000};
 
+    Q_UNUSED(files_needing_readding);
     list_lock->unlock();
     int event_count = kevent( kqueue_fd_, NULL, 0, &event, 1, timeout_ms ? &timeout : NULL );
     list_lock->lock();

@@ -61,7 +61,6 @@ class Filter
     QRegularExpression regexp_;
     QString foreColorName_;
     QString backColorName_;
-    bool enabled_;
 };
 
 // Represents an ordered set of filters to be applied to each line displayed.
@@ -81,7 +80,7 @@ class FilterSet : public Persistable
     virtual void saveToStorage( QSettings& settings ) const;
     virtual void retrieveFromStorage( QSettings& settings );
 
-    // Should be private really, but I don't know how to have 
+    // Should be private really, but I don't know how to have
     // it recognised by QVariant then.
     typedef QList<Filter> FilterList;
 

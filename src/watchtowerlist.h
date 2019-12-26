@@ -205,7 +205,7 @@ class ObservedFileList {
 };
 
 namespace {
-    std::string directory_path( const std::string& path );
+    static inline std::string directory_path( const std::string& path );
 }
 
 // ObservedFileList class

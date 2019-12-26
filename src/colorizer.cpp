@@ -24,7 +24,7 @@
 void mergeSyntaxTokens(std::list<Token> &upperTokens,
                        const std::list<Token> &syntaxTokens)
 {
-    for (auto iter = syntaxTokens.crbegin(); iter != syntaxTokens.crend();
+    for (auto iter = syntaxTokens.crbegin(); !(iter == syntaxTokens.crend());
          ++iter)
         addLowerToken(upperTokens, *iter);
 }

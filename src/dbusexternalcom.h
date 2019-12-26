@@ -66,14 +66,14 @@ class DBusExternalCommunicator : public ExternalCommunicator
     DBusExternalCommunicator();
     ~DBusExternalCommunicator() {}
 
-    virtual void startListening(const QString &name);
+    void startListening(const QString &name) override;
 
-    virtual QStringList allServerNames() const override;
+    QStringList allServerNames() const override;
 
-    virtual ExternalInstance* otherInstance(const QString &name) const;
+    ExternalInstance* otherInstance(const QString &name) const override;
 
   public slots:
-    qint32 version() const;
+    qint32 version() const override;
 
   private:
     std::shared_ptr<DBusInterfaceExternalCommunicator> dbus_iface_object_;

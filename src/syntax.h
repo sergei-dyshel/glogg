@@ -127,6 +127,11 @@ public:
 
 QString stringList2Regex(const QStringList &strings);
 
+template <> const QString Enum<SyntaxRule::SearchType>::name;
+template <>
+const std::unordered_map<SyntaxRule::SearchType, QString>
+    Enum<SyntaxRule::SearchType>::strings;
+
 QDEBUG_DEFINE_ENUM(SyntaxRule::SearchType)
 
 QDebug &operator<<(QDebug &d, const SyntaxRule &rule);

@@ -26,7 +26,7 @@ namespace YAML {
 class Highlights;
 class StructConfig;
 class Settings;
-class TabInfo;
+struct TabInfo;
 
 class QString;
 class QMenu;
