@@ -24,6 +24,12 @@ endif
 
 MAKE := $(MAKE) --no-print-directory -j$(shell nproc)
 
+CMAKE_ARGS += -DUSE_DBUS=0
+CMAKE_ARGS += -DUSE_HOMEBREW_LLVM=1
+
+submodule_update:
+	git submodule update --init --recursive
+
 configure_debug:
 	mkdir -p $(DEBUG)
 	cd $(DEBUG) && cmake $(ROOT) -DCMAKE_BUILD_TYPE=Debug \
