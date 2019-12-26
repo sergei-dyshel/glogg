@@ -68,7 +68,12 @@ static QString getBuiltinDir()
         dir = curDir;
         if (dir.cd("share") && dir.cd("glogg") && dir.cd("config")
             && !dir.entryList().empty()) {
-            INFO << "Detected installation root in " << curDir.absolutePath();
+            INFO << "Detected installation prefix in " << curDir.absolutePath();
+            return dir.absolutePath();
+        }
+        dir = curDir;
+        if (dir.cd("Resources") && dir.cd("config") && !dir.entryList().empty()) {
+            INFO << "Detected MacOS app bundle in " << curDir.absolutePath();
             return dir.absolutePath();
         }
         if (!curDir.cdUp())
