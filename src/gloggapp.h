@@ -50,6 +50,7 @@ class GloggApp : public QApplication
 
   signals:
     void loadFile( const QString& file_name );
+    void settingsChanged();
 
   protected:
 #ifdef __APPLE__

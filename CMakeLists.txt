@@ -84,6 +84,7 @@ include_directories(src)
 add_executable(glogg
     src/main.cpp
     glogg.qrc
+    qdarkstyle/style.qrc
 )
 
 target_link_libraries(glogg ${LIBS} glogg_core glogg_syntax pthread Qt5::Widgets Boost::program_options)

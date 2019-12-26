@@ -116,6 +116,8 @@ void Configuration::retrieveFromStorage( QSettings& settings )
         searchAutoRefresh_ = settings.value( "defaultView.searchAutoRefresh" ).toBool();
     if ( settings.contains( "defaultView.searchIgnoreCase" ) )
         searchIgnoreCase_ = settings.value( "defaultView.searchIgnoreCase" ).toBool();
+
+    style = settings.value("view.style", QVariant("")).toString();
 }
 
 void Configuration::saveToStorage( QSettings& settings ) const
@@ -139,4 +141,6 @@ void Configuration::saveToStorage( QSettings& settings ) const
     settings.setValue( "view.lineNumbersVisibleInFiltered", lineNumbersVisibleInFiltered_ );
     settings.setValue( "defaultView.searchAutoRefresh", searchAutoRefresh_ );
     settings.setValue( "defaultView.searchIgnoreCase", searchIgnoreCase_ );
+
+    settings.setValue( "view.style", style);
 }

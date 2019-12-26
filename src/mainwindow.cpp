@@ -36,6 +36,7 @@
 #include <QDragEnterEvent>
 #include <QMimeData>
 #include <QUrl>
+#include <QStyleFactory>
 
 #include "log.h"
 
@@ -451,6 +452,9 @@ void MainWindow::createMenus()
     configMenu->addAction(configReloadAction);
     configMenu->addSeparator();
     colorSchemeMenu = configMenu->addMenu(tr("&Color schemes..."));
+    stylesMenu = configMenu->addMenu(tr("&Styles"));
+
+    populateStylesMenu();
 
     toolsMenu = menuBar()->addMenu( tr("&Tools") );
     toolsMenu->addAction( filtersAction );
@@ -468,6 +472,60 @@ void MainWindow::createMenus()
 
     helpMenu = menuBar()->addMenu( tr("&Help") );
     helpMenu->addAction( aboutAction );
+}
+
+void MainWindow::setAppStyle(const QString& style, const QString& styleSheet)
+{
+    emit setAppStyleSheet(styleSheet);
+    QApplication::setStyle(style);
+}
+
+void MainWindow::addStyleAction(const QString& label, const QString& conf,
+                                const QString& style, const QString& styleSheet)
+{
+    std::shared_ptr<Configuration> config
+        = Persistent<Configuration>("settings");
+    auto action = new QAction(label, this);
+    action->setCheckable(true);
+    styleActions[conf] = action;
+    stylesGroup->addAction(action);
+    connect(action, &QAction::triggered, [=]() {
+        INFO << "Setting style" << style;
+        setAppStyle(style, styleSheet);
+        config->style = conf;
+        emit optionsChanged();
+    });
+}
+
+void MainWindow::populateStylesMenu()
+{
+    const auto styles = QStyleFactory::keys();
+    stylesGroup = new QActionGroup(this);
+
+    addStyleAction(tr("&Default"), "", styles[0], "");
+
+    for (const auto &style : styles) {
+        addStyleAction(style, style, style, "");
+    }
+
+    QFile file(":qdarkstyle/style.qss");
+    file.open(QFile::ReadOnly | QFile::Text);
+    addStyleAction(tr("Dark"), "dark", styles[0], file.readAll());
+
+    stylesMenu->addActions(stylesGroup->actions());
+}
+
+void MainWindow::updateCurrentStyle(bool trigger)
+{
+   std::shared_ptr<Configuration> config
+        = Persistent<Configuration>("settings");
+
+    auto style = config->style;
+    auto action
+        = styleActions.count(style) ? styleActions[style] : styleActions[""];
+    action->setChecked(true);
+    if (trigger)
+        action->trigger();
 }
 
 void MainWindow::createToolBars()
@@ -811,6 +869,8 @@ void MainWindow::loadFileNonInteractive( const QString& file_name )
     activateWindow();
     raise();
 }
+
+void MainWindow::applySettings() { updateCurrentStyle(); }
 
 void MainWindow::newVersionNotification( const QString& new_version )
 {

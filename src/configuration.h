@@ -96,12 +96,11 @@ class Configuration : public Persistable {
     void setSearchIgnoreCaseDefault( bool ignore_case )
     { searchIgnoreCase_ = ignore_case; }
 
+    QString style;
+
     // Reads/writes the current config in the QSettings object passed
     virtual void saveToStorage( QSettings& settings ) const;
     virtual void retrieveFromStorage( QSettings& settings );
-
-    QString colorScheme;
-    bool colorSchemePersistent;
 
   private:
     // Configuration settings

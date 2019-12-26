@@ -43,6 +43,13 @@ MainWindow &GloggApp::newWindow()
     connect(&window, &MainWindow::windowActivated,
             [=, &window]() { onWindowActivated(window); });
     connect(&window, &MainWindow::exitRequested, this, &QCoreApplication::quit);
+    connect(&window, &MainWindow::setAppStyleSheet,
+            [=](const QString &styleSheet) { setStyleSheet(styleSheet); });
+    connect(&window, &MainWindow::optionsChanged, this,
+            &GloggApp::settingsChanged);
+    connect(this, &GloggApp::settingsChanged, &window,
+            &MainWindow::applySettings);
+    window.updateCurrentStyle(true /* trigger */);
     return window;
 }
 

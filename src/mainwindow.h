@@ -21,6 +21,8 @@
 #define MAINWINDOW_H
 
 #include <memory>
+#include <map>
+
 #include <QMainWindow>
 
 #include "session.h"
@@ -65,10 +67,13 @@ class MainWindow : public QMainWindow
     // version checking etc...
     void startBackgroundTasks();
 
+    void updateCurrentStyle(bool trigger = false);
+
   public slots:
     // Load a file in a new tab (non-interactive)
     // (for use from e.g. IPC)
     void loadFileNonInteractive( const QString& file_name );
+    void applySettings();
 
   protected:
     void closeEvent( QCloseEvent* event ) override;
@@ -145,11 +150,13 @@ class MainWindow : public QMainWindow
     void newWindow();
     void windowActivated();
     void exitRequested();
+    void setAppStyleSheet(const QString &stylesheet);
 
   private:
     void createActions();
     void createMenus();
     void createContextMenu();
+    void populateStylesMenu();
     void createToolBars();
     void createStatusBar();
     void createRecentFileToolTipTimer();
@@ -166,6 +173,10 @@ class MainWindow : public QMainWindow
     void updateInfoLine();
     void reloadStructConfig();
     void repaintLogViews();
+
+    void setAppStyle(const QString &style, const QString &styleSheet);
+    void addStyleAction(const QString &label, const QString &conf,
+                        const QString &style, const QString &styleSheet);
 
     std::shared_ptr<Session> session_;
     std::shared_ptr<RecentFiles> recentFiles_;
@@ -189,6 +200,7 @@ class MainWindow : public QMainWindow
     QMenu *toolsMenu;
     QMenu *configMenu;
     QMenu *colorSchemeMenu;
+    QMenu *stylesMenu;
     QMenu *encodingMenu;
     QMenu *helpMenu;
 
@@ -216,6 +228,9 @@ class MainWindow : public QMainWindow
     QAction *aboutQtAction;
     QActionGroup *encodingGroup;
     QAction *encodingAction[static_cast<int>( Encoding::ENCODING_MAX )];
+
+    QActionGroup *stylesGroup;
+    std::map<QString, QAction*> styleActions;
 
     std::unique_ptr<QActionGroup> colorSchemeGroup;
     QAction *configReloadAction;
