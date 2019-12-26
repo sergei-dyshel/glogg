@@ -9,7 +9,7 @@
 class SocketExternalInstance : public ExternalInstance
 {
 public:
-    SocketExternalInstance();
+    SocketExternalInstance(const QString &name);
 
     void loadFile( const QString& file_name ) const override;
     uint32_t getVersion() const override;
@@ -24,8 +24,10 @@ public:
     SocketExternalCommunicator();
     ~SocketExternalCommunicator();
 
-    ExternalInstance* otherInstance() const override;
-    void startListening() override;
+    ExternalInstance* otherInstance(const QString &name) const override;
+    void startListening(const QString &name) override;
+
+    QStringList allServerNames() const override;
 
 public slots:
     qint32 version() const override;

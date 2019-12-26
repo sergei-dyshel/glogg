@@ -199,8 +199,6 @@ int main(int argc, char *argv[])
         externalCommunicator = make_shared<DBusExternalCommunicator>();
 #elif GLOGG_SUPPORTS_SOCKETIPC
         externalCommunicator = make_shared<SocketExternalCommunicator>();
-        auto ptr = externalCommunicator->otherInstance();
-        externalInstance = shared_ptr<ExternalInstance>( ptr );
 #endif
     }
     catch(CantCreateExternalErr& e) {

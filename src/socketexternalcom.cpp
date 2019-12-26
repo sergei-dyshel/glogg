@@ -11,10 +11,18 @@
 
 #include "log.h"
 
-static const char* GLOG_SERVICE_NAME = "org.bonnefon.glogg";
+static const QString GLOG_SERVICE_NAME = "org.bonnefon.glogg";
 
 #ifdef Q_OS_UNIX
 QSharedMemory* g_staticSharedMemory = nullptr;
+
+static QString fullServiceName(const QString& name)
+{
+    auto result = GLOG_SERVICE_NAME;
+    if (!name.isEmpty())
+        result += "." + name;
+    return result;
+}
 
 void terminate(int signum)
 {
@@ -40,8 +48,8 @@ void setCrashHandler(QSharedMemory* memory)
 
 #endif
 
-SocketExternalInstance::SocketExternalInstance()
-    : ExternalInstance(), memory_(new QSharedMemory(GLOG_SERVICE_NAME) )
+SocketExternalInstance::SocketExternalInstance(const QString &name)
+    : ExternalInstance(), memory_(new QSharedMemory(fullServiceName(name) ))
 {
     if ( !memory_->attach( QSharedMemory::ReadOnly ) ) {
         LOG( logERROR ) << "attach failed!";
@@ -58,7 +66,7 @@ SocketExternalInstance::SocketExternalInstance()
 void SocketExternalInstance::loadFile(const QString &file_name) const
 {
     QLocalSocket socket;
-    socket.connectToServer(GLOG_SERVICE_NAME);
+    socket.connectToServer(memory_->key());
     if (!socket.waitForConnected(1000)) {
         LOG( logERROR ) << "Failed to connect to socket";
         return;
@@ -79,7 +87,6 @@ uint32_t SocketExternalInstance::getVersion() const
 
 SocketExternalCommunicator::SocketExternalCommunicator()
     : ExternalCommunicator()
-    , memory_(new QSharedMemory(GLOG_SERVICE_NAME))
     , server_(new QLocalServer)
 {}
 
@@ -90,8 +97,14 @@ SocketExternalCommunicator::~SocketExternalCommunicator()
     delete server_;
 }
 
-void SocketExternalCommunicator::startListening()
+QStringList SocketExternalCommunicator::allServerNames() const {
+    return QStringList();
+}
+
+void SocketExternalCommunicator::startListening(const QString &name)
 {
+    auto fullName = fullServiceName(name);
+    memory_ = new QSharedMemory(fullName);
     if ( memory_->create(sizeof(qint32))) {
 #ifdef Q_OS_UNIX
         // Handle any further termination signals to ensure the
@@ -100,10 +113,10 @@ void SocketExternalCommunicator::startListening()
 #endif
 
         *reinterpret_cast<qint32*>(memory_->data()) = version();
-        QLocalServer::removeServer(GLOG_SERVICE_NAME);
+        QLocalServer::removeServer(fullName);
 
         connect(server_, SIGNAL(newConnection()), SLOT(onConnection()));
-        server_->listen(GLOG_SERVICE_NAME);
+        server_->listen(fullName);
     }
 }
 
@@ -112,10 +125,10 @@ qint32 SocketExternalCommunicator::version() const
     return 3;
 }
 
-ExternalInstance* SocketExternalCommunicator::otherInstance() const
+ExternalInstance* SocketExternalCommunicator::otherInstance(const QString &name) const
 {
     try {
-        return static_cast<ExternalInstance*>( new SocketExternalInstance() );
+        return static_cast<ExternalInstance*>( new SocketExternalInstance(name) );
     }
     catch ( CantCreateExternalErr ) {
         LOG(logINFO) << "Cannot find external correspondant, we are the only glogg out there.";
