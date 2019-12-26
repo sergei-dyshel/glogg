@@ -87,12 +87,12 @@ class QuickFindWidget : public QWidget
     QToolButton* nextButton_;
     QToolButton* previousButton_;
     QComboBox*   editQuickFind_;
-    QPushButton* ignoreCaseCheck_;
-    QPushButton* regexCheck_;
-    QPushButton* incrementalCheck_;
+    QToolButton* ignoreCaseCheck_;
+    QToolButton* regexCheck_;
+    QToolButton* incrementalCheck_;
     QLabel*      notificationText_;
 
-    QToolButton* setupToolButton(const QString &text, const QString &icon);
+    QToolButton* setupToolButton(const QString &icon);
     bool isIgnoreCase() const;
 
     QTimer*      notificationTimer_;

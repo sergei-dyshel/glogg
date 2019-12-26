@@ -95,7 +95,7 @@ add_library(glogg_core
 )
 
 target_link_libraries(glogg_core
-    glogg_common ${LIBS} pthread Qt5::Widgets Boost::program_options
+    glogg_common ${LIBS} pthread Qt5::Svg Qt5::Widgets Boost::program_options
 )
 
 add_library(glogg_syntax

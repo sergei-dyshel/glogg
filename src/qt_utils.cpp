@@ -23,6 +23,15 @@
 #include <QPainter>
 #include <QAbstractButton>
 #include <QPushButton>
+#include <QToolButton>
+#include <QPixmap>
+#include <QGuiApplication>
+#include <QBitmap>
+#include <QGraphicsSvgItem>
+#include <QGraphicsColorizeEffect>
+#include <QPainter>
+#include <QBitmap>
+#include <QStyleOptionGraphicsItem>
 
 void addColorIconToAction(QAction* action, const TextColor& color)
 {
@@ -53,14 +62,42 @@ void setButtonToolTipWithShortcut(QAbstractButton& button,
             .arg( button.shortcut().toString( QKeySequence::NativeText ) ) );
 }
 
-QPushButton* createCheckButton(const QString& tooltip, const QString& shortcut,
+QToolButton* createCheckButton(const QString& tooltip, const QString& shortcut,
                                const QString& iconPath)
 {
-    QPushButton* button = new QPushButton();
+    QToolButton* button = new QToolButton();
     button->setCheckable(true);
-    button->setFlat(true);
     button->setShortcut(QKeySequence(shortcut));
     setButtonToolTipWithShortcut(*button, tooltip);
-    button->setIcon(QIcon(iconPath));
+    button->setIcon(QIcon(loadSvgAndAdjustColor(iconPath)));
     return button;
+}
+
+QPixmap loadPngAndAdjustColor(const QString& filename)
+{
+    QPixmap pixmap(filename);
+    auto mask = pixmap.createMaskFromColor(Qt::black, Qt::MaskOutColor);
+    pixmap.fill(QGuiApplication::palette().color(QPalette::Text));
+    pixmap.setMask(mask);
+
+    return pixmap;
+}
+
+QPixmap loadSvgAndAdjustColor(const QString &filename)
+{
+    QGraphicsSvgItem *item = new QGraphicsSvgItem(filename);
+
+    QGraphicsColorizeEffect effect;
+
+    effect.setColor(QGuiApplication::palette().color(QPalette::Text));
+    effect.setStrength(1);
+
+    item->setGraphicsEffect(&effect);
+
+    QPixmap pixmap(item->boundingRect().size().toSize());
+    pixmap.fill(Qt::transparent);
+    QPainter painter(&pixmap);
+    QStyleOptionGraphicsItem option;
+    item->paint(&painter, &option);
+    return pixmap;
 }

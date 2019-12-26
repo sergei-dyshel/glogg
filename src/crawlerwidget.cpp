@@ -738,13 +738,13 @@ void CrawlerWidget::setup()
     searchInfoLineDefaultPalette = searchInfoLine->palette();
 
     ignoreCaseCheck
-        = createCheckButton("Ignore case", "Alt+C", ":/images/ignore_case.png");
+        = createCheckButton("Ignore case", "Alt+C", ":/images/ignore_case.svg");
 
     regexSearchCheck
-        = createCheckButton("Regex search", "Alt+R", ":/images/regex.png");
+        = createCheckButton("Regex search", "Alt+R", ":/images/regex.svg");
 
     searchRefreshCheck = createCheckButton("Auto refresh", "Alt+F",
-                                           ":/images/auto_refresh.png");
+                                           ":/images/auto_refresh.svg");
 
     // Construct the Search line
     searchLineEdit = new QComboBox;
@@ -758,12 +758,12 @@ void CrawlerWidget::setup()
     searchLineEditErrorPalette.setColor(QPalette::Base, Qt::yellow);
 
     startButton = new QToolButton();
-    startButton->setIcon( QIcon(":/images/search.png") );
+    startButton->setIcon(QIcon(loadSvgAndAdjustColor(":/images/search.svg")));
     startButton->setAutoRaise( true );
     startButton->setEnabled( false );
 
     stopButton = new QToolButton();
-    stopButton->setIcon( QIcon(":/images/stop14.png") );
+    stopButton->setIcon(QIcon(loadSvgAndAdjustColor(":/images/stop.svg")));
     stopButton->setAutoRaise( true );
     stopButton->setEnabled( false );
 
@@ -1166,8 +1166,8 @@ void CrawlerWidget::setPinButtonMode()
 {
     bool pin = !savedSearches_->pinnedSearches().contains(
         searchLineEdit->lineEdit()->text() );
-    pinButton->setIcon(
-        QIcon( pin ? ":/images/pin.png" : ":/images/unpin.png" ) );
+    pinButton->setIcon(QIcon(loadSvgAndAdjustColor(
+        pin ? ":/images/pin.svg" : ":/images/unpin.svg")));
     setButtonToolTipWithShortcut( *pinButton, pin ? "Pin" : "Unpin" );
 }
 

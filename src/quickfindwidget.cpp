@@ -51,8 +51,7 @@ QuickFindWidget::QuickFindWidget( QWidget* parent ) : QWidget( parent )
     layout->setMargin( 0 );
     layout->setSpacing( 6 );
 
-    closeButton_ = setupToolButton(
-            QLatin1String(""), QLatin1String( ":/images/darkclosebutton.png" ) );
+    closeButton_ = setupToolButton(QLatin1String(":/images/close.svg"));
     layout->addWidget( closeButton_ );
 
     editQuickFind_ = new QComboBox( this );
@@ -63,24 +62,22 @@ QuickFindWidget::QuickFindWidget( QWidget* parent ) : QWidget( parent )
     editQuickFind_->setMaxCount( 100 );
     layout->addWidget(editQuickFind_, 3);
 
-    previousButton_ = setupToolButton( QLatin1String(""),
-            QLatin1String( ":/images/arrowup.png" ) );
+    previousButton_ = setupToolButton(QLatin1String(":/images/arrowup.svg"));
     layout->addWidget( previousButton_ );
 
-    nextButton_ = setupToolButton( QLatin1String(""),
-            QLatin1String( ":/images/arrowdown.png" ) );
+    nextButton_ = setupToolButton(QLatin1String(":/images/arrowdown.svg"));
     layout->addWidget( nextButton_ );
 
     ignoreCaseCheck_
-        = createCheckButton("Ignore case", "Alt+C", ":/images/ignore_case.png");
+        = createCheckButton("Ignore case", "Alt+C", ":/images/ignore_case.svg");
     layout->addWidget(ignoreCaseCheck_);
 
     regexCheck_
-        = createCheckButton("Regex search", "Alt+R", ":/images/regex.png");
+        = createCheckButton("Regex search", "Alt+R", ":/images/regex.svg");
     layout->addWidget(regexCheck_);
 
     incrementalCheck_
-        = createCheckButton("Incremental", "Alt+I", ":/images/incremental.png");
+        = createCheckButton("Incremental", "Alt+I", ":/images/incremental.svg");
     layout->addWidget(incrementalCheck_);
 
     notificationText_ = new QLabel( "" );
@@ -227,15 +224,12 @@ void QuickFindWidget::textChanged()
 //
 // Private functions
 //
-QToolButton* QuickFindWidget::setupToolButton(
-        const QString &text, const QString &icon)
+QToolButton* QuickFindWidget::setupToolButton(const QString& icon)
 {
     QToolButton *toolButton = new QToolButton(this);
 
-    toolButton->setText(text);
     toolButton->setAutoRaise(true);
-    toolButton->setIcon(QIcon(icon));
-    toolButton->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+    toolButton->setIcon(QIcon(loadSvgAndAdjustColor(icon)));
 
     return toolButton;
 }

@@ -38,8 +38,8 @@
 #include "qt_utils.h"
 
 TabbedCrawlerWidget::TabbedCrawlerWidget(QWidget *parent) : QTabWidget(parent),
-    olddata_icon_( ":/images/olddata_icon.png" ),
-    newdata_icon_( ":/images/newdata_icon.png" ),
+    olddata_icon_( loadPngAndAdjustColor(":/images/olddata_icon.png") ),
+    newdata_icon_( loadPngAndAdjustColor(":/images/newdata_icon.png") ),
     newfiltered_icon_( ":/images/newfiltered_icon.png" ),
     myTabBar_(this)
 {
@@ -101,6 +101,13 @@ int TabbedCrawlerWidget::insertTab(int tabIndex, QWidget* page,
     icon_label->setPixmap( olddata_icon_.pixmap( 11, 12 ) );
     icon_label->setAlignment( Qt::AlignCenter );
     myTabBar_.setTabButton( index, QTabBar::RightSide, icon_label );
+    auto *closeButton = new QToolButton();
+    closeButton->setIcon(loadSvgAndAdjustColor(":images/close.svg"));
+    closeButton->setIconSize(QSize(11, 12));
+    connect(closeButton, &QToolButton::clicked, [=] {
+        emit tabCloseRequested(index);
+    });
+    myTabBar_.setTabButton( index, QTabBar::LeftSide, closeButton);
 
     LOG(logDEBUG) << "insertTab, count = " << count();
     LOG(logDEBUG) << "width = " << olddata_icon_.pixmap( 11, 12 ).devicePixelRatio();

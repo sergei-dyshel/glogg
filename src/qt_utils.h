@@ -24,7 +24,8 @@
 #include <QWidget>
 
 class QAbstractButton;
-class QPushButton;
+class QToolButton;
+class QPixmap;
 
 inline void disableTabFocus(QWidget* widget)
 {
@@ -45,5 +46,8 @@ void addColorIconToAction(QAction* action, const QColor &color);
 void setButtonToolTipWithShortcut(QAbstractButton& button,
                                   const QString& toolTip);
 
-QPushButton* createCheckButton(const QString& tooltip, const QString& shortcut,
+QToolButton* createCheckButton(const QString& tooltip, const QString& shortcut,
                                const QString& iconPath);
+
+QPixmap loadPngAndAdjustColor(const QString& filename);
+QPixmap loadSvgAndAdjustColor(const QString &filename);
