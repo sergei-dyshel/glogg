@@ -24,9 +24,6 @@ endif
 
 MAKE := $(MAKE) --no-print-directory -j$(shell nproc)
 
-CMAKE_ARGS += -DUSE_DBUS=0
-CMAKE_ARGS += -DUSE_HOMEBREW_LLVM=1
-
 submodule_update:
 	git submodule update --init --recursive
 
@@ -34,7 +31,8 @@ configure_debug:
 	mkdir -p $(DEBUG)
 	cd $(DEBUG) && cmake $(ROOT) -DCMAKE_BUILD_TYPE=Debug \
 		-DCMAKE_EXPORT_COMPILE_COMMANDS=YES \
-		-DBUILD_TESTS=$(DEBUG_TESTS) $(CMAKE_ARGS)
+		-DBUILD_TESTS=$(DEBUG_TESTS) -DMAC_BUNDLE=NO $(CMAKE_ARGS)
+	ln -f $(DEBUG)/compile_commands.json
 
 configure_release:
 	mkdir -p $(RELEASE)
@@ -44,7 +42,7 @@ configure: configure_debug configure_release
 
 build_debug:
 	$(MAKE) -C $(DEBUG)
-	[ -f $(DEBUG)/tests/glogg_syntax_tests ] && $(DEBUG)/tests/glogg_syntax_tests --quiet
+	[ -f $(DEBUG)/tests/glogg_syntax_tests ] && $(DEBUG)/tests/glogg_syntax_tests --quiet || true
 	./validate-yaml.py colors.schema.json config/*.glogg-colors.yaml
 	./validate-yaml.py syntax.schema.json config/*.glogg-syntax.yaml
 	$(DEBUG)/glogg --check-config ./config
@@ -68,6 +66,9 @@ distclean_release:
 
 install:
 	$(MAKE) -C $(RELEASE) install
+
+cpack: install
+	cd $(RELEASE) && cpack $(if $(VERBOSE),--verbose)
 
 clean_debug:
 ifneq (,$(wildcard $(DEBUG)))
