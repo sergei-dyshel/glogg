@@ -41,8 +41,7 @@ RegExpFilter::RegExpFilter( QString text, enum SearchRegexpType type,
         excludeText_ = parts.at( 1 );
     }
 
-    auto opt = QRegularExpression::OptimizeOnFirstUsageOption
-               | QRegularExpression::DontCaptureOption
+    auto opt = QRegularExpression::DontCaptureOption
                | QRegularExpression::UseUnicodePropertiesOption;
     if ( case_insensitive )
         opt |= QRegularExpression::CaseInsensitiveOption;

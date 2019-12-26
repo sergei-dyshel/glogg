@@ -114,7 +114,7 @@ void AbstractLogView::drawColorizedText(QPainter& painter, int initialXPos,
     const int fontAscent = fm.ascent();
     // For some reason on Qt 4.8.2 for Win, maxWidth() is wrong but the
     // following give the right result, not sure why:
-    const int fontWidth = fm.width( QChar('a') );
+    const int fontWidth = fm.horizontalAdvance( QChar('a') );
     auto &colorScheme = StructConfigStore::get().colorScheme();
 
     int xPos = initialXPos;
@@ -1097,7 +1097,7 @@ void AbstractLogView::updateDisplaySize()
     charHeight_ = fm.height();
     // For some reason on Qt 4.8.2 for Win, maxWidth() is wrong but the
     // following give the right result, not sure why:
-    charWidth_ = fm.width( QChar('a') );
+    charWidth_ = fm.horizontalAdvance( QChar('a') );
 
     // Update the scroll bars
     updateScrollBars();
