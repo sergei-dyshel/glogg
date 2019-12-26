@@ -1742,12 +1742,12 @@ QPixmap AbstractLogView::drawPullToFollowBar( int width, float pixel_ratio )
     static constexpr int barWidth = 40;
     QPixmap pixmap ( static_cast<float>( width ) * pixel_ratio, barWidth * 6.0 );
     pixmap.setDevicePixelRatio( pixel_ratio );
-    pixmap.fill( this->palette().color( this->backgroundRole() ) );
+    pixmap.fill( this->palette().color( QPalette::Base ) );
     const int nbBars = width / (barWidth * 2) + 1;
 
     QPainter painter( &pixmap );
     painter.setPen( QPen( QColor( 0, 0, 0, 0 ) ) );
-    painter.setBrush( QBrush( QColor( "lightyellow" ) ) );
+    painter.setBrush( QBrush( this->palette().color( QPalette::Window ) ) );
 
     for ( int i = 0; i < nbBars; ++i ) {
         QPoint points[4] = {
