@@ -51,7 +51,10 @@ include_directories(${Boost_INCLUDE_DIRS})
 SET(YAML_CPP_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 SET(YAML_CPP_BUILD_TOOLS OFF CACHE BOOL "" FORCE)
 SET(YAML_CPP_BUILD_CONTRIB OFF CACHE BOOL "" FORCE)
+set(cxx_flags_backup "${CMAKE_CXX_FLAGS}")
+string(APPEND CMAKE_CXX_FLAGS " -Wno-shadow")
 add_subdirectory(3rdparty/yaml-cpp EXCLUDE_FROM_ALL)
+set(CMAKE_CXX_FLAGS "${cxx_flags_backup}")
 list(APPEND LIBS yaml-cpp)
 
 # dbus
