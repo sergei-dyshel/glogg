@@ -12,13 +12,15 @@ For details look [here](README.fork.md).
 
 ## Building
 
-The build was migrated to CMake and currently supports only Linux. For convenience, a simple Makefile is added to automate common tasks (e.g. create build directories, run cmake).
+The build was migrated to CMake and currently drops Win32 support. For convenience, a simple Makefile is added to automate common tasks (e.g. creating build directories, running *cmake*).
 For building release version:
 
-```
+```shell
+make submodule_update # fetch Git submodules
 make configure_release
 make
 make install
+make cpack # MacOS-only: create DMG image
 ```
 
 glogg - the fast, smart log explorer
