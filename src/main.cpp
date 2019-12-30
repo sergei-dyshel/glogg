@@ -51,23 +51,22 @@ using namespace std;
 #include "socketexternalcom.h"
 #endif
 
-
 #include "log.h"
 
 static void print_version();
 
 int main(int argc, char *argv[])
 {
+    GloggApp app(argc, argv);
+
     QStringList filenames;
 
     // Configuration
     bool new_session = false;
     bool load_session = false;
-    bool temp_session = false;
     bool multi_instance = false;
     bool check_config = false;
     QString logFile;
-    QString serverName;
 
     TLogLevel logLevel = logWARNING;
 
@@ -80,7 +79,7 @@ int main(int argc, char *argv[])
             ("load-session,s", "load the previous session (default when no file is passed)")
             ("server", po::value<std::string>(), "instance server name")
             ("new-session,n", "do not load the previous session (default when a file is passed)")
-            ("temp-session,t", "do not save session on close")
+            ("volatile-mode,t", "Do not save settings/session on close")
             ("log,l", po::value<std::string>(), "Filename to redirect log to")
             ("debug,d", "output more debug (include multiple times for more verbosity e.g. -dddd)")
             ("check-config", "check color scheme / syntax config files")
@@ -138,8 +137,8 @@ int main(int argc, char *argv[])
         if ( vm.count( "load-session" ) )
             load_session = true;
 
-        if ( vm.count( "temp-session" ) )
-            temp_session = true;
+        if ( vm.count( "volatile-mode" ) )
+            GetPersistentInfo().volatileMode = true;
 
         if ( vm.count( "log" ) )
             logFile = QString::fromStdString(vm["log"].as<std::string>());
@@ -149,7 +148,7 @@ int main(int argc, char *argv[])
                 logLevel = (TLogLevel) (logWARNING + s.length());
 
         if (vm.count("server")) {
-            serverName
+            QString serverName
                 = QString::fromStdString(vm["server"].as<std::string>());
             if (!QRegExp("[a-zA-Z_]\\S*").exactMatch(serverName)) {
                 cerr << "Server name must consist of alphanumeric and not "
@@ -157,6 +156,7 @@ int main(int argc, char *argv[])
                      << serverName.toStdString();
                 return 1;
             }
+            ExternalCommunicator::serverName = serverName;
         }
 
         if ( vm.count("input-file") ) {
@@ -194,37 +194,29 @@ int main(int argc, char *argv[])
         }
     }
 
-    try {
+    if (!multi_instance) {
+        try {
 #ifdef GLOGG_SUPPORTS_DBUS
-        externalCommunicator = make_shared<DBusExternalCommunicator>();
+            externalCommunicator = make_shared<DBusExternalCommunicator>();
 #elif GLOGG_SUPPORTS_SOCKETIPC
-        externalCommunicator = make_shared<SocketExternalCommunicator>();
+            externalCommunicator = make_shared<SocketExternalCommunicator>();
 #endif
-    }
-    catch(CantCreateExternalErr& e) {
-        LOG(logWARNING) << "Cannot initialise external communication.";
+        }
+        catch(CantCreateExternalErr& e) {
+            LOG(logWARNING) << "Cannot initialise external communication.";
+        }
     }
 
     if (externalCommunicator) {
-        QStringList allServers = externalCommunicator->allServerNames();
-        for (auto name : allServers)
-               INFO << "Found another server: " << name;
-        QString existingServer;
-        if (!serverName.isEmpty()) {
-            if (allServers.contains(serverName))
-                existingServer = serverName;
-        } else if (! multi_instance && !allServers.isEmpty()) {
-            if (allServers.contains(ExternalCommunicator::DEFAULT_SERVER_NAME))
-                existingServer = ExternalCommunicator::DEFAULT_SERVER_NAME;
-            else
-                existingServer = allServers[0];
-        }
-
-        if (!existingServer.isEmpty()) {
-            shared_ptr<ExternalInstance> externalInstance(
-                externalCommunicator->otherInstance(existingServer));
+        QObject::connect(externalCommunicator.get(),
+                         &ExternalCommunicator::loadFile, &app,
+                         &GloggApp::loadFileInActiveWindow);
+        shared_ptr<ExternalInstance> externalInstance(
+            externalCommunicator->otherInstance(
+                ExternalCommunicator::serverName));
+        if (externalInstance) {
             LOG(logDEBUG) << "externalInstance = " << externalInstance
-                          << ", version = " << externalInstance->getVersion();
+                            << ", version = " << externalInstance->getVersion();
             for ( const auto& filename: filenames ) {
                 externalInstance->loadFile(filename);
             }
@@ -234,7 +226,7 @@ int main(int argc, char *argv[])
             // FIXME: there is a race condition here. One glogg could start
             // between the declaration of externalInstance and here,
             // is it a problem?
-            externalCommunicator->startServer(serverName);
+            externalCommunicator->startListening();
         }
     }
 
@@ -262,12 +254,11 @@ int main(int argc, char *argv[])
     AllowSetForegroundWindow(ASFW_ANY);
 #endif
 
-    std::shared_ptr<Session> session( new Session(temp_session) );
-    GloggApp app(argc, argv, session, externalCommunicator);
+    Session::the = std::make_shared<Session>();
 
     if (externalCommunicator && !externalCommunicator->isDefaultServer())
         app.setApplicationName(app.applicationName() + "."
-                               + externalCommunicator->serverName());
+                               + ExternalCommunicator::serverName);
 
     // We support high-dpi (aka Retina) displays
     app.setAttribute( Qt::AA_UseHighDpiPixmaps );

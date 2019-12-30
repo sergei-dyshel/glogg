@@ -25,9 +25,7 @@ public:
     ~SocketExternalCommunicator();
 
     ExternalInstance* otherInstance(const QString &name) const override;
-    void startListening(const QString &name) override;
-
-    QStringList allServerNames() const override;
+    void startListening() override;
 
 public slots:
     qint32 version() const override;
@@ -36,7 +34,7 @@ private slots:
     void onConnection();
 
 private:
-     QSharedMemory* memory_;
+     QSharedMemory* memory_ = nullptr;
      QLocalServer* server_;
 };
 

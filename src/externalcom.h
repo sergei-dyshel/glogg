@@ -50,25 +50,21 @@ class ExternalCommunicator : public QObject
   Q_OBJECT
 
   public:
+
     ExternalCommunicator() : QObject() {}
 
     virtual ExternalInstance* otherInstance(const QString &name) const = 0;
 
-    virtual QStringList allServerNames() const = 0;
-
-    QStringList otherServerNames() const;
-
-    QString serverName() const { return serverName_; }
-
-    void startServer(const QString &name);
-
     /* Instruct the communicator to start listening for
      * remote initiated operations */
-    virtual void startListening(const QString &name) = 0;
+    virtual void startListening() = 0;
 
     static const QString DEFAULT_SERVER_NAME;
+    static const QString SERVER_NAME_PREFIX;
 
-    bool isDefaultServer() const { return serverName_ == DEFAULT_SERVER_NAME; }
+    static QString fullServerName(const QString& name);
+
+    static bool isDefaultServer() { return serverName == DEFAULT_SERVER_NAME; }
 
   signals:
     void loadFile( const QString& file_name );
@@ -76,8 +72,8 @@ class ExternalCommunicator : public QObject
   public slots:
     virtual qint32 version() const = 0;
 
-  private:
-    QString serverName_;
+  public:
+    static QString serverName;
 };
 
 extern std::shared_ptr<ExternalCommunicator> externalCommunicator;

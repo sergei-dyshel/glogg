@@ -35,7 +35,7 @@ bool GloggApp::event( QEvent *event )
 
 MainWindow &GloggApp::newWindow()
 {
-    windows_.emplace_front(session_);
+    windows_.emplace_front(Session::the);
     auto &window = windows_.front();
     lastActiveWindow_ = &window;
     DEBUG << "Window" << &window << "created";
@@ -59,3 +59,7 @@ void GloggApp::onWindowActivated(MainWindow &window)
     lastActiveWindow_ = &window;
 }
 
+void GloggApp::loadFileInActiveWindow(const QString &filename)
+{
+    lastActiveWindow_->loadFileNonInteractive(filename);
+}

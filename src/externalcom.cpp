@@ -25,33 +25,14 @@
 
 std::shared_ptr<ExternalCommunicator> externalCommunicator = nullptr;
 
-static const QStringList predefinedNames = {"default", "a", "b", "c"};
-
 const QString ExternalCommunicator::DEFAULT_SERVER_NAME = "default";
+const QString ExternalCommunicator::SERVER_NAME_PREFIX = "org.bonnefon.glogg";
+QString ExternalCommunicator::serverName = ExternalCommunicator::DEFAULT_SERVER_NAME;
 
-void ExternalCommunicator::startServer(const QString &name)
+QString ExternalCommunicator::fullServerName(const QString& name)
 {
-    auto all_servers = allServerNames();
-    if (!name.isEmpty()) {
-        assert(!all_servers.contains(name));
-        serverName_ = name;
-    }
-    else {
-        for (auto predefined : predefinedNames)
-            if (!all_servers.contains(predefined)) {
-                serverName_ = predefined;
-                break;
-            }
-        assert(!serverName_.isEmpty());
-    }
-    startListening(serverName_);
-}
-
-QStringList ExternalCommunicator::otherServerNames() const
-{
-    QStringList result;
-    for (auto name : allServerNames())
-        if (name != serverName_)
-            result.append(name);
+    auto result = SERVER_NAME_PREFIX;
+    if (!name.isEmpty())
+        result += "." + name;
     return result;
 }

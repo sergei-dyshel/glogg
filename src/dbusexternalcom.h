@@ -68,8 +68,6 @@ class DBusExternalCommunicator : public ExternalCommunicator
 
     void startListening(const QString &name) override;
 
-    QStringList allServerNames() const override;
-
     ExternalInstance* otherInstance(const QString &name) const override;
 
   public slots:

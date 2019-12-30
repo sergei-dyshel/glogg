@@ -49,6 +49,8 @@ class PersistentInfo {
 
     Settings& settings() { return *settings_; }
 
+    bool volatileMode = false;
+
   private:
     // Can't be constructed or copied (singleton)
     PersistentInfo();

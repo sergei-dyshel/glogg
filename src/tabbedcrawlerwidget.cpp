@@ -233,22 +233,6 @@ void TabbedCrawlerWidget::showTabPopupMenu(const QPoint &pos, int tab)
     menu.addAction("Move to end", [=]() { myTabBar_.moveTab(tab, count()); })
         ->setEnabled(tab < count() - 1);
 
-    if (externalCommunicator) {
-        auto servers = externalCommunicator->otherServerNames();
-        if (!servers.isEmpty()) {
-            auto copy_submenu = menu.addMenu("Copy to other instance ...");
-            auto move_submenu = menu.addMenu("Move to other instance ...");
-            for (auto name : servers) {
-                copy_submenu->addAction(
-                    name, [=]() { emit openInAnotherServer(tab, name); });
-                move_submenu->addAction(name, [=]() {
-                    emit openInAnotherServer(tab, name);
-                    emit tabCloseRequested(tab);
-                });
-            }
-        }
-    }
-
     menu.exec(mapToGlobal(pos));
 }
 

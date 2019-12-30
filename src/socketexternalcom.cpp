@@ -1,4 +1,5 @@
 #include "socketexternalcom.h"
+#include "externalcom.h"
 
 #include <QLocalServer>
 #include <QLocalSocket>
@@ -11,18 +12,8 @@
 
 #include "log.h"
 
-static const QString GLOG_SERVICE_NAME = "org.bonnefon.glogg";
-
 #ifdef Q_OS_UNIX
 QSharedMemory* g_staticSharedMemory = nullptr;
-
-static QString fullServiceName(const QString& name)
-{
-    auto result = GLOG_SERVICE_NAME;
-    if (!name.isEmpty())
-        result += "." + name;
-    return result;
-}
 
 void terminate(int signum)
 {
@@ -49,7 +40,8 @@ void setCrashHandler(QSharedMemory* memory)
 #endif
 
 SocketExternalInstance::SocketExternalInstance(const QString &name)
-    : ExternalInstance(), memory_(new QSharedMemory(fullServiceName(name) ))
+    : ExternalInstance(),
+      memory_(new QSharedMemory(ExternalCommunicator::fullServerName(name)))
 {
     if ( !memory_->attach( QSharedMemory::ReadOnly ) ) {
         LOG( logERROR ) << "attach failed!";
@@ -92,18 +84,15 @@ SocketExternalCommunicator::SocketExternalCommunicator()
 
 SocketExternalCommunicator::~SocketExternalCommunicator()
 {
-    delete memory_;
+    if (memory_)
+        delete memory_;
     server_->close();
     delete server_;
 }
 
-QStringList SocketExternalCommunicator::allServerNames() const {
-    return QStringList();
-}
-
-void SocketExternalCommunicator::startListening(const QString &name)
+void SocketExternalCommunicator::startListening()
 {
-    auto fullName = fullServiceName(name);
+    auto fullName = fullServerName(serverName);
     memory_ = new QSharedMemory(fullName);
     if ( memory_->create(sizeof(qint32))) {
 #ifdef Q_OS_UNIX
@@ -116,7 +105,11 @@ void SocketExternalCommunicator::startListening(const QString &name)
         QLocalServer::removeServer(fullName);
 
         connect(server_, SIGNAL(newConnection()), SLOT(onConnection()));
-        server_->listen(fullName);
+        if (!server_->listen(fullName)) {
+            ERROR << "Can not listen on" << fullName;
+            exit(1);
+        }
+        DEBUG << "Listening on" << fullName;
     }
 }
 
@@ -140,11 +133,13 @@ void SocketExternalCommunicator::onConnection()
 {
      QLocalSocket *socket = server_->nextPendingConnection();
      QByteArray data;
+     DEBUG << "Incoming connection";
      while(socket->waitForReadyRead(100)) {
          data.append(socket->readAll());
      }
 
      socket->close();
+     DEBUG << "Received data" << data;
 
      emit loadFile(QString::fromUtf8(data));
 }

@@ -86,8 +86,12 @@ void PersistentInfo::save( const QString& name )
 {
     assert( initialised_ );
 
-    if ( objectList_.contains( name ) )
-        objectList_.value( name )->saveToStorage( *settings_ );
+    if ( objectList_.contains( name ) ) {
+        if (!volatileMode)
+            objectList_.value(name)->saveToStorage(*settings_);
+        else
+            DEBUG << "Temporary mode: not saving" << name;
+    }
     else
         LOG(logERROR) << "Unregistered persistable " << name.toStdString();
 

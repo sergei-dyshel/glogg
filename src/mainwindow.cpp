@@ -54,6 +54,7 @@
 #include "struct_config_store.h"
 #include "qt_utils.h"
 #include "tab_info.h"
+#include "session.h"
 
 // Returns the size in human readable format
 static QString readableSize( qint64 size );
@@ -412,6 +413,14 @@ void MainWindow::createActions()
         repaintLogViews();
     });
 
+    volatileModeAction = new QAction(tr("&Volatile mode"), this);
+    volatileModeAction->setCheckable(true);
+    volatileModeAction->setChecked(GetPersistentInfo().volatileMode);
+    connect(volatileModeAction, &QAction::triggered, [=](bool checked) {
+        GetPersistentInfo().volatileMode = checked;
+        emit optionsChanged();
+    });
+
     connect( encodingGroup, SIGNAL( triggered( QAction* ) ),
             this, SLOT( encodingChanged( QAction* ) ) );
 }
@@ -453,6 +462,8 @@ void MainWindow::createMenus()
     configMenu->addSeparator();
     colorSchemeMenu = configMenu->addMenu(tr("&Color schemes..."));
     stylesMenu = configMenu->addMenu(tr("&Styles"));
+    configMenu->addSeparator();
+    configMenu->addAction(volatileModeAction);
 
     populateStylesMenu();
 
@@ -870,7 +881,11 @@ void MainWindow::loadFileNonInteractive( const QString& file_name )
     raise();
 }
 
-void MainWindow::applySettings() { updateCurrentStyle(); }
+void MainWindow::applySettings()
+{
+    updateCurrentStyle();
+    volatileModeAction->setChecked(GetPersistentInfo().volatileMode);
+}
 
 void MainWindow::newVersionNotification( const QString& new_version )
 {
@@ -1020,12 +1035,10 @@ void MainWindow::updateTitleBar( const QString& file_name )
     if ( !file_name.isEmpty() )
         shownName = strippedName( file_name );
 
-    setWindowTitle(
-            tr("%1 - %2").arg(shownName).arg(tr("glogg"))
-#ifdef GLOGG_COMMIT
-            + " (dev build " GLOGG_VERSION ")"
-#endif
-            );
+    shownName += QString(" - ") + tr("glogg");
+    if (ExternalCommunicator::isDefaultServer())
+        shownName += " (" + ExternalCommunicator::serverName + ")";
+    setWindowTitle(shownName);
 }
 
 // Updates the actions for the recent files.

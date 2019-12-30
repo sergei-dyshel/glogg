@@ -34,19 +34,12 @@ class GloggApp : public QApplication
 {
     Q_OBJECT
   public:
-    GloggApp(int& argc, char** argv, std::shared_ptr<Session> session,
-             std::shared_ptr<ExternalCommunicator> externalCom)
-        : QApplication(argc, argv), session_(session)
-    {
-        connect(externalCom.get(), &ExternalCommunicator::loadFile,
-                [=](const QString& filename) {
-                    lastActiveWindow().loadFileNonInteractive(filename);
-                });
-    }
+    GloggApp(int &argc, char **argv) : QApplication(argc, argv) {}
 
     MainWindow &newWindow();
 
-    MainWindow &lastActiveWindow() { return *lastActiveWindow_; }
+  public slots:
+    void loadFileInActiveWindow(const QString &filename);
 
   signals:
     void loadFile( const QString& file_name );

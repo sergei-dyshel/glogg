@@ -228,6 +228,7 @@ class MainWindow : public QMainWindow
     QAction *aboutQtAction;
     QActionGroup *encodingGroup;
     QAction *encodingAction[static_cast<int>( Encoding::ENCODING_MAX )];
+    QAction *volatileModeAction;
 
     QActionGroup *stylesGroup;
     std::map<QString, QAction*> styleActions;
