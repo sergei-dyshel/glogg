@@ -639,7 +639,7 @@ void MainWindow::copy()
 // Display the QuickFind bar
 void MainWindow::find()
 {
-    displayQuickFindBar( QuickFindMux::Forward );
+    displayQuickFindBar( QFDirection::Forward );
 }
 
 // Opens the 'Filters' dialog box
@@ -937,10 +937,10 @@ void MainWindow::keyPressEvent( QKeyEvent* keyEvent )
     }
     switch ( (keyEvent->text())[0].toLatin1() ) {
         case '/':
-            displayQuickFindBar( QuickFindMux::Forward );
+            displayQuickFindBar( QFDirection::Forward );
             break;
         case '?':
-            displayQuickFindBar( QuickFindMux::Backward );
+            displayQuickFindBar( QFDirection::Forward );
             break;
         default:
             keyEvent->ignore();

@@ -963,7 +963,7 @@ void AbstractLogView::incrementalSearchAbort()
     quickFind_.incrementalSearchAbort();
     emit changeQuickFind(
             "",
-            QuickFindMux::Forward );
+            QFDirection::Forward );
 }
 
 void AbstractLogView::incrementalSearchStop()
@@ -1023,7 +1023,7 @@ void AbstractLogView::findNextSelected()
     if ( selection_.isPortion() ) {
         emit changeQuickFind(
                 selection_.getSelectedText( logData ),
-                QuickFindMux::Forward );
+                QFDirection::Forward );
         emit searchNext();
     }
 }
@@ -1034,7 +1034,7 @@ void AbstractLogView::findPreviousSelected()
     if ( selection_.isPortion() ) {
         emit changeQuickFind(
                 selection_.getSelectedText( logData ),
-                QuickFindMux::Backward );
+                QFDirection::Forward );
         emit searchNext();
     }
 }

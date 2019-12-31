@@ -23,6 +23,8 @@
 #include <QWidget>
 #include <QTimer>
 
+#include "quickfind_common.h"
+
 class QHBoxLayout;
 class QComboBox;
 class QLineEdit;
@@ -30,11 +32,6 @@ class QToolButton;
 class QLabel;
 class QPushButton;
 class QFNotification;
-
-enum QFDirection {
-    Forward,
-    Backward,
-};
 
 class QuickFindWidget : public QWidget
 {

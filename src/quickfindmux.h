@@ -27,6 +27,9 @@
 #include <QString>
 
 #include "quickfindpattern.h"
+#include "quickfind_common.h"
+
+class AbstractLogView;
 
 // Interface representing a widget searchable in both direction.
 class SearchableWidgetInterface {
@@ -50,11 +53,11 @@ class QuickFindMuxSelectorInterface {
     // Return the list of all possible searchables, this
     // is done on registration in order to establish
     // listeners on all searchables.
-    std::vector<QObject*> getAllSearchables() const
+    std::vector<AbstractLogView*> getAllSearchables() const
     { return doGetAllSearchables(); }
   protected:
     virtual SearchableWidgetInterface* doGetActiveSearchable() const = 0;
-    virtual std::vector<QObject*> doGetAllSearchables() const = 0;
+    virtual std::vector<AbstractLogView*> doGetAllSearchables() const = 0;
 };
 
 class QFNotification;
@@ -69,10 +72,7 @@ class QuickFindMux : public QObject
 
   public:
 
-    enum QFDirection {
-        Forward,
-        Backward,
-    };
+  using QFDirection = ::QFDirection;
 
     // Construct the multiplexer, taking a reference to the pattern
     QuickFindMux( std::shared_ptr<QuickFindPattern> pattern );
@@ -131,10 +131,10 @@ class QuickFindMux : public QObject
 
     QFDirection currentDirection_;
 
-    std::vector<QObject*> registeredSearchables_;
+    std::vector<AbstractLogView*> registeredSearchables_;
 
     SearchableWidgetInterface* getSearchableWidget() const;
-    void registerSearchable( QObject* searchable );
+    void registerSearchable( AbstractLogView* searchable );
     void unregisterAllSearchables();
 };
 

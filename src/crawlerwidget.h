@@ -110,7 +110,7 @@ class CrawlerWidget : public QSplitter,
     // Implementation of the mux selector interface
     // (for dispatching QuickFind to the right widget)
     virtual SearchableWidgetInterface* doGetActiveSearchable() const;
-    virtual std::vector<QObject*> doGetAllSearchables() const;
+    virtual std::vector<AbstractLogView*> doGetAllSearchables() const;
 
     // Implementation of the MuxableDocumentInterface
     virtual void doSendAllStateSignals();

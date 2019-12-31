@@ -24,6 +24,11 @@
 #include "quickfindmux.h"
 
 #include "qfnotifications.h"
+#include "abstractlogview.h"
+
+ENUM_DEFINE(QFDirection, "QFDirection",
+            ({{QFDirection::Forward, "Forward"},
+              {QFDirection::Backward, "Backward"}}))
 
 QuickFindMux::QuickFindMux( std::shared_ptr<QuickFindPattern> pattern ) :
     QObject(), pattern_( pattern ), registeredSearchables_()
@@ -69,7 +74,7 @@ void QuickFindMux::setDirection( QFDirection direction )
 void QuickFindMux::searchNext()
 {
     LOG(logDEBUG) << "QuickFindMux::searchNext";
-    if ( currentDirection_ == Forward )
+    if ( currentDirection_ == QFDirection::Forward )
         searchForward();
     else
         searchBackward();
@@ -78,7 +83,7 @@ void QuickFindMux::searchNext()
 void QuickFindMux::searchPrevious()
 {
     LOG(logDEBUG) << "QuickFindMux::searchPrevious";
-    if ( currentDirection_ == Forward )
+    if ( currentDirection_ == QFDirection::Forward )
         searchBackward();
     else
         searchForward();
@@ -112,7 +117,7 @@ void QuickFindMux::setNewPattern(
     if ( config->isQuickfindIncremental() ) {
         pattern_->changeSearchPattern( new_pattern, ignore_case );
         if ( auto searchable = getSearchableWidget() ) {
-            if ( currentDirection_ == Forward )
+            if ( currentDirection_ == QFDirection::Forward )
                 searchable->incrementallySearchForward();
             else
                 searchable->incrementallySearchBackward();
@@ -186,7 +191,7 @@ SearchableWidgetInterface* QuickFindMux::getSearchableWidget() const
     return searchable;
 }
 
-void QuickFindMux::registerSearchable( QObject* searchable )
+void QuickFindMux::registerSearchable( AbstractLogView* searchable )
 {
     LOG(logDEBUG) << "QuickFindMux::registerSearchable";
 
