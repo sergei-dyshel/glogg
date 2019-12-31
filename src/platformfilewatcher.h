@@ -54,9 +54,6 @@ class PlatformFileWatcher : public FileWatcher {
     // Set the polling interval (0 means disabled)
     void setPollingInterval( uint32_t interval_ms );
 
-  signals:
-    void fileChanged( const QString& );
-
   private:
 #ifdef _WIN32
 #  ifdef HAS_TEMPLATE_ALIASES

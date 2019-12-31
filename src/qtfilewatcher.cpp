@@ -28,11 +28,9 @@ QtFileWatcher::QtFileWatcher() : FileWatcher(), qtFileWatcher_( this )
 {
     monitoringState_ = None;
 
-    connect( &qtFileWatcher_, SIGNAL( fileChanged( const QString& ) ),
-            this, SLOT( fileChangedOnDisk( const QString& ) ) );
+    CONNECT(&qtFileWatcher_, fileChanged, this, fileChangedOnDisk);
 
-    connect( &qtFileWatcher_, SIGNAL( directoryChanged( const QString& ) ),
-            this, SLOT( directoryChangedOnDisk( const QString& ) ) );
+    CONNECT(&qtFileWatcher_, directoryChanged, this, directoryChangedOnDisk);
 }
 
 QtFileWatcher::~QtFileWatcher()

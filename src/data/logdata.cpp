@@ -26,6 +26,7 @@
 #include <QFileInfo>
 
 #include "log.h"
+#include "signal_slot.h"
 
 #include "logdata.h"
 #include "logfiltereddata.h"
@@ -79,13 +80,11 @@ LogData::LogData() : AbstractLogData(), indexing_data_(),
 #endif
 
     // Initialise the file watcher
-    connect( fileWatcher_.get(), SIGNAL( fileChanged( const QString& ) ),
-            this, SLOT( fileChangedOnDisk() ) );
+    CONNECT_1_TO_0_ARG(fileWatcher_.get(), fileChanged, this,
+                         fileChangedOnDisk);
     // Forward the update signal
-    connect( &workerThread_, SIGNAL( indexingProgressed( int ) ),
-            this, SIGNAL( loadingProgressed( int ) ) );
-    connect( &workerThread_, SIGNAL( indexingFinished( LoadingStatus ) ),
-            this, SLOT( indexingFinished( LoadingStatus ) ) );
+    CONNECT(&workerThread_, indexingProgressed, this, loadingProgressed);
+    CONNECT(&workerThread_, indexingFinished, this, indexingFinished);
 
     // Starts the worker thread
     workerThread_.start();

@@ -22,6 +22,7 @@
 #include <QString>
 
 #include "log.h"
+#include "signal_slot.h"
 
 static const QString DBUS_SERVICE_NAME = "org.bonnefon.glogg";
 
@@ -44,8 +45,7 @@ DBusExternalCommunicator::DBusExternalCommunicator()
 
     dbus_iface_object_ = std::make_shared<DBusInterfaceExternalCommunicator>();
 
-    connect( dbus_iface_object_.get(), SIGNAL( signalLoadFile( const QString& ) ),
-             this, SIGNAL( loadFile( const QString& ) ) );
+    CONNECT(dbus_iface_object_.get(), signalLoadFile, this, loadFile);
 }
 
 // If listening fails (e.g. another glogg is already listening,

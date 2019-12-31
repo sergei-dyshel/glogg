@@ -32,6 +32,7 @@
 #include "marks.h"
 #include "logfiltereddata.h"
 #include "regexp_filter.h"
+#include "signal_slot.h"
 
 // Creates an empty set. It must be possible to display it without error.
 // FIXME
@@ -76,8 +77,7 @@ LogFilteredData::LogFilteredData( const LogData* logData )
     filteredItemsCacheDirty_ = true;
 
     // Forward the update signal
-    connect( &workerThread_, SIGNAL( searchProgressed( int, int, qint64 ) ),
-            this, SLOT( handleSearchProgressed( int, int, qint64 ) ) );
+    CONNECT(&workerThread_, searchProgressed, this, handleSearchProgressed);
 
     // Starts the worker thread
     workerThread_.start();

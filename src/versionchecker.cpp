@@ -87,8 +87,7 @@ void VersionChecker::startCheck()
         // Check the deadline has been reached
         if ( config->nextDeadline() < std::time( nullptr ) )
         {
-            connect( &manager_, SIGNAL( finished( QNetworkReply* ) ),
-                    this, SLOT( downloadFinished( QNetworkReply* ) ) );
+            CONNECT(&manager_, finished, this, downloadFinished);
 
             QNetworkRequest request;
             request.setUrl( QUrl( VERSION_URL ) );

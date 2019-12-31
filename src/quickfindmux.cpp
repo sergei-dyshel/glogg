@@ -17,6 +17,7 @@
  * along with glogg.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "abstractlogview.h"
 #include "log.h"
 
 #include "persistentinfo.h"
@@ -24,6 +25,7 @@
 #include "quickfindmux.h"
 
 #include "qfnotifications.h"
+#include "signal_slot.h"
 #include "abstractlogview.h"
 
 ENUM_DEFINE(QFDirection, "QFDirection",
@@ -36,8 +38,7 @@ QuickFindMux::QuickFindMux( std::shared_ptr<QuickFindPattern> pattern ) :
     selector_ = nullptr;
 
     // Forward the pattern's signal to our listeners
-    connect( pattern_.get(), SIGNAL( patternUpdated() ),
-             this, SLOT( notifyPatternChanged() ) );
+    CONNECT(pattern_.get(), patternUpdated, this, notifyPatternChanged);
 }
 
 //
@@ -196,21 +197,15 @@ void QuickFindMux::registerSearchable( AbstractLogView* searchable )
     LOG(logDEBUG) << "QuickFindMux::registerSearchable";
 
     // The searchable can change our qf pattern
-    connect( searchable,
-             SIGNAL( changeQuickFind( const QString&, QuickFindMux::QFDirection ) ),
-             this, SLOT( changeQuickFind( const QString&, QuickFindMux::QFDirection ) ) );
+    CONNECT(searchable, changeQuickFind, this, changeQuickFind);
     // Send us notifications
-    connect( searchable, SIGNAL( notifyQuickFind( const QFNotification& ) ),
-             this, SIGNAL( notify( const QFNotification& ) ) );
+    CONNECT(searchable, notifyQuickFind, this, notify);
 
     // And clear them
-    connect( searchable, SIGNAL( clearQuickFindNotification() ),
-             this, SIGNAL( clearNotification() ) );
+    CONNECT(searchable, clearQuickFindNotification, this, clearNotification);
     // Search can be initiated by the view itself
-    connect( searchable, SIGNAL( searchNext() ),
-             this, SLOT( searchNext() ) );
-    connect( searchable, SIGNAL( searchPrevious() ),
-             this, SLOT( searchPrevious() ) );
+    CONNECT(searchable, searchNext, this, searchNext);
+    CONNECT(searchable, searchPrevious, this, searchPrevious);
 
     registeredSearchables_.push_back( searchable );
 }

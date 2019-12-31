@@ -23,6 +23,7 @@
 
 #include "logfiltereddataworkerthread.h"
 #include "logdata.h"
+#include "signal_slot.h"
 
 // Number of lines in each chunk to read
 const int SearchOperation::nbLinesInChunk = 5000;
@@ -189,8 +190,8 @@ void LogFilteredDataWorkerThread::run()
             return;      // We must die
 
         if ( operationRequested_ ) {
-            connect( operationRequested_, SIGNAL( searchProgressed( int, int, qint64 ) ),
-                    this, SIGNAL( searchProgressed( int, int, qint64 ) ) );
+            CONNECT(operationRequested_, searchProgressed, this,
+                    searchProgressed);
 
             // Run the search operation
             operationRequested_->start( searchData_ );

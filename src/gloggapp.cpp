@@ -18,6 +18,7 @@
  */
 
 #include "gloggapp.h"
+#include "signal_slot.h"
 
 #include <QFileOpenEvent>
 
@@ -49,6 +50,7 @@ MainWindow &GloggApp::newWindow()
             &GloggApp::settingsChanged);
     connect(this, &GloggApp::settingsChanged, &window,
             &MainWindow::applySettings);
+    CONNECT(this, loadFile, &window, loadFileNonInteractive);
     window.updateCurrentStyle(true /* trigger */);
     return window;
 }

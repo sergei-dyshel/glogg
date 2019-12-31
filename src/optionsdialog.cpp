@@ -24,6 +24,7 @@
 #include "log.h"
 #include "persistentinfo.h"
 #include "configuration.h"
+#include "signal_slot.h"
 
 static const uint32_t POLL_INTERVAL_MIN = 10;
 static const uint32_t POLL_INTERVAL_MAX = 3600000;
@@ -41,12 +42,10 @@ OptionsDialog::OptionsDialog( QWidget* parent ) : QDialog(parent)
            POLL_INTERVAL_MIN, POLL_INTERVAL_MAX, this );
     pollIntervalLineEdit->setValidator( polling_interval_validator_ );
 
-    connect(buttonBox, SIGNAL( clicked( QAbstractButton* ) ),
-            this, SLOT( onButtonBoxClicked( QAbstractButton* ) ) );
-    connect(fontFamilyBox, SIGNAL( currentIndexChanged(const QString& ) ),
-            this, SLOT( updateFontSize( const QString& ) ));
-    connect(pollingCheckBox, SIGNAL( toggled( bool ) ),
-            this, SLOT( onPollingChanged() ) );
+    CONNECT(buttonBox, clicked, this, onButtonBoxClicked);
+    CONNECT_OVLD_SIGNAL(fontFamilyBox, currentIndexChanged, this,
+                            updateFontSize);
+    CONNECT(pollingCheckBox, toggled, this, onPollingChanged);
 
     updateDialogFromConfig();
 

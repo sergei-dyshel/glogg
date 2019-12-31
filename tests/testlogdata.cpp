@@ -53,8 +53,7 @@ void TestLogData::simpleLoad()
     QSignalSpy progressSpy( &logData, SIGNAL( loadingProgressed( int ) ) );
 
     // Register for notification file is loaded
-    connect( &logData, SIGNAL( loadingFinished( bool ) ),
-            this, SLOT( loadingFinished() ) );
+    CONNECT(&logData, loadingFinished, this, loadingFinished);
 
     QBENCHMARK {
         logData.attachFile( TMPDIR "/verybiglog.txt" );
@@ -74,8 +73,7 @@ void TestLogData::multipleLoad()
     QSignalSpy finishedSpy( &logData, SIGNAL( loadingFinished( bool ) ) );
 
     // Register for notification file is loaded
-    connect( &logData, SIGNAL( loadingFinished( bool ) ),
-            this, SLOT( loadingFinished() ) );
+    CONNECT(&logData, loadingFinished, this, loadingFinished);
 
     // Start loading the VBL
     logData.attachFile( TMPDIR "/verybiglog.txt" );

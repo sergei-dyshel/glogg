@@ -23,6 +23,7 @@
 #include <QToolTip>
 
 #include "menuactiontooltipbehavior.h"
+#include "signal_slot.h"
 
 // It would be nice to only need action, and have action be the parent,
 // however implementation needs the parent menu (see showToolTip), and
@@ -39,7 +40,7 @@ MenuActionToolTipBehavior::MenuActionToolTipBehavior(QAction *action,
       timerId(0),
       hoverPoint()
 {
-    connect(action, SIGNAL(hovered()), this, SLOT(onActionHovered()));
+    CONNECT(action, hovered, this, onActionHovered);
 }
 
 int MenuActionToolTipBehavior::toolTipDelay()

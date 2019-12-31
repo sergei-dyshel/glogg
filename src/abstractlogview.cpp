@@ -53,6 +53,7 @@
 #include "struct_config_store.h"
 #include "highlights.h"
 #include "qt_utils.h"
+#include "signal_slot.h"
 
 namespace {
 int mapPullToFollowLength( int length );
@@ -252,16 +253,11 @@ AbstractLogView::AbstractLogView(const AbstractLogData* newLogData,
     setBorderColorFromFocus();
 
     // Signals
-    connect( quickFindPattern_, SIGNAL( patternUpdated() ),
-            this, SLOT ( handlePatternUpdated() ) );
-    connect( &quickFind_, SIGNAL( notify( const QFNotification& ) ),
-            this, SIGNAL( notifyQuickFind( const QFNotification& ) ) );
-    connect( &quickFind_, SIGNAL( clearNotification() ),
-            this, SIGNAL( clearQuickFindNotification() ) );
-    connect( &followElasticHook_, SIGNAL( lengthChanged() ),
-            this, SLOT( repaint() ) );
-    connect( &followElasticHook_, SIGNAL( hooked( bool ) ),
-            this, SIGNAL( followModeChanged( bool ) ) );
+    CONNECT(quickFindPattern_, patternUpdated, this, handlePatternUpdated);
+    CONNECT(&quickFind_, notify, this, notifyQuickFind);
+    CONNECT(&quickFind_, clearNotification, this, clearQuickFindNotification);
+    CONNECT_OVLD_0_ARG(&followElasticHook_, lengthChanged, this, repaint);
+    CONNECT(&followElasticHook_, hooked, this, followModeChanged);
 }
 
 AbstractLogView::~AbstractLogView()
@@ -903,8 +899,7 @@ void AbstractLogView::setOverview( Overview* overview,
     overviewWidget_ = overview_widget;
 
     if ( overviewWidget_ ) {
-        connect( overviewWidget_, SIGNAL( lineClicked ( int ) ),
-                this, SLOT( jumpToLine( int ) ) );
+        CONNECT(overviewWidget_, lineClicked, this, jumpToLine);
     }
     refreshOverview();
 }
@@ -1427,7 +1422,7 @@ void AbstractLogView::createMenu()
 {
     copyAction_ = new QAction( tr("&Copy"), this );
     // No text as this action title depends on the type of selection
-    connect( copyAction_, SIGNAL(triggered()), this, SLOT(copy()) );
+    CONNECT(copyAction_, triggered, this, copy);
 
     // For '#' and '*', shortcuts doesn't seem to work but
     // at least it displays them in the menu, we manually handle those keys
@@ -1435,20 +1430,17 @@ void AbstractLogView::createMenu()
     findNextAction_ = new QAction(tr("Find &next"), this);
     findNextAction_->setShortcut( Qt::Key_Asterisk );
     findNextAction_->setStatusTip( tr("Find the next occurence") );
-    connect( findNextAction_, SIGNAL(triggered()),
-            this, SLOT( findNextSelected() ) );
+    CONNECT(findNextAction_, triggered, this, findNextSelected);
 
     findPreviousAction_ = new QAction( tr("Find &previous"), this );
     findPreviousAction_->setShortcut( tr("#")  );
     findPreviousAction_->setStatusTip( tr("Find the previous occurence") );
-    connect( findPreviousAction_, SIGNAL(triggered()),
-            this, SLOT( findPreviousSelected() ) );
+    CONNECT(findPreviousAction_, triggered, this, findPreviousSelected);
 
     addToSearchAction_ = new QAction( tr("&Add to search"), this );
     addToSearchAction_->setStatusTip(
             tr("Add the selection to the current search") );
-    connect( addToSearchAction_, SIGNAL( triggered() ),
-            this, SLOT( addToSearch() ) );
+    CONNECT_1_TO_0_ARG(addToSearchAction_, triggered, this, addToSearch);
 
     addMarkAction_ = new QAction(tr("&Mark selected lines"), this);
     connect(addMarkAction_, &QAction::triggered, [=]() {

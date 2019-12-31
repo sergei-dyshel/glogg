@@ -34,6 +34,7 @@
 #include "quickfindwidget.h"
 
 #include "qt_utils.h"
+#include "signal_slot.h"
 
 const int QuickFindWidget::NOTIFICATION_TIMEOUT = 5000;
 
@@ -90,7 +91,7 @@ QuickFindWidget::QuickFindWidget( QWidget* parent ) : QWidget( parent )
     setMinimumWidth( minimumSizeHint().width() );
 
     // Behaviour
-    connect( closeButton_, SIGNAL( clicked() ), SLOT( closeHandler() ) );
+    CONNECT(closeButton_, clicked, this, closeHandler);
     connect( editQuickFind_->lineEdit(), &QLineEdit::textEdited, this,
              &QuickFindWidget::textChanged );
     connect(ignoreCaseCheck_, &QPushButton::toggled, [=]() { textChanged(); });
@@ -102,16 +103,13 @@ QuickFindWidget::QuickFindWidget( QWidget* parent ) : QWidget( parent )
     */
     connect( editQuickFind_->lineEdit(), &QLineEdit::returnPressed, this,
              &QuickFindWidget::returnHandler );
-    connect( previousButton_, SIGNAL( clicked() ),
-            this, SLOT( doSearchBackward() ) );
-    connect( nextButton_, SIGNAL( clicked() ),
-            this, SLOT( doSearchForward() ) );
+    CONNECT(previousButton_, clicked, this, doSearchBackward);
+    CONNECT(nextButton_, clicked, this, doSearchForward);
 
     // Notification timer:
     notificationTimer_ = new QTimer( this );
     notificationTimer_->setSingleShot( true );
-    connect( notificationTimer_, SIGNAL( timeout() ),
-            this, SLOT( notificationTimeout() ) );
+    CONNECT(notificationTimer_, timeout, this, notificationTimeout);
 
     auto config = Persistent<Configuration>( "settings" );
     ignoreCaseCheck_->setChecked(config->quickfindIgnoreCase());

@@ -1,5 +1,6 @@
 #include "socketexternalcom.h"
 #include "externalcom.h"
+#include "signal_slot.h"
 
 #include <QLocalServer>
 #include <QLocalSocket>
@@ -104,7 +105,7 @@ void SocketExternalCommunicator::startListening()
         *reinterpret_cast<qint32*>(memory_->data()) = version();
         QLocalServer::removeServer(fullName);
 
-        connect(server_, SIGNAL(newConnection()), SLOT(onConnection()));
+        CONNECT(server_, newConnection, this, onConnection);
         if (!server_->listen(fullName)) {
             ERROR << "Can not listen on" << fullName;
             exit(1);

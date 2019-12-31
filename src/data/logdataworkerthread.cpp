@@ -23,6 +23,7 @@
 
 #include "logdata.h"
 #include "logdataworkerthread.h"
+#include "signal_slot.h"
 
 // Size of the chunk to read (5 MiB)
 const int IndexOperation::sizeChunk = 5*1024*1024;
@@ -165,8 +166,8 @@ void LogDataWorkerThread::run()
             return;      // We must die
 
         if ( operationRequested_ ) {
-            connect( operationRequested_, SIGNAL( indexingProgressed( int ) ),
-                    this, SIGNAL( indexingProgressed( int ) ) );
+            CONNECT(operationRequested_, indexingProgressed, this,
+                    indexingProgressed);
 
             // Run the operation
             try {

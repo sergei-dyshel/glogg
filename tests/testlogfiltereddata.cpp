@@ -63,12 +63,10 @@ void TestLogFilteredData::simpleSearch()
     logData_ = new LogData();
 
     // Register for notification file is loaded
-    connect( logData_, SIGNAL( loadingFinished( bool ) ),
-            this, SLOT( loadingFinished() ) );
+    CONNECT(logData_, loadingFinished, this, loadingFinished);
 
     filteredData_ = logData_->getNewFilteredData();
-    connect( filteredData_, SIGNAL( searchProgressed( int, int ) ),
-            this, SLOT( searchProgressed( int, int ) ) );
+    CONNECT(filteredData_, searchProgressed, this, searchProgressed);
 
     QFuture<void> future = QtConcurrent::run(this, &TestLogFilteredData::simpleSearchTest);
 
@@ -145,12 +143,10 @@ void TestLogFilteredData::multipleSearch()
     logData_ = new LogData();
 
     // Register for notification file is loaded
-    connect( logData_, SIGNAL( loadingFinished( bool ) ),
-            this, SLOT( loadingFinished() ) );
+    CONNECT(logData_, loadingFinished, this, loadingFinished);
 
     filteredData_ = logData_->getNewFilteredData();
-    connect( filteredData_, SIGNAL( searchProgressed( int, int ) ),
-            this, SLOT( searchProgressed( int, int ) ) );
+    CONNECT(filteredData_, searchProgressed, this, searchProgressed);
 
     QFuture<void> future = QtConcurrent::run(this, &TestLogFilteredData::multipleSearchTest);
 
@@ -213,12 +209,10 @@ void TestLogFilteredData::updateSearch()
     logData_ = new LogData();
 
     // Register for notification file is loaded
-    connect( logData_, SIGNAL( loadingFinished( bool ) ),
-            this, SLOT( loadingFinished() ) );
+    CONNECT(logData_, loadingFinished, this, loadingFinished);
 
     filteredData_ = logData_->getNewFilteredData();
-    connect( filteredData_, SIGNAL( searchProgressed( int, int ) ),
-            this, SLOT( searchProgressed( int, int ) ) );
+    CONNECT(filteredData_, searchProgressed, this, searchProgressed);
 
     QFuture<void> future = QtConcurrent::run(this, &TestLogFilteredData::updateSearchTest);
 
@@ -355,12 +349,10 @@ void TestLogFilteredData::marks()
     logData_ = new LogData();
 
     // Register for notification file is loaded
-    connect( logData_, SIGNAL( loadingFinished( bool ) ),
-            this, SLOT( loadingFinished() ) );
+    CONNECT(logData_, loadingFinished, this, loadingFinished);
 
     filteredData_ = logData_->getNewFilteredData();
-    connect( filteredData_, SIGNAL( searchProgressed( int, int ) ),
-            this, SLOT( searchProgressed( int, int ) ) );
+    CONNECT(filteredData_, searchProgressed, this, searchProgressed);
 
     QFuture<void> future = QtConcurrent::run(this, &TestLogFilteredData::marksTest);
 
@@ -482,12 +474,10 @@ void TestLogFilteredData::lineLength()
     logData_ = new LogData();
 
     // Register for notification file is loaded
-    connect( logData_, SIGNAL( loadingFinished( bool ) ),
-            this, SLOT( loadingFinished() ) );
+    CONNECT(logData_, loadingFinished, this, loadingFinished);
 
     filteredData_ = logData_->getNewFilteredData();
-    connect( filteredData_, SIGNAL( searchProgressed( int, int ) ),
-            this, SLOT( searchProgressed( int, int ) ) );
+    CONNECT(filteredData_, searchProgressed, this, searchProgressed);
 
     QFuture<void> future = QtConcurrent::run(this, &TestLogFilteredData::lineLengthTest);
 

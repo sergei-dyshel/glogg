@@ -29,6 +29,7 @@
 #include "quickfindpattern.h"
 #include "selection.h"
 #include "data/abstractlogdata.h"
+#include "signal_slot.h"
 
 #include "quickfind.h"
 
@@ -108,8 +109,7 @@ QuickFind::QuickFind( const AbstractLogData* const logData,
     lastMatch_(), firstMatch_(), searchingNotifier_(),
     incrementalSearchStatus_()
 {
-    connect( &searchingNotifier_, SIGNAL( notify( const QFNotification& ) ),
-            this, SIGNAL( notify( const QFNotification& ) ) );
+    CONNECT(&searchingNotifier_, notify, this, notify);
 }
 
 void QuickFind::incrementalSearchStop()

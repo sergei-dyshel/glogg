@@ -86,7 +86,7 @@ class MainWindow : public QMainWindow
   private slots:
     void open();
     void openRecentFile();
-    void closeTab();
+    void closeCurrentTab();
     void closeAll();
     void selectAll();
     void copy();

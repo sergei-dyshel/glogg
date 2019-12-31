@@ -46,6 +46,7 @@
 #include "configuration.h"
 #include "regexp_filter.h"
 #include "qt_utils.h"
+#include "signal_slot.h"
 
 // Palette for error signaling (yellow background)
 const QPalette CrawlerWidget::errorPalette( QColor( "yellow" ) );
@@ -152,9 +153,9 @@ SearchableWidgetInterface* CrawlerWidget::doGetActiveSearchable() const
 }
 
 // Return all the searchable widgets (views)
-std::vector<QObject*> CrawlerWidget::doGetAllSearchables() const
+std::vector<AbstractLogView*> CrawlerWidget::doGetAllSearchables() const
 {
-    std::vector<QObject*> searchables =
+    std::vector<AbstractLogView*> searchables =
     { logMainView, filteredView };
 
     return searchables;
@@ -818,21 +819,19 @@ void CrawlerWidget::setup()
     regexSearchCheck->setChecked(config->mainRegexpType() == ExtendedRegexp);
 
     // Connect the signals
-    connect(filteredView, SIGNAL(activateSearchLineEdit()),
-            searchLineEdit->lineEdit(), SLOT(setFocus()));
-    connect(logMainView, SIGNAL(activateSearchLineEdit()),
-            searchLineEdit->lineEdit(), SLOT(setFocus()));
+    CONNECT_OVLD_0_ARG(filteredView, activateSearchLineEdit,
+                              searchLineEdit->lineEdit(), setFocus);
+    CONNECT_OVLD_0_ARG(logMainView, activateSearchLineEdit,
+                              searchLineEdit->lineEdit(), setFocus);
 
     connect( searchLineEdit->lineEdit(), &QLineEdit::returnPressed, [=]() {
         if ( startButton->isEnabled() )
             startNewSearch();
     });
-    connect( searchLineEdit->lineEdit(), SIGNAL( textEdited( const QString& ) ),
-             this, SLOT( searchTextChangeHandler() ) );
+    CONNECT(searchLineEdit->lineEdit(), textEdited, this, searchTextChangeHandler);
     connect( searchLineEdit->lineEdit(), &QLineEdit::textChanged, this,
              &CrawlerWidget::onSearchTextChanged );
-    connect(stopButton, SIGNAL( clicked() ),
-            this, SLOT( stopSearch() ) );
+    CONNECT(stopButton, clicked, this, stopSearch);
     connect( startButton, &QToolButton::clicked, this,
              &CrawlerWidget::startNewSearch );
 
@@ -845,21 +844,15 @@ void CrawlerWidget::setup()
         setPinButtonMode();
     } );
 
-    connect( visibilityBox, SIGNAL( currentIndexChanged( int ) ), this,
-             SLOT( changeFilteredViewVisibility( int ) ) );
+    CONNECT_OVLD_SIGNAL(visibilityBox, currentIndexChanged, this,
+                            changeFilteredViewVisibility);
 
-    connect(logMainView, SIGNAL( newSelection( int ) ),
-            logMainView, SLOT( update() ) );
-    connect(filteredView, SIGNAL( newSelection( int ) ),
-            this, SLOT( jumpToMatchingLine( int ) ) );
-    connect(filteredView, SIGNAL( newSelection( int ) ),
-            filteredView, SLOT( update() ) );
-    connect(logMainView, SIGNAL( updateLineNumber( int ) ),
-            this, SLOT( updateLineNumberHandler( int ) ) );
-    connect(logMainView, SIGNAL( markLine( qint64 ) ),
-            this, SLOT( markLineFromMain( qint64 ) ) );
-    connect(filteredView, SIGNAL( markLine( qint64 ) ),
-            this, SLOT( markLineFromFiltered( qint64 ) ) );
+    CONNECT_1_TO_0_ARG(logMainView, newSelection, logMainView, update);
+    CONNECT(filteredView, newSelection, this, jumpToMatchingLine);
+    CONNECT_1_TO_0_ARG(filteredView, newSelection, filteredView, update);
+    CONNECT(logMainView, updateLineNumber, this, updateLineNumberHandler);
+    CONNECT(logMainView, markLine, this, markLineFromMain);
+    CONNECT(filteredView, markLine, this, markLineFromFiltered);
     connect(logMainView, &AbstractLogView::markLines,
             [=](const Range& range, bool addMark) {
                 markLines(range, false /* data */, addMark);
@@ -869,15 +862,11 @@ void CrawlerWidget::setup()
                 markLines(range, true /* data */, addMark);
             });
 
-    connect(logMainView, SIGNAL( addToSearch( const QString& ) ),
-            this, SLOT( addToSearch( const QString& ) ) );
-    connect(filteredView, SIGNAL( addToSearch( const QString& ) ),
-            this, SLOT( addToSearch( const QString& ) ) );
+    CONNECT_OVLD_SIGNAL(logMainView, addToSearch, this, addToSearch);
+    CONNECT_OVLD_SIGNAL(filteredView, addToSearch, this, addToSearch);
 
-    connect(filteredView, SIGNAL( mouseHoveredOverLine( qint64 ) ),
-            this, SLOT( mouseHoveredOverMatch( qint64 ) ) );
-    connect(filteredView, SIGNAL( mouseLeftHoveringZone() ),
-            overviewWidget_, SLOT( removeHighlight() ) );
+    CONNECT(filteredView, mouseHoveredOverLine, this, mouseHoveredOverMatch);
+    CONNECT(filteredView, mouseLeftHoveringZone, overviewWidget_, removeHighlight);
 
     // Save last focused log view
     connect( logMainView, &AbstractLogView::gotFocus,
@@ -886,31 +875,21 @@ void CrawlerWidget::setup()
              [=]() { lastFocusedLogView = filteredView; } );
 
     // Follow option (up and down)
-    connect(this, SIGNAL( followSet( bool ) ),
-            logMainView, SLOT( followSet( bool ) ) );
-    connect(this, SIGNAL( followSet( bool ) ),
-            filteredView, SLOT( followSet( bool ) ) );
-    connect(logMainView, SIGNAL( followModeChanged( bool ) ),
-            this, SIGNAL( followModeChanged( bool ) ) );
-    connect(filteredView, SIGNAL( followModeChanged( bool ) ),
-            this, SIGNAL( followModeChanged( bool ) ) );
+    CONNECT(this, followSet, logMainView, followSet);
+    CONNECT(this, followSet, filteredView, followSet);
+    CONNECT(logMainView, followModeChanged, this, followModeChanged);
+    CONNECT(filteredView, followModeChanged, this, followModeChanged);
 
     // Detect activity in the views
-    connect(logMainView, SIGNAL( activity() ),
-            this, SLOT( activityDetected() ) );
-    connect(filteredView, SIGNAL( activity() ),
-            this, SLOT( activityDetected() ) );
+    CONNECT(logMainView, activity, this, activityDetected);
+    CONNECT(filteredView, activity, this, activityDetected);
 
-    connect( logFilteredData_, SIGNAL( searchProgressed( int, int, qint64 ) ),
-            this, SLOT( updateFilteredView( int, int, qint64 ) ) );
+    CONNECT(logFilteredData_, searchProgressed, this, updateFilteredView);
 
     // Sent load file update to MainWindow (for status update)
-    connect( logData_, SIGNAL( loadingProgressed( int ) ),
-            this, SIGNAL( loadingProgressed( int ) ) );
-    connect( logData_, SIGNAL( loadingFinished( LoadingStatus ) ),
-            this, SLOT( loadingFinishedHandler( LoadingStatus ) ) );
-    connect( logData_, SIGNAL( fileChanged( LogData::MonitoredFileStatus ) ),
-            this, SLOT( fileChangedHandler( LogData::MonitoredFileStatus ) ) );
+    CONNECT(logData_, loadingProgressed, this, loadingProgressed);
+    CONNECT(logData_, loadingFinished, this, loadingFinishedHandler);
+    CONNECT(logData_, fileChanged, this, fileChangedHandler);
 
     connect( searchRefreshCheck, &QPushButton::toggled, [=]( bool checked ) {
         auto new_state = checked ? Qt::Checked : Qt::Unchecked;
@@ -929,10 +908,8 @@ void CrawlerWidget::setup()
     });
 
     // Switch between views
-    connect( logMainView, SIGNAL( exitView() ),
-            filteredView, SLOT( setFocus() ) );
-    connect( filteredView, SIGNAL( exitView() ),
-            logMainView, SLOT( setFocus() ) );
+    CONNECT_OVLD_0_ARG(logMainView, exitView, filteredView, setFocus);
+    CONNECT_OVLD_0_ARG(filteredView, exitView, logMainView, setFocus);
 
     connect(logMainView, &AbstractLogView::hightlighsUpdated,
             [=]() { repaintLogViews(); });

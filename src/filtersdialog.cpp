@@ -24,6 +24,7 @@
 #include "filterset.h"
 
 #include "filtersdialog.h"
+#include "signal_slot.h"
 
 static const QString DEFAULT_PATTERN = "New Filter";
 static const bool    DEFAULT_IGNORE_CASE = false;
@@ -58,16 +59,13 @@ FiltersDialog::FiltersDialog( QWidget* parent ) : QDialog( parent )
     // No filter selected by default
     selectedRow_ = -1;
 
-    connect( filterListWidget, SIGNAL( itemSelectionChanged() ),
-            this, SLOT( updatePropertyFields() ) );
-    connect( patternEdit, SIGNAL( textEdited( const QString& ) ),
-            this, SLOT( updateFilterProperties() ) );
-    connect( ignoreCaseCheckBox, SIGNAL( clicked( bool ) ),
-            this, SLOT( updateFilterProperties() ) );
-    connect( foreColorBox, SIGNAL( activated( int ) ),
-            this, SLOT( updateFilterProperties() ) );
-    connect( backColorBox, SIGNAL( activated( int ) ),
-            this, SLOT( updateFilterProperties() ) );
+    CONNECT(filterListWidget, itemSelectionChanged, this, updatePropertyFields);
+    CONNECT_1_TO_0_ARG(patternEdit, textEdited, this, updateFilterProperties);
+    CONNECT(ignoreCaseCheckBox, clicked, this, updateFilterProperties);
+    CONNECT_OVLD_1_TO_0_ARG(foreColorBox, activated, int, this,
+                                  updateFilterProperties);
+    CONNECT_OVLD_1_TO_0_ARG(backColorBox, activated, int, this,
+                                  updateFilterProperties);
 
     if ( !filterSet->filterList.empty() ) {
         filterListWidget->setCurrentItem( filterListWidget->item( 0 ) );
