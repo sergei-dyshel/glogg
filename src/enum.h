@@ -27,12 +27,21 @@
 #include <QString>
 #include <QStringList>
 
-#define QDEBUG_DEFINE_ENUM(E)                                                  \
+#define ENUM_DECLARE(E)                                                        \
+    template <> const QString Enum<E>::name;                                   \
+    template <> const std::unordered_map<E, QString> Enum<E>::strings;         \
+                                                                               \
     static inline QDebug& operator<<(QDebug& debug, E e)                       \
     {                                                                          \
         QDEBUG_COMPAT(debug);                                                  \
         return debug << Enum<E>::name << "::" << Enum<E>::toString(e);         \
     }
+
+#define ENUM_DEFINE(E, _name, _strings)                                        \
+    template <> const QString Enum<E>::name = (_name);                         \
+    template <>                                                                \
+    const std::unordered_map<E, QString> Enum<E>::strings                      \
+        = std::unordered_map<E, QString> _strings;
 
 template <typename E> struct Enum {
     static const QString name;

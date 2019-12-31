@@ -29,11 +29,9 @@ const QString SyntaxRule::GROUP_LINE = "LINE";
 const QString SyntaxRule::GROUP_MATCH = "MATCH";
 const QString SyntaxRule::GROUP_GROUP = "GROUP";
 
-template <> const QString Enum<SyntaxRule::SearchType>::name = "SearchType";
-template <> const std::unordered_map<SyntaxRule::SearchType, QString>
-    Enum<SyntaxRule::SearchType>::strings
-    = {{SyntaxRule::SearchType::MATCH, "match"},
-       {SyntaxRule::SearchType::ALL, "all"}};
+ENUM_DEFINE(SyntaxRule::SearchType, "SearchType",
+            ({{SyntaxRule::SearchType::MATCH, "match"},
+              {SyntaxRule::SearchType::ALL, "all"}}));
 
 QString stringList2Regex(const QStringList &strings)
 {
