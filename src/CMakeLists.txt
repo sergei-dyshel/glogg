@@ -29,7 +29,6 @@ set(SOURCES
     overviewwidget.cpp
     marks.cpp
     quickfindmux.cpp
-    signalmux.cpp
     tabbedcrawlerwidget.cpp
     viewtools.cpp
     encodingspeculator.cpp

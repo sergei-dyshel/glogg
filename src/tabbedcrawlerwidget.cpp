@@ -81,20 +81,15 @@ TabbedCrawlerWidget::TabbedCrawlerWidget(QWidget *parent) : QTabWidget(parent),
 // QTabBar with all signals and all just to implement this very simple logic.
 // Maybe one day that should be done better...
 
-int TabbedCrawlerWidget::insertTab(int tabIndex, QWidget* page,
+int TabbedCrawlerWidget::insertTab(int tabIndex, CrawlerWidget* crawler,
                                    const QString& label, bool setCurrent)
 {
-    int index = QTabWidget::insertTab(tabIndex, page, label );
+    int index = QTabWidget::insertTab(tabIndex, crawler, label );
 
-    if ( auto crawler = dynamic_cast<CrawlerWidget*>( page ) ) {
-        // Mmmmhhhh... new Qt5 signal syntax create tight coupling between
-        // us and the sender, baaaaad....
-
-        // Listen for a changing data status:
-        disconnect(crawler, &CrawlerWidget::dataStatusChanged, 0, 0);
-        connect( crawler, &CrawlerWidget::dataStatusChanged,
-                [ this, index ]( DataStatus status ) { setTabDataStatus( index, status ); } );
-    }
+    // Listen for a changing data status:
+    disconnect(crawler, &CrawlerWidget::dataStatusChanged, 0, 0);
+    connect( crawler, &CrawlerWidget::dataStatusChanged,
+            [ this, index ]( DataStatus status ) { setTabDataStatus( index, status ); } );
 
     // Display the icon
     QLabel* icon_label = new QLabel();
@@ -115,6 +110,7 @@ int TabbedCrawlerWidget::insertTab(int tabIndex, QWidget* page,
     if (setCurrent)
         setCurrentIndex(index);
     allowDrops_ = false;
+    emit crawlerAdded(crawler);
     return index;
 }
 

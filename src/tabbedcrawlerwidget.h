@@ -42,7 +42,7 @@ class TabbedCrawlerWidget : public QTabWidget
       // "Overridden" insertTab/removeTab that automatically
       // show/hide the tab bar
       // The tab is created with the 'old data' icon.
-      int insertTab(int index, QWidget *page, const QString &label,
+      int insertTab(int index, CrawlerWidget *crawler, const QString &label,
                     bool setCurrent = false);
       void removeTab( int index );
 
@@ -55,6 +55,7 @@ class TabbedCrawlerWidget : public QTabWidget
       void openInAnotherServer(int tab, QString server);
       void dragAndDrop(int dropTabIndex, const TabInfo &tab);
       void duplicateTab(int tabIndex);
+      void crawlerAdded(CrawlerWidget *crawler);
 
     protected:
       void keyPressEvent( QKeyEvent* event ) override;

@@ -36,7 +36,6 @@
 #include "data/logdata.h"
 #include "data/logfiltereddata.h"
 #include "viewinterface.h"
-#include "signalmux.h"
 #include "overview.h"
 #include "loadingstatus.h"
 #include "highlights.h"
@@ -52,8 +51,7 @@ class OverviewWidget;
 // It includes both windows, the search line, the info
 // lines and various buttons.
 class CrawlerWidget : public QSplitter,
-    public QuickFindMuxSelectorInterface, public ViewInterface,
-    public MuxableDocumentInterface
+    public QuickFindMuxSelectorInterface, public ViewInterface
 {
   Q_OBJECT
 
@@ -85,6 +83,8 @@ class CrawlerWidget : public QSplitter,
 
     const LogData *logData() const { return logData_; }
 
+    void sendAllStateSignals();
+
   public slots:
     // Stop the asynchoronous loading of the file if one is in progress
     // The file is identified by the view attached to it.
@@ -93,6 +93,12 @@ class CrawlerWidget : public QSplitter,
     void reload();
     // Set the encoding
     void setEncoding( Encoding encoding );
+    // Instructs the widget to reconfigure itself because Config() has changed.
+    void applyConfiguration();
+    // QuickFind is being entered, save the focus for incremental qf.
+    void enteringQuickFind();
+    // QuickFind is being closed.
+    void exitingQuickFind();
 
   protected:
     // Implementation of the ViewInterface functions
@@ -111,9 +117,6 @@ class CrawlerWidget : public QSplitter,
     // (for dispatching QuickFind to the right widget)
     virtual SearchableWidgetInterface* doGetActiveSearchable() const;
     virtual std::vector<AbstractLogView*> doGetAllSearchables() const;
-
-    // Implementation of the MuxableDocumentInterface
-    virtual void doSendAllStateSignals();
 
     virtual void keyPressEvent( QKeyEvent* keyEvent );
 
@@ -145,12 +148,6 @@ class CrawlerWidget : public QSplitter,
     void startNewSearch();
     // Stop the currently ongoing search (if one exists)
     void stopSearch();
-    // Instructs the widget to reconfigure itself because Config() has changed.
-    void applyConfiguration();
-    // QuickFind is being entered, save the focus for incremental qf.
-    void enteringQuickFind();
-    // QuickFind is being closed.
-    void exitingQuickFind();
     // Called when new data must be displayed in the filtered window.
     void updateFilteredView( int nbMatches, int progress, qint64 initial_position );
     // Called when a new line has been selected in the filtered view,

@@ -69,6 +69,23 @@
         _S_IGNORE_ARG(receiver, slot, _S_METHOD_ARG(sender, signal)))
 
 /**
+ * Connect dynamically - receiver may be expression which is evaluated at
+ * runtime and can be NULL, signal and slot have no arguments
+ */
+#define CONNECT_DYN_0_ARG(sender, signal, receiver, slot)                      \
+    QObject::connect(_S_OBJ_METHOD(sender, signal),                            \
+                     _S_LAMBDA_0ARG(receiver, slot))
+
+/**
+ * Connect dynamically - receiver may be expression which is evaluated at
+ * runtime and can be NULL, signal and slot have 1 argument
+ */
+#define CONNECT_DYN_1_ARG(sender, signal, receiver, slot)                      \
+    QObject::connect(                                                          \
+        _S_OBJ_METHOD(sender, signal),                                         \
+        _S_LAMBDA_1ARG(receiver, slot, _S_METHOD_ARG(sender, signal)))
+
+/**
  * Choose overloaded signal to match slot argument
  */
 #define CONNECT_OVLD_SIGNAL(sender, signal, receiver, slot)                    \
@@ -83,6 +100,12 @@
     QObject::connect(                                                          \
         _S_OBJ_METHOD(sender, signal),                                         \
         _S_OVERLOAD(receiver, slot, _S_METHOD_ARG(sender, signal)))
+
+/**
+ * Connect to function
+ */
+#define CONNECT_FUNC(sender, signal, func)                                     \
+    QObject::connect(_S_OBJ_METHOD(sender, signal), func)
 
 /**
  * Choose overloaded signal without arguments, slot shoud have no arguments too

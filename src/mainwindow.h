@@ -28,7 +28,6 @@
 #include "session.h"
 #include "crawlerwidget.h"
 #include "infoline.h"
-#include "signalmux.h"
 #include "tabbedcrawlerwidget.h"
 #include "quickfindwidget.h"
 #include "quickfindmux.h"
@@ -137,6 +136,8 @@ class MainWindow : public QMainWindow
     void onTabDragAndDrop(int dropTabIndex, const TabInfo &tab);
     void onDuplicateTab(int tabIndex);
 
+    void handleCrawlerAdded(CrawlerWidget *crawler);
+
   signals:
     // Is emitted when new settings must be used
     void optionsChanged();
@@ -237,9 +238,6 @@ class MainWindow : public QMainWindow
     QAction *configReloadAction;
 
     QIcon mainIcon_;
-
-    // Multiplex signals to any of the CrawlerWidgets
-    SignalMux signalMux_;
 
     // QuickFind widget
     QuickFindWidget quickFindWidget_;

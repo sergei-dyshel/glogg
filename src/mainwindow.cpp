@@ -65,7 +65,6 @@ MainWindow::MainWindow(std::shared_ptr<Session> session ) :
     session_( session ),
     recentFiles_( Persistent<RecentFiles>( "recentFiles" ) ),
     mainIcon_(),
-    signalMux_(),
     quickFindMux_( session_->getQuickFindPattern() ),
     mainTabWidget_(this)
 #ifdef GLOGG_SUPPORTS_VERSION_CHECKING
@@ -99,32 +98,15 @@ MainWindow::MainWindow(std::shared_ptr<Session> session ) :
     // "current" crawlerwidget
 
     // Send actions to the crawlerwidget
-    signalMux_.connect( this, SIGNAL( followSet( bool ) ),
-            SIGNAL( followSet( bool ) ) );
-    signalMux_.connect( this, SIGNAL( optionsChanged() ),
-            SLOT( applyConfiguration() ) );
-    signalMux_.connect( this, SIGNAL( enteringQuickFind() ),
-            SLOT( enteringQuickFind() ) );
-    signalMux_.connect( &quickFindWidget_, SIGNAL( close() ),
-            SLOT( exitingQuickFind() ) );
+    CONNECT_DYN_1_ARG(this, followSet, currentCrawlerWidget(), followSet);
+    CONNECT_DYN_0_ARG(this, optionsChanged, currentCrawlerWidget(),
+                  applyConfiguration);
+    CONNECT_DYN_0_ARG(this, enteringQuickFind, currentCrawlerWidget(),
+                  enteringQuickFind);
+    CONNECT_DYN_0_ARG(&quickFindWidget_, close, currentCrawlerWidget(),
+                  exitingQuickFind);
 
-    // Actions from the CrawlerWidget
-    signalMux_.connect( SIGNAL( followModeChanged( bool ) ),
-            this, SLOT( changeFollowMode( bool ) ) );
-    signalMux_.connect( SIGNAL( updateLineNumber( int ) ),
-            this, SLOT( lineNumberHandler( int ) ) );
-
-    // Register for progress status bar
-    signalMux_.connect( SIGNAL( loadingProgressed( int ) ),
-            this, SLOT( updateLoadingProgress( int ) ) );
-    signalMux_.connect( SIGNAL( loadingFinished( LoadingStatus ) ),
-            this, SLOT( handleLoadingFinished( LoadingStatus ) ) );
-
-    // Register for checkbox changes
-    signalMux_.connect( SIGNAL( searchRefreshChanged( int ) ),
-            this, SLOT( handleSearchRefreshChanged( int ) ) );
-    signalMux_.connect( SIGNAL( ignoreCaseChanged( int ) ),
-            this, SLOT( handleIgnoreCaseChanged( int ) ) );
+    CONNECT(&mainTabWidget_, crawlerAdded, this, handleCrawlerAdded);
 
     // Configure the main tabbed widget
     mainTabWidget_.setDocumentMode( true );
@@ -175,6 +157,27 @@ MainWindow::MainWindow(std::shared_ptr<Session> session ) :
     central_widget->setLayout( main_layout );
 
     setCentralWidget( central_widget );
+}
+
+void MainWindow::handleCrawlerAdded(CrawlerWidget *crawler)
+{
+    // Actions from the CrawlerWidget
+    CONNECT(crawler, followModeChanged, this, changeFollowMode);
+    CONNECT(crawler, updateLineNumber, this, lineNumberHandler);
+
+    // Register for progress status bar
+    CONNECT_FUNC(crawler, loadingProgressed, [=](int progress) {
+        if (crawler == currentCrawlerWidget())
+            updateLoadingProgress(progress);
+    });
+    CONNECT_FUNC(crawler, loadingFinished, [=](auto status) {
+        if (crawler == currentCrawlerWidget())
+            handleLoadingFinished(status);
+    });
+
+    // Register for checkbox changes
+    CONNECT(crawler, searchRefreshChanged, this, handleSearchRefreshChanged);
+    CONNECT(crawler, ignoreCaseChanged, this, handleIgnoreCaseChanged);
 }
 
 void MainWindow::reloadStructConfig()
@@ -353,12 +356,12 @@ void MainWindow::createActions()
     reloadAction = new QAction( tr("&Reload"), this );
     reloadAction->setShortcut(QKeySequence::Refresh);
     reloadAction->setIcon( QIcon(":/images/reload14.png") );
-    signalMux_.connect( reloadAction, SIGNAL(triggered()), SLOT(reload()) );
+    CONNECT(reloadAction, triggered, currentCrawlerWidget(), reload);
 
     stopAction = new QAction( tr("&Stop"), this );
     stopAction->setIcon( QIcon(":/images/stop14.png") );
     stopAction->setEnabled( true );
-    signalMux_.connect( stopAction, SIGNAL(triggered()), SLOT(stopLoading()) );
+    CONNECT(stopAction, triggered, currentCrawlerWidget(), stopLoading);
 
     filtersAction = new QAction(tr("&Filters..."), this);
     filtersAction->setStatusTip(tr("Show the Filters box"));
@@ -625,18 +628,20 @@ void MainWindow::find()
 void MainWindow::filters()
 {
     FiltersDialog dialog(this);
-    signalMux_.connect(&dialog, SIGNAL( optionsChanged() ), SLOT( applyConfiguration() ));
+    auto connection = CONNECT(&dialog, optionsChanged, currentCrawlerWidget(),
+                              applyConfiguration);
     dialog.exec();
-    signalMux_.disconnect(&dialog, SIGNAL( optionsChanged() ), SLOT( applyConfiguration() ));
+    QObject::disconnect(connection);
 }
 
 // Opens the 'Options' modal dialog box
 void MainWindow::options()
 {
     OptionsDialog dialog(this);
-    signalMux_.connect(&dialog, SIGNAL( optionsChanged() ), SLOT( applyConfiguration() ));
+    auto connection = CONNECT(&dialog, optionsChanged, currentCrawlerWidget(),
+                              applyConfiguration);
     dialog.exec();
-    signalMux_.disconnect(&dialog, SIGNAL( optionsChanged() ), SLOT( applyConfiguration() ));
+    QObject::disconnect(connection);
 }
 
 // Opens the 'About' dialog box.
@@ -806,7 +811,7 @@ void MainWindow::currentTabChanged( int index )
         if (!crawler_widget)
             return;
 
-        signalMux_.setCurrentDocument( crawler_widget );
+        crawler_widget->sendAllStateSignals();
         quickFindMux_.registerSelector( crawler_widget );
 
         // New tab is set up with fonts etc...
@@ -822,7 +827,6 @@ void MainWindow::currentTabChanged( int index )
     else
     {
         // No tab left
-        signalMux_.setCurrentDocument( nullptr );
         quickFindMux_.registerSelector( nullptr );
 
         infoLine->hideGauge();
@@ -873,7 +877,7 @@ void MainWindow::newVersionNotification( const QString& new_version )
 
     QMessageBox msgBox;
     msgBox.setText( QString( "A new version of glogg (%1) is available for download <p>"
-                "<a href=\"http://glogg.bonnefon.org/download.html\">http://glogg.bonnefon.org/download.html</a>" 
+                "<a href=\"http://glogg.bonnefon.org/download.html\">http://glogg.bonnefon.org/download.html</a>"
                 ).arg( new_version ) );
     msgBox.exec();
 }
@@ -1196,7 +1200,8 @@ void MainWindow::onTabDragAndDrop(int dropTabIndex, const TabInfo &tab)
     auto otherTabWidget
         = dynamic_cast<TabbedCrawlerWidget*>(otherTabBar->parent());
     ASSERT(otherTabWidget);
-    auto* crawler = otherTabWidget->widget(tab.tabIndex);
+    auto* crawler
+        = dynamic_cast<CrawlerWidget*>(otherTabWidget->widget(tab.tabIndex));
     otherTabWidget->removeTab(tab.tabIndex);
     ASSERT(crawler);
     mainTabWidget_.insertTab(dropTabIndex, crawler, tab.tabText,

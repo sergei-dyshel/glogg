@@ -162,7 +162,7 @@ std::vector<AbstractLogView*> CrawlerWidget::doGetAllSearchables() const
 }
 
 // Update the state of the parent
-void CrawlerWidget::doSendAllStateSignals()
+void CrawlerWidget::sendAllStateSignals()
 {
     emit updateLineNumber( currentLineNumber_ );
     if ( !loadingInProgress_ )
