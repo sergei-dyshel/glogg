@@ -35,7 +35,6 @@ OptionsDialog::OptionsDialog( QWidget* parent ) : QDialog(parent)
     setupUi( this );
 
     setupTabs();
-    setupFontList();
 
     // Validators
     QValidator* polling_interval_validator_ = new QIntValidator(
@@ -43,8 +42,6 @@ OptionsDialog::OptionsDialog( QWidget* parent ) : QDialog(parent)
     pollIntervalLineEdit->setValidator( polling_interval_validator_ );
 
     CONNECT(buttonBox, clicked, this, onButtonBoxClicked);
-    CONNECT_OVLD_SIGNAL(fontFamilyBox, currentIndexChanged, this,
-                            updateFontSize);
     CONNECT(pollingCheckBox, toggled, this, onPollingChanged);
 
     updateDialogFromConfig();
@@ -64,18 +61,6 @@ void OptionsDialog::setupTabs()
 #endif
 }
 
-// Populates the 'family' ComboBox
-void OptionsDialog::setupFontList()
-{
-    QFontDatabase database;
-
-    // We only show the fixed fonts
-    foreach ( const QString &str, database.families() ) {
-         if ( database.isFixedPitch( str ) )
-             fontFamilyBox->addItem( str );
-     }
-}
-
 void OptionsDialog::setupPolling()
 {
     pollIntervalLineEdit->setEnabled( pollingCheckBox->isChecked() );
@@ -86,17 +71,6 @@ void OptionsDialog::updateDialogFromConfig()
 {
     std::shared_ptr<Configuration> config =
         Persistent<Configuration>( "settings" );
-
-    // Main font
-    QFontInfo fontInfo = QFontInfo( config->mainFont() );
-
-    int familyIndex = fontFamilyBox->findText( fontInfo.family() );
-    if ( familyIndex != -1 )
-        fontFamilyBox->setCurrentIndex( familyIndex );
-
-    int sizeIndex = fontSizeBox->findText( QString::number(fontInfo.pointSize()) );
-    if ( sizeIndex != -1 )
-        fontSizeBox->setCurrentIndex( sizeIndex );
 
     // Polling
     pollingCheckBox->setChecked( config->pollingEnabled() );
@@ -110,31 +84,10 @@ void OptionsDialog::updateDialogFromConfig()
 // Slots
 //
 
-void OptionsDialog::updateFontSize(const QString& fontFamily)
-{
-    QFontDatabase database;
-    QString oldFontSize = fontSizeBox->currentText();
-    QList<int> sizes = database.pointSizes( fontFamily, "" );
-
-    fontSizeBox->clear();
-    foreach (int size, sizes) {
-        fontSizeBox->addItem( QString::number(size) );
-    }
-    // Now restore the size we had before
-    int i = fontSizeBox->findText(oldFontSize);
-    if ( i != -1 )
-        fontSizeBox->setCurrentIndex(i);
-}
-
 void OptionsDialog::updateConfigFromDialog()
 {
     std::shared_ptr<Configuration> config =
         Persistent<Configuration>( "settings" );
-
-    QFont font = QFont(
-            fontFamilyBox->currentText(),
-            (fontSizeBox->currentText()).toInt() );
-    config->setMainFont(font);
 
     config->setPollingEnabled( pollingCheckBox->isChecked() );
     uint32_t poll_interval = pollIntervalLineEdit->text().toUInt();

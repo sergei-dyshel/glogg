@@ -37,6 +37,7 @@
 #include <QMimeData>
 #include <QUrl>
 #include <QStyleFactory>
+#include <QFontDialog>
 
 #include "log.h"
 
@@ -353,6 +354,17 @@ void MainWindow::createActions()
     followAction->setCheckable(true);
     CONNECT(followAction, toggled, this, followSet);
 
+    chooseFontAction = new QAction(tr("&Font..."), this);
+    CONNECT(chooseFontAction, triggered, this, changeFont);
+    increaseFontSizeAction = new QAction(tr("&Increase font size"), this);
+    increaseFontSizeAction->setShortcut(tr("Ctrl+="));
+    CONNECT_FUNC(increaseFontSizeAction, triggered,
+                 [=]() { changeFontSize(1); });
+    decreaseFontSizeAction = new QAction(tr("&Decrease font size"), this);
+    decreaseFontSizeAction->setShortcut(tr("Ctrl+-"));
+    CONNECT_FUNC(decreaseFontSizeAction, triggered,
+                 [=]() { changeFontSize(-1); });
+
     reloadAction = new QAction( tr("&Reload"), this );
     reloadAction->setShortcut(QKeySequence::Refresh);
     reloadAction->setIcon( QIcon(":/images/reload14.png") );
@@ -436,6 +448,10 @@ void MainWindow::createMenus()
     viewMenu->addAction( lineNumbersVisibleInFilteredAction );
     viewMenu->addSeparator();
     viewMenu->addAction( followAction );
+    viewMenu->addSeparator();
+    viewMenu->addAction(chooseFontAction);
+    viewMenu->addAction(increaseFontSizeAction);
+    viewMenu->addAction(decreaseFontSizeAction);
     viewMenu->addSeparator();
     viewMenu->addAction( reloadAction );
 
@@ -1216,4 +1232,31 @@ void MainWindow::onDuplicateTab(int tabIndex)
     ASSERT(crawler);
     loadFile(crawler->logData()->attachedFilename(), QString(), -1,
              true /* allowDuplicate */);
+}
+
+void MainWindow::changeFont() {
+    std::shared_ptr<Configuration> config =
+        Persistent<Configuration>( "settings" );
+    auto font = config->mainFont();
+
+    bool ok;
+    QFont newFont = QFontDialog::getFont(
+        &ok, config->mainFont(), this, "Select main font",
+        QFontDialog::MonospacedFonts | QFontDialog::DontUseNativeDialog);
+    if (newFont == config->mainFont())
+        return;
+    config->setMainFont(newFont);
+    emit optionsChanged();
+}
+
+void MainWindow::changeFontSize(int delta)
+{
+    ASSERT(delta != 0);
+    std::shared_ptr<Configuration> config =
+        Persistent<Configuration>( "settings" );
+
+    auto font = config->mainFont();
+    font.setPointSize(font.pointSize() + delta);
+    config->setMainFont(font);
+    emit optionsChanged();
 }

@@ -39,9 +39,6 @@ class OptionsDialog : public QDialog, public Ui::OptionsDialog
     void optionsChanged();
 
   private slots:
-    // Clears and updates the font size box with the sizes allowed
-    // by the passed font family.
-    void updateFontSize(const QString& fontFamily);
     // Update the content of the global Config() using parameters
     // from the dialog box.
     void updateConfigFromDialog();
@@ -52,7 +49,6 @@ class OptionsDialog : public QDialog, public Ui::OptionsDialog
 
   private:
     void setupTabs();
-    void setupFontList();
     void setupPolling();
 
     void updateDialogFromConfig();

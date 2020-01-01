@@ -138,6 +138,9 @@ class MainWindow : public QMainWindow
 
     void handleCrawlerAdded(CrawlerWidget *crawler);
 
+    void changeFont();
+    void changeFontSize(int delta);
+
   signals:
     // Is emitted when new settings must be used
     void optionsChanged();
@@ -221,6 +224,11 @@ class MainWindow : public QMainWindow
     QAction *lineNumbersVisibleInMainAction;
     QAction *lineNumbersVisibleInFilteredAction;
     QAction *followAction;
+
+    QAction *chooseFontAction;
+    QAction *increaseFontSizeAction;
+    QAction *decreaseFontSizeAction;
+
     QAction *reloadAction;
     QAction *stopAction;
     QAction *filtersAction;
