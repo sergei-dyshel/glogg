@@ -66,7 +66,7 @@ class DBusExternalCommunicator : public ExternalCommunicator
     DBusExternalCommunicator();
     ~DBusExternalCommunicator() {}
 
-    void startListening(const QString &name) override;
+    void startListening() override;
 
     ExternalInstance* otherInstance(const QString &name) const override;
 

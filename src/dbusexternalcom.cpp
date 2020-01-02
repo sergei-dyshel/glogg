@@ -24,16 +24,6 @@
 #include "log.h"
 #include "signal_slot.h"
 
-static const QString DBUS_SERVICE_NAME = "org.bonnefon.glogg";
-
-static QString dbusFullServiceName(const QString& name)
-{
-    auto result = DBUS_SERVICE_NAME;
-    if (!name.isEmpty())
-        result += "." + name;
-    return result;
-}
-
 DBusExternalCommunicator::DBusExternalCommunicator()
 {
     if (!QDBusConnection::sessionBus().isConnected()) {
@@ -50,9 +40,10 @@ DBusExternalCommunicator::DBusExternalCommunicator()
 
 // If listening fails (e.g. another glogg is already listening,
 // the function will fail silently and no listening will be done.
-void DBusExternalCommunicator::startListening(const QString &name)
+void DBusExternalCommunicator::startListening()
 {
-    if (!QDBusConnection::sessionBus().registerService( dbusFullServiceName(name) )) {
+    auto fullName = fullServerName(serverName);
+    if (!QDBusConnection::sessionBus().registerService( fullName )) {
         LOG(logERROR) << qPrintable(QDBusConnection::sessionBus().lastError().message());
     }
 
@@ -92,10 +83,11 @@ void DBusInterfaceExternalCommunicator::loadFile( const QString& file_name )
 
 DBusExternalInstance::DBusExternalInstance(const QString &name)
 {
-     dbusInterface_ = std::make_shared<QDBusInterface>(
-             dbusFullServiceName(name), "/", "", QDBusConnection::sessionBus() );
+    dbusInterface_ = std::make_shared<QDBusInterface>(
+        ExternalCommunicator::fullServerName(name), "/", "",
+        QDBusConnection::sessionBus());
 
-     if ( ! dbusInterface_->isValid() ) {
+    if (!dbusInterface_->isValid()) {
         throw CantCreateExternalErr();
      }
 }
