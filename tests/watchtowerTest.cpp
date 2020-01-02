@@ -37,10 +37,10 @@ class WatchTowerBehaviour: public testing::Test {
 #if _WIN32
         name = _tempnam( "c:\\temp", "glogg_test" );
 #else
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
         name = tmpnam( nullptr );
-#pragma clang diagnostic pop
+#pragma GCC diagnostic pop
 #endif
         return name;
     }
@@ -66,10 +66,10 @@ class WatchTowerBehaviour: public testing::Test {
 #if _WIN32
         return string( _tempnam( "c:\\temp", "inexistant" ) );
 #else
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
         return string( tmpnam( nullptr ) );
-#pragma clang diagnostic pop
+#pragma GCC diagnostic pop
 #endif
     }
 

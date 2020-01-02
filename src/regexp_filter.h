@@ -35,8 +35,6 @@ class RegExpFilter final {
 
     bool hasMatch( QString str ) const;
 
-    RegExpFilter &operator=( const RegExpFilter &other );
-
     QString errorMessage() const;
 
   private:
@@ -46,9 +44,6 @@ class RegExpFilter final {
     static const QString separator_;
 
   private:
-    QString includeText_ = "";
-    QString excludeText_ = "";
-    bool hasSeparator_ = false;
     QRegularExpression include_;
     QRegularExpression exclude_;
 };

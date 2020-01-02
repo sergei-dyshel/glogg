@@ -214,7 +214,9 @@ template <typename T> LogStream &operator<<(LogStream &stream, const T &val)
 {
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Waddress"
+#ifdef __clang__
 #pragma GCC diagnostic ignored "-Wunknown-warning-option"
+#endif
 #pragma GCC diagnostic ignored "-Wnonnull-compare"
     stream.d << val;
 #pragma GCC diagnostic pop

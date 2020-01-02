@@ -37,10 +37,6 @@ struct Token {
         : range(range_), colorScope(colorScope_)
     {}
 
-    Token(const Token &token)
-        : range(token.range), colorScope(token.colorScope)
-    {}
-
     bool operator==(const Token& token) const {
       return range == token.range && colorScope == token.colorScope;
     }

@@ -103,7 +103,7 @@ class WatchTower {
 #include "log.h"
 
 namespace {
-    bool isSymLink( const std::string& file_name );
+    static inline bool isSymLink( const std::string& file_name );
     std::string directory_path( const std::string& path );
 }
 

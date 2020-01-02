@@ -31,7 +31,7 @@ const QString SyntaxRule::GROUP_GROUP = "GROUP";
 
 ENUM_DEFINE(SyntaxRule::SearchType, "SearchType",
             ({{SyntaxRule::SearchType::MATCH, "match"},
-              {SyntaxRule::SearchType::ALL, "all"}}));
+              {SyntaxRule::SearchType::ALL, "all"}}))
 
 QString stringList2Regex(const QStringList &strings)
 {

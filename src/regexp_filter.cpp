@@ -28,17 +28,18 @@ const QString RegExpFilter::separator_ = "|||";
 RegExpFilter::RegExpFilter( QString text, enum SearchRegexpType type,
                             bool case_insensitive )
 {
+    QString includeText = "";
+    QString excludeText = "";
     if ( type == FixedString ) {
         include_.setPattern( QRegularExpression::escape( text ) );
         return;
     }
     auto parts = text.split( separator_ );
     if ( parts.size() >= 1 ) {
-        includeText_ = parts.at( 0 );
+        includeText = parts.at( 0 );
     }
     if ( parts.size() >= 2 ) {
-        hasSeparator_ = true;
-        excludeText_ = parts.at( 1 );
+        excludeText = parts.at( 1 );
     }
 
     auto opt = QRegularExpression::DontCaptureOption
@@ -47,8 +48,8 @@ RegExpFilter::RegExpFilter( QString text, enum SearchRegexpType type,
         opt |= QRegularExpression::CaseInsensitiveOption;
     include_.setPatternOptions( opt );
     exclude_.setPatternOptions( opt );
-    include_.setPattern( includeText_ );
-    exclude_.setPattern( excludeText_ );
+    include_.setPattern( includeText );
+    exclude_.setPattern( excludeText );
 }
 
 bool RegExpFilter::hasMatch( QString str ) const
@@ -79,11 +80,4 @@ QString RegExpFilter::regExpErrorMsg( QString name,
     res += ":";
     res += regExp.errorString();
     return res;
-}
-
-RegExpFilter &RegExpFilter::operator=( const RegExpFilter &other )
-{
-    include_ = other.include_;
-    exclude_ = other.exclude_;
-    return *this;
 }
