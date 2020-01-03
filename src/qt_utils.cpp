@@ -27,8 +27,7 @@
 #include <QPixmap>
 #include <QGuiApplication>
 #include <QBitmap>
-#include <QGraphicsSvgItem>
-#include <QGraphicsColorizeEffect>
+#include <QSvgRenderer>
 #include <QPainter>
 #include <QBitmap>
 #include <QStyleOptionGraphicsItem>
@@ -85,19 +84,15 @@ QPixmap loadPngAndAdjustColor(const QString& filename)
 
 QPixmap loadSvgAndAdjustColor(const QString &filename)
 {
-    QGraphicsSvgItem *item = new QGraphicsSvgItem(filename);
-
-    QGraphicsColorizeEffect effect;
-
-    effect.setColor(QGuiApplication::palette().color(QPalette::Text));
-    effect.setStrength(1);
-
-    item->setGraphicsEffect(&effect);
-
-    QPixmap pixmap(item->boundingRect().size().toSize());
+    QFile file(filename);
+    file.open(QIODevice::ReadOnly | QIODevice::Text);
+    QString contents = file.readAll();
+    auto newColor = QGuiApplication::palette().color(QPalette::Text);
+    contents.replace("#ffffff", newColor.name(QColor::HexRgb));
+    QSvgRenderer renderer(contents.toUtf8());
+    QPixmap pixmap(renderer.defaultSize());
     pixmap.fill(Qt::transparent);
     QPainter painter(&pixmap);
-    QStyleOptionGraphicsItem option;
-    item->paint(&painter, &option);
+    renderer.render(&painter);
     return pixmap;
 }
