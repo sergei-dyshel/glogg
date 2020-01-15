@@ -3,6 +3,16 @@
     "clang-format.language.cpp.style": "file",
     "dash.languageIdToDocsetMap.cpp": "qt5",
     "ccls.index.blacklist": ["yaml-cpp/.*\\.cpp"],
+    "ccls.launch.command": "ccls-filtered.sh",
+    "ccls.launch.args": ["ccls"],
+    "clangd.path": "clangd-filtered.sh",
+    "clangd.arguments": [
+        "/usr/local/opt/llvm/bin/clangd",
+        "--all-scopes-completion",
+        "--background-index",
+        "--pch-storage=disk"
+    ],
+    "clangd.semanticHighlighting": false,
     "yaml.schemas": {
         "./colors.schema.json": "*.glogg-colors.yaml",
         "./syntax.schema.json": "*.glogg-syntax.yaml"
@@ -10,5 +20,7 @@
     "files.associations": {
         "tasks.json": "jsonc",
         "*.json": "json"
-    }
+    },
+    "workbench.colorTheme": "Solarized Dark",
+    "cmake.configureOnOpen": false
 }
