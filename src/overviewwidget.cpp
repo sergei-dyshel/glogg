@@ -29,6 +29,7 @@
 #include "overviewwidget.h"
 
 #include "overview.h"
+#include "struct_config_store.h"
 
 // Graphic parameters
 const int OverviewWidget::LINE_MARGIN = 4;
@@ -151,8 +152,9 @@ OverviewWidget::OverviewWidget( QWidget* parent ) :
 
 void OverviewWidget::paintEvent( QPaintEvent* /* paintEvent */ )
 {
-    static const QColor match_color("red");
-    static const QColor mark_color("dodgerblue");
+    auto &colorScheme = StructConfigStore::get().colorScheme();
+
+    static const auto lineWidth = 3;
 
     static const QPixmap highlight_pixmap[] = {
         QPixmap( highlight_xpm[0] ),
@@ -170,14 +172,14 @@ void OverviewWidget::paintEvent( QPaintEvent* /* paintEvent */ )
     {
         QPainter painter( this );
 
-        painter.fillRect( painter.viewport(), painter.background() );
+        painter.fillRect( painter.viewport(), colorScheme.bullets.background );
 
         // The line separating from the main view
-        painter.setPen( palette().color(QPalette::Text) );
+        painter.setPen(QPen(colorScheme.text.foreground, 3));
         painter.drawLine( 0, 0, 0, height() );
 
         // The 'match' lines
-        painter.setPen( match_color );
+        painter.setPen(QPen(colorScheme.bullets.match, lineWidth));
         foreach (Overview::WeightedLine line, *(overview_->getMatchLines()) ) {
             painter.setOpacity( ( 1.0 / Overview::WeightedLine::WEIGHT_STEPS )
                    * ( line.weight() + 1 ) );
@@ -187,7 +189,7 @@ void OverviewWidget::paintEvent( QPaintEvent* /* paintEvent */ )
         }
 
         // The 'mark' lines
-        painter.setPen( mark_color );
+        painter.setPen(QPen(colorScheme.bullets.mark, lineWidth));
         foreach (Overview::WeightedLine line, *(overview_->getMarkLines()) ) {
             painter.setOpacity( ( 1.0 / Overview::WeightedLine::WEIGHT_STEPS )
                    * ( line.weight() + 1 ) );

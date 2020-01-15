@@ -40,6 +40,7 @@
 #include <QtCore>
 #include <QGestureEvent>
 
+#include "color_scheme.h"
 #include "log.h"
 
 #include "persistentinfo.h"
@@ -1107,8 +1108,9 @@ void AbstractLogView::updateDisplaySize()
     LOG(logDEBUG) << "height()=" << height();
 
     if ( overviewWidget_ )
-        overviewWidget_->setGeometry( viewport()->width() + 2, 1,
-                OVERVIEW_WIDTH - 1, viewport()->height() );
+        overviewWidget_->setGeometry(viewport()->x() + viewport()->width() + 2,
+                                     viewport()->y(), OVERVIEW_WIDTH - 1,
+                                     viewport()->height());
 
     // Our text area cache is now invalid
     textAreaCache_.invalid_ = true;
@@ -1528,14 +1530,12 @@ void AbstractLogView::drawTextArea( QPaintDevice* paint_device, int32_t )
         Persistent<FilterSet>( "filterSet" );
     QColor foreColor, backColor;
 
-    static const QBrush normalBulletBrush = QBrush( Qt::white );
-    static const QBrush matchBulletBrush = QBrush( Qt::red );
-    static const QBrush markBrush = QBrush( "dodgerblue" );
+    auto &colorScheme = StructConfigStore::get().colorScheme();
 
     static const int SEPARATOR_WIDTH = 1;
-    static const qreal BULLET_AREA_WIDTH = 14;
+    static const qreal BULLET_AREA_WIDTH = charWidth_ * 2;
     static const int CONTENT_MARGIN_WIDTH = 1;
-    static const int LINE_NUMBER_PADDING = 3;
+    static const int LINE_NUMBER_PADDING = charWidth_ / 2;
 
     // First check the lines to be drawn are within range (might not be the case if
     // the file has just changed)
@@ -1562,7 +1562,7 @@ void AbstractLogView::drawTextArea( QPaintDevice* paint_device, int32_t )
     painter.setPen(palette.color(QPalette::Text));
     painter.fillRect( 0, 0,
                       BULLET_AREA_WIDTH, paintDeviceHeight,
-                      Qt::darkGray );
+                      colorScheme.bullets.background);
 
     // Column at which the content should start (pixels)
     qreal contentStartPosX = BULLET_AREA_WIDTH + SEPARATOR_WIDTH;
@@ -1581,7 +1581,7 @@ void AbstractLogView::drawTextArea( QPaintDevice* paint_device, int32_t )
             2 * LINE_NUMBER_PADDING + lineNumberWidth;
         lineNumberAreaStartX = contentStartPosX;
 
-        painter.setPen(palette.color(QPalette::Text));
+        painter.setPen(colorScheme.lineNumbers.foreground);
         /* Not sure if it looks good...
         painter.drawLine( contentStartPosX + lineNumberAreaWidth,
                           0,
@@ -1590,7 +1590,7 @@ void AbstractLogView::drawTextArea( QPaintDevice* paint_device, int32_t )
         */
         painter.fillRect( contentStartPosX - SEPARATOR_WIDTH, 0,
                           lineNumberAreaWidth + SEPARATOR_WIDTH, paintDeviceHeight,
-                          Qt::lightGray );
+                          colorScheme.lineNumbers.background );
 
         // Update for drawing the actual text
         contentStartPosX += lineNumberAreaWidth;
@@ -1598,12 +1598,9 @@ void AbstractLogView::drawTextArea( QPaintDevice* paint_device, int32_t )
     else {
         painter.fillRect( contentStartPosX - SEPARATOR_WIDTH, 0,
                           SEPARATOR_WIDTH + 1, paintDeviceHeight,
-                          Qt::lightGray );
+                          colorScheme.lineNumbers.background );
         // contentStartPosX += SEPARATOR_WIDTH;
     }
-
-    painter.drawLine( BULLET_AREA_WIDTH, 0,
-                      BULLET_AREA_WIDTH, paintDeviceHeight - 1 );
 
     // This is the total width of the 'margin' (including line number if any)
     // used for mouse calculation etc...
@@ -1626,7 +1623,6 @@ void AbstractLogView::drawTextArea( QPaintDevice* paint_device, int32_t )
         bool isSelection =
             selection_.getPortionForLine( line_index, &sel_start, &sel_end );
         bool isLineSelected = selection_.isLineSelected(line_index);
-        auto &colorScheme = StructConfigStore::get().colorScheme();
         Range selRange;
         if (isSelection)
             selRange = Range(sel_start, sel_end + 1);
@@ -1691,17 +1687,22 @@ void AbstractLogView::drawTextArea( QPaintDevice* paint_device, int32_t )
                 QPointF(1, middleYLine + 2 ),
             };
 
-            painter.setBrush( markBrush );
+            painter.setPen(colorScheme.bullets.mark);
+            painter.setBrush(colorScheme.bullets.mark);
             painter.drawPolygon( points, 7 );
         }
         else {
             // For pretty circles
             painter.setRenderHint( QPainter::Antialiasing );
 
-            if ( lineType( line_index ) == Match )
-                painter.setBrush( matchBulletBrush );
-            else
-                painter.setBrush( normalBulletBrush );
+            if (lineType(line_index) == Match) {
+                painter.setPen(colorScheme.bullets.match);
+                painter.setBrush(colorScheme.bullets.match);
+            }
+            else {
+                painter.setPen(colorScheme.bullets.normal);
+                painter.setBrush(colorScheme.bullets.normal);
+            }
             painter.drawEllipse( middleXLine - circleSize,
                     middleYLine - circleSize,
                     circleSize * 2, circleSize * 2 );
@@ -1713,7 +1714,7 @@ void AbstractLogView::drawTextArea( QPaintDevice* paint_device, int32_t )
             const QString& lineNumberStr =
                 lineNumberFormat.arg( displayLineNumber( line_index ),
                         nbDigitsInLineNumber );
-            painter.setPen( palette.color( QPalette::Text ) );
+            painter.setPen(colorScheme.lineNumbers.foreground);
             painter.drawText( lineNumberAreaStartX + LINE_NUMBER_PADDING,
                     yPos + fontAscent, lineNumberStr );
         }
@@ -1721,9 +1722,9 @@ void AbstractLogView::drawTextArea( QPaintDevice* paint_device, int32_t )
 
     if ( bottomOfTextPx < paintDeviceHeight ) {
         // The lines don't cover the whole device
-        painter.fillRect( contentStartPosX, bottomOfTextPx,
-                paintDeviceWidth - contentStartPosX,
-                paintDeviceHeight, palette.color( QPalette::Window ) );
+        painter.fillRect(contentStartPosX, bottomOfTextPx,
+                         paintDeviceWidth - contentStartPosX, paintDeviceHeight,
+                         colorScheme.text.background);
     }
 }
 

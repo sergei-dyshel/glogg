@@ -16,14 +16,20 @@ Solarized dark:
     blue:      '#268bd2'
     cyan:      '#2aa198'
     green:     '#859900'
-  text: [base1, base03]
-  selection: [base03, base1]
+  text: [base0, base03]
+  selection: [base03, base0]
   quickFind: [base01, base2]
   highlight:
     - [base03, magenta]
     - [base03, violet]
     - [base03, orange]
     - [base03, blue]
+  lineNumbers: [base1, base03]
+  bullets:
+    background: base03
+    normal: base0
+    mark: blue
+    match: red
   user:
     timestamp: violet
     function: blue

@@ -28,10 +28,25 @@
 #include <QPalette>
 #include <QRegularExpression>
 
+static bool isDarkMode()
+{
+    const QPalette palette;
+
+    auto rgb = palette.text().color().rgba();
+    return qGray(rgb) > 128;
+}
+
+static QColor lightOrDark(const QColor &lightColor, const QColor &darkColor)
+{
+    return isDarkMode() ? darkColor : lightColor;
+}
+
 TextColor::TextColor(const ConfigNode &node)
     : foreground(colorFromNode(node.element(0))),
       background(colorFromNode(node.element(1)))
 {}
+
+TextColor::TextColor(const char *foreName) : TextColor(QColor(foreName)) {}
 
 TextColor::TextColor(const std::initializer_list<QColor> &init_list)
 {
@@ -67,16 +82,18 @@ const QString ColorScheme::HIGHLIGHT("highlight");
 const unsigned ColorScheme::HIGHLIGHT_COUNT = 4;
 
 ColorScheme::ColorScheme(const QString &name, const Location &location)
-    : highlight_{TextColor("red"), TextColor("blue"), TextColor("green"),
-                 TextColor("yellow")},
-      name_(name), location_(location)
+    : text(palette.text().color(), palette.base().color()),
+      selection(palette.highlightedText().color(), palette.highlight().color()),
+      quickFind("black", "yellow"),
+      lineNumbers(palette.text().color(),
+                  lightOrDark(Qt::lightGray, "dimgray")),
+      bullets{.background = "silver",
+               .normal = "azure",
+               .match = "deeppink",
+               .mark = "dodgerblue"},
+      highlight_{"red", "blue", "green", "yellow"}, name_(name),
+      location_(location)
 {
-    const QPalette palette;
-
-    text = TextColor(palette.text().color(), palette.base().color());
-    selection = TextColor(palette.highlightedText().color(),
-                                   palette.highlight().color());
-    quickFind = TextColor(QColor("black"), QColor("yellow"));
     generateColorsMap();
 }
 
@@ -132,6 +149,18 @@ void ColorScheme::addScopes(const ConfigNode &node,
         for (unsigned i = 0;i < HIGHLIGHT_COUNT; ++i)
             highlight_[i] = readTextColor(hlNode.element(i), defs);
     }
+    if (node.hasMember("lineNumbers")) {
+        lineNumbers = readTextColor(node.requiredMember("lineNumbers"), defs);
+    }
+    if (node.hasMember("bullets")) {
+        auto bNode = node.requiredMember("bullets");
+        bullets.background
+            = readColor(bNode.requiredMember("background"), &defs);
+        bullets.normal
+            = readColor(bNode.requiredMember("normal"), &defs);
+        bullets.mark = readColor(bNode.requiredMember("mark"), &defs);
+        bullets.match = readColor(bNode.requiredMember("match"), &defs);
+    }
     if (node.hasMember("user")) {
         for (const auto &member : node.requiredMember("user").members())
             user_.emplace(member.first,
@@ -155,7 +184,12 @@ auto ColorScheme::loadAll(const ConfigNode &node) -> Map
         }
         const auto *schemeNode = &pair.second;
         schemeNode->assertProperties({"defs", "inherits", "text", "selection",
-                                      "quickFind", "highlight", "user"});
+                                      "quickFind", "highlight", "lineNumbers",
+                                      "bullets", "user"});
+        if (schemeNode->hasMember("bullets")) {
+            auto bNode = schemeNode->requiredMember("bullets");
+            bNode.assertProperties({"background", "normal", "mark", "match"});
+        }
         ColorScheme scheme(name, schemeNode->location());
         std::list<const ConfigNode *> nodesToAdd = {schemeNode};
         while (schemeNode->hasMember("inherits")) {

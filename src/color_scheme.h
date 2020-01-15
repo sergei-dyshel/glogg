@@ -30,6 +30,7 @@
 
 #include <QColor>
 #include <QString>
+#include <QPalette>
 
 #include <unordered_map>
 #include <utility>
@@ -40,6 +41,8 @@ struct TextColor final {
     TextColor(const QColor &fore = QColor(), const QColor &back = QColor())
         : foreground(fore), background(back)
     {}
+
+    TextColor(const char *foreName);
 
     TextColor(const std::initializer_list<QColor> &init_list);
 
@@ -53,6 +56,9 @@ private:
 }; // struct TextColor
 
 class ColorScheme final {
+  private:
+    QPalette palette;
+
   public:
     explicit ColorScheme(const QString &name = "",
                          const Location &location = Location());
@@ -80,6 +86,14 @@ class ColorScheme final {
     TextColor text;
     TextColor selection;
     TextColor quickFind;
+    TextColor lineNumbers;
+
+    struct {
+        QColor background;
+        QColor normal;
+        QColor match;
+        QColor mark;
+    } bullets;
 
     static const QString TEXT;
     static const QString SELECTION;

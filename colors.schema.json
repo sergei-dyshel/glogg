@@ -39,6 +39,10 @@
                 "description": "Color of searched text",
                 "$ref": "#/definitions/textColor"
             },
+            "lineNumbers": {
+                "description": "Color gutter with line numbers",
+                "$ref": "#/definitions/textColor"
+            },
             "highlight": {
                 "description": "Pattern highlight",
                 "type": "array",
@@ -46,6 +50,16 @@
                 "default": [[], [], [], []],
                 "minItems": 4,
                 "maxItems": 4
+            },
+            "bullets": {
+                "description": "Colors of bullets gutter",
+                "type": "object",
+                "properties": {
+                    "background": { "type": "string" },
+                    "normal": { "type": "string" },
+                    "mark": { "type": "string" },
+                    "match": { "type": "string" }
+                }
             },
             "user": {
                 "description": "Additional colors",
