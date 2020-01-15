@@ -12,7 +12,19 @@ For details look [here](README.fork.md).
 
 ## Building
 
-The build was migrated to CMake and currently drops Win32 support. For convenience, a simple Makefile is added to automate common tasks (e.g. creating build directories, running *cmake*).
+The build was migrated to CMake and currently drops Win32 support.
+
+### Install prerequisites
+
+On Ubuntu:
+```sudo apt-get cmake qt5-default libboost-program-options-dev libqt5svg5-dev```
+
+On MacOS:
+```brew install cmake llvm boost qt5```
+
+### Compile
+
+For convenience, a simple Makefile is added to automate common tasks (e.g. creating build directories, running *cmake*).
 For building release version:
 
 ```shell
