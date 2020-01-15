@@ -76,6 +76,7 @@ execute_process(COMMAND git describe OUTPUT_STRIP_TRAILING_WHITESPACE
 string(APPEND CMAKE_CXX_FLAGS " -DGLOGG_VERSION=\\\"${VERSION}\\\"")
 
 string(APPEND CMAKE_CXX_FLAGS " -Wall -pedantic -Wextra -Werror")
+string(APPEND CMAKE_CXX_FLAGS " -Wno-c99-extensions")
 
 # debug
 option(BUILD_TESTS "Compile integration and unit-tests")
