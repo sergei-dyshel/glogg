@@ -1,4 +1,4 @@
-CMAKE_ARGS :=
+CMAKE_ARGS ?=
 
 ifdef PREFIX
 CMAKE_ARGS += -DCMAKE_INSTALL_PREFIX=$(shell readlink -f $(PREFIX))
@@ -39,6 +39,22 @@ configure_release:
 	cd $(RELEASE) && cmake $(ROOT) -DCMAKE_BUILD_TYPE=RelWithDebInfo $(CMAKE_ARGS)
 
 configure: configure_debug configure_release
+
+reconfigure:
+ifneq (,$(wildcard $(DEBUG)))
+	$(MAKE) configure_debug
+endif
+ifneq (,$(wildcard $(RELEASE)))
+	$(MAKE) configure_release
+endif
+
+clean_reconfigure:
+ifneq (,$(wildcard $(DEBUG)))
+	rm -rf $(DEBUG) && $(MAKE) configure_debug
+endif
+ifneq (,$(wildcard $(RELEASE)))
+	rm -rf $(RELEASE) && $(MAKE) configure_release
+endif
 
 build_debug:
 	$(MAKE) -C $(DEBUG)
