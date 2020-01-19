@@ -193,7 +193,7 @@ class Log final : public LogStream {
 
   private:
     static TLogLevel level_;
-    static QFile file_;
+    static QFile *file_;
     static std::unique_ptr<QTextStream> stream_;
     static QMutex mutex_;
     static bool isConfigured_;

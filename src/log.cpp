@@ -94,7 +94,7 @@ Log::Log(const LogContext &context, bool oldCompat) : LogStream(context)
 }
 
 TLogLevel Log::level_;
-QFile Log::file_;
+QFile *Log::file_;
 std::unique_ptr<QTextStream> Log::stream_;
 QMutex Log::mutex_;
 bool Log::isConfigured_ = false;
@@ -103,10 +103,11 @@ void Log::configure(TLogLevel level, const QString &fileName)
 {
     level_ = level;
     if (!fileName.isNull()) {
-        file_.setFileName(fileName);
-        file_.open(QIODevice::WriteOnly);
+        file_ = new QFile(fileName);
+        file_->open(QIODevice::WriteOnly);
     } else {
-        file_.open(stderr, QIODevice::WriteOnly);
+        file_ = new QFile();
+        file_->open(stderr, QIODevice::WriteOnly);
     }
     isConfigured_ = true;
 }
@@ -120,10 +121,10 @@ Log::~Log()
     }
     if (context_.level > level_)
         return;
-    QTextStream stream(&file_);
+    QTextStream stream(file_);
     stream << fullMessage() << '\n';
     stream.flush();
-    file_.flush();
+    file_->flush();
 }
 
 QString ellipsize(const QString &str, int len)
