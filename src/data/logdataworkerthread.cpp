@@ -275,7 +275,7 @@ void IndexOperation::doIndex( IndexingData* indexing_data,
         // Check if there is a non LF terminated line at the end of the file
         qint64 file_size = file.size();
         if ( !*interruptRequest_ && file_size > pos ) {
-            LOG( logWARNING ) <<
+            LOG( logDEBUG ) <<
                 "Non LF terminated file, adding a fake end of line";
 
             FastLinePositionArray line_position;
