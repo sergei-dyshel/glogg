@@ -3,7 +3,6 @@
 #include "signal_slot.h"
 
 #include <QLocalServer>
-#include <QLocalSocket>
 #include <QSharedMemory>
 
 #ifdef Q_OS_UNIX
@@ -41,41 +40,26 @@ void setCrashHandler(QSharedMemory* memory)
 #endif
 
 SocketExternalInstance::SocketExternalInstance(const QString &name)
-    : ExternalInstance(),
-      memory_(new QSharedMemory(ExternalCommunicator::fullServerName(name)))
+    : ExternalInstance()
 {
-    if ( !memory_->attach( QSharedMemory::ReadOnly ) ) {
-        LOG( logERROR ) << "attach failed!";
+    socket_.connectToServer(ExternalCommunicator::fullServerName(name));
+    if (!socket_.waitForConnected(1000)) {
+        LOG( logERROR ) << "Failed to connect to socket";
         throw CantCreateExternalErr();
     }
-
-#ifdef Q_OS_UNIX
-        // Handle any further termination signals to ensure the
-        // QSharedMemory block is deleted even if the process crashes
-        setCrashHandler(memory_);
-#endif
 }
 
-void SocketExternalInstance::loadFile(const QString &file_name) const
+void SocketExternalInstance::loadFile(const QString &file_name)
 {
-    QLocalSocket socket;
-    socket.connectToServer(memory_->key());
-    if (!socket.waitForConnected(1000)) {
-        LOG( logERROR ) << "Failed to connect to socket";
-        return;
-    }
-
-    socket.write(file_name.toUtf8());
-    if (!socket.waitForBytesWritten(1000)) {
+    socket_.write(file_name.toUtf8());
+    if (!socket_.waitForBytesWritten(1000)) {
         LOG( logERROR ) << "Failed to send filename";
     }
-
-    socket.close();
 }
 
 uint32_t SocketExternalInstance::getVersion() const
 {
-    return *reinterpret_cast<uint32_t*>(memory_->data());
+    return 0;
 }
 
 SocketExternalCommunicator::SocketExternalCommunicator()
@@ -94,24 +78,14 @@ SocketExternalCommunicator::~SocketExternalCommunicator()
 void SocketExternalCommunicator::startListening()
 {
     auto fullName = fullServerName(serverName);
-    memory_ = new QSharedMemory(fullName);
-    if ( memory_->create(sizeof(qint32))) {
-#ifdef Q_OS_UNIX
-        // Handle any further termination signals to ensure the
-        // QSharedMemory block is deleted even if the process crashes
-        setCrashHandler(memory_);
-#endif
+    QLocalServer::removeServer(fullName);
 
-        *reinterpret_cast<qint32*>(memory_->data()) = version();
-        QLocalServer::removeServer(fullName);
-
-        CONNECT(server_, newConnection, this, onConnection);
-        if (!server_->listen(fullName)) {
-            ERROR << "Can not listen on" << fullName;
-            exit(1);
-        }
-        DEBUG << "Listening on" << fullName;
+    CONNECT(server_, newConnection, this, onConnection);
+    if (!server_->listen(fullName)) {
+        ERROR << "Can not listen on" << fullName;
+        exit(1);
     }
+    DEBUG << "Listening on" << fullName;
 }
 
 qint32 SocketExternalCommunicator::version() const

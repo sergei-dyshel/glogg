@@ -37,7 +37,7 @@ class ExternalInstance
     ExternalInstance() {}
     virtual ~ExternalInstance() {}
 
-    virtual void loadFile( const QString& file_name ) const = 0;
+    virtual void loadFile( const QString& file_name ) = 0;
     virtual uint32_t getVersion() const = 0;
 };
 

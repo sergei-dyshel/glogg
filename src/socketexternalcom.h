@@ -5,16 +5,17 @@
 
 #include <QLocalServer>
 #include <QSharedMemory>
+#include <QLocalSocket>
 
 class SocketExternalInstance : public ExternalInstance
 {
 public:
     SocketExternalInstance(const QString &name);
 
-    void loadFile( const QString& file_name ) const override;
+    void loadFile( const QString& file_name ) override;
     uint32_t getVersion() const override;
 private:
-    QSharedMemory* memory_;
+    QLocalSocket socket_;
 };
 
 class SocketExternalCommunicator : public ExternalCommunicator

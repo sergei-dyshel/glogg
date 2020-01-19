@@ -92,7 +92,7 @@ DBusExternalInstance::DBusExternalInstance(const QString &name)
      }
 }
 
-void DBusExternalInstance::loadFile( const QString& file_name ) const
+void DBusExternalInstance::loadFile( const QString& file_name )
 {
     QDBusReply<void> reply = dbusInterface_->call( "loadFile", file_name );
 
