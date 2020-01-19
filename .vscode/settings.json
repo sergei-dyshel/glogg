@@ -2,17 +2,14 @@
     "clang-format.language.c.style": "file",
     "clang-format.language.cpp.style": "file",
     "dash.languageIdToDocsetMap.cpp": "qt5",
-    "ccls.index.blacklist": ["yaml-cpp/.*\\.cpp"],
-    "ccls.launch.command": "ccls-filtered.sh",
-    "ccls.launch.args": ["ccls"],
-    "clangd.path": "clangd-filtered.sh",
+    "ccls.index.blacklist": ["yaml-cpp", "googletest", "googlemock", "autogen"],
+    "ccls.launch.command": "q-lang-server",
+    "ccls.launch.args": ["--ccls", "--filtered"],
+    "clangd.path": "q-lang-server",
     "clangd.arguments": [
-        "/usr/local/opt/llvm/bin/clangd",
-        "--all-scopes-completion",
-        "--background-index",
-        "--pch-storage=disk"
+        "--clangd",
+        "--filtered"
     ],
-    "clangd.semanticHighlighting": false,
     "yaml.schemas": {
         "./colors.schema.json": "*.glogg-colors.yaml",
         "./syntax.schema.json": "*.glogg-syntax.yaml"

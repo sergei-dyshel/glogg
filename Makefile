@@ -82,6 +82,7 @@ distclean_release:
 
 install:
 	$(MAKE) -C $(RELEASE) install
+	[[ "$$OSTYPE" == "darwin"* ]] && rm -rf /Applications/glogg.app && cp -r build/release/output/glogg.app /Applications
 
 cpack: install
 	cd $(RELEASE) && cpack $(if $(VERBOSE),--verbose)
