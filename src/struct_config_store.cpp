@@ -28,7 +28,7 @@
 #include <QStandardPaths>
 #include <QMessageBox>
 
-static const QString ENV_VAR_NAME = "GLOGG_CONFIG_DEVEL";
+static const QString ENV_VAR_NAME = "GLOGG_CONFIG";
 static const QString DEFAULT_COLOR_SCHEME = "default";
 static const QString COLOR_SCHEME_SETTING = "colorScheme";
 
