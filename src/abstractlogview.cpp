@@ -564,6 +564,10 @@ void AbstractLogView::keyPressEvent( QKeyEvent* keyEvent )
         searchPrevious(); // duplicate of 'N' action.
     else if ( keyEvent->key() == Qt::Key_Space && noModifier )
         verticalScrollBar()->triggerAction(QScrollBar::SliderPageStepAdd);
+    else if (keyEvent->key() == Qt::Key_Up && controlModifier)
+        verticalScrollBar()->triggerAction(QScrollBar::SliderPageStepSub);
+    else if (keyEvent->key() == Qt::Key_Down && controlModifier)
+        verticalScrollBar()->triggerAction(QScrollBar::SliderPageStepAdd);
     else {
         const char character = (keyEvent->text())[0].toLatin1();
 
