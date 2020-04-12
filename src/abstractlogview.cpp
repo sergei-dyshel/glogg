@@ -1034,7 +1034,7 @@ void AbstractLogView::findPreviousSelected()
     if ( selection_.isPortion() ) {
         emit changeQuickFind(
                 selection_.getSelectedText( logData ),
-                QFDirection::Forward );
+                QFDirection::Backward );
         emit searchNext();
     }
 }
