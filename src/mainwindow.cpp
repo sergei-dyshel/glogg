@@ -1260,3 +1260,23 @@ void MainWindow::changeFontSize(int delta)
     config->setMainFont(font);
     emit optionsChanged();
 }
+
+// https://bugreports.qt.io/browse/QTBUG-36926
+void MainWindow::enterEvent(QEvent* event)
+{
+#ifdef __APPLE__
+    static bool doReFocusingOnReenter = false;
+
+    if (QGuiApplication::applicationState() == Qt::ApplicationInactive)
+        doReFocusingOnReenter = true;
+    else if (doReFocusingOnReenter) {
+        auto savedPos = QCursor::pos();
+        QTimer::singleShot(0, this,
+                           [savedPos]()
+                           { QCursor::setPos(savedPos); });
+        QCursor::setPos(pos() + QPoint(width() / 2, 5));
+        doReFocusingOnReenter = false;
+    }
+#endif
+    QMainWindow::enterEvent(event);
+}

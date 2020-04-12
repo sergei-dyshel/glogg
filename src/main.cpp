@@ -268,7 +268,7 @@ int main(int argc, char *argv[])
 
     // Prevent the bug when the splitter is very thin and cursor doesn't change
     // on hover https://bugreports.qt.io/browse/QTBUG-33479
-    app.setAttribute(Qt::AA_DontCreateNativeWidgetSiblings);
+    // app.setAttribute(Qt::AA_DontCreateNativeWidgetSiblings);
 
     // Must come after App init
     GetPersistentInfo().registerPersistable(

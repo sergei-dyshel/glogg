@@ -81,6 +81,7 @@ class MainWindow : public QMainWindow
     void dropEvent( QDropEvent* event ) override;
     void keyPressEvent( QKeyEvent* keyEvent ) override;
     bool event(QEvent *event) override;
+    void enterEvent(QEvent *event) override;
 
   private slots:
     void open();

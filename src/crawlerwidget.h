@@ -120,6 +120,8 @@ class CrawlerWidget : public QSplitter,
 
     virtual void keyPressEvent( QKeyEvent* keyEvent );
 
+    virtual QSplitterHandle *createHandle();
+
   signals:
     // Sent to signal the client load has progressed,
     // passing the completion percentage.

@@ -1286,3 +1286,28 @@ void CrawlerWidget::onSplitterMoved(int, int)
     filteredView->setFocusPolicy(
         filteredView->visibleRegion().isEmpty() ? Qt::NoFocus : Qt::StrongFocus);
 }
+
+class MySplitterHandle: public QSplitterHandle {
+    public:
+      MySplitterHandle(Qt::Orientation orientation, QSplitter* parent)
+          : QSplitterHandle(orientation, parent)
+      {
+          setMouseTracking(true);
+      }
+
+    protected:
+      void enterEvent(QEvent*) override
+      {
+          QApplication::setOverrideCursor(Qt::SplitVCursor);
+      }
+
+      void leaveEvent(QEvent*) override
+      {
+          QApplication::restoreOverrideCursor();
+      }
+};
+
+QSplitterHandle* CrawlerWidget::createHandle()
+{
+    return new MySplitterHandle(orientation(), this);
+}
