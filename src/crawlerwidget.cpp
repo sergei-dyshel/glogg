@@ -802,7 +802,7 @@ void CrawlerWidget::setup()
     splitterSizes += 400;
     splitterSizes += 100;
     setSizes( splitterSizes );
-    setHandleWidth(5);
+    setHandleWidth(10);
     disableTabFocusOnChildren<QWidget>(this);
     logMainView->setFocusPolicy(Qt::StrongFocus);
     filteredView->setFocusPolicy(Qt::StrongFocus);
