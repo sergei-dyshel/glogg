@@ -32,13 +32,6 @@
         return os << str;                                                      \
     }
 
-namespace std
-{
-    template <> struct hash<QString> {
-        size_t operator()(const QString& str) const { return qHash(str); }
-    };
-}
-
 template <typename Cont>
 QStringList makeStringListFromValues(const Cont &cont)
 {

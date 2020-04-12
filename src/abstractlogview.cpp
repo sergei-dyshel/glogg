@@ -1532,7 +1532,6 @@ void AbstractLogView::drawTextArea( QPaintDevice* paint_device, int32_t )
     const QPalette& palette = viewport()->palette();
     std::shared_ptr<const FilterSet> filterSet =
         Persistent<FilterSet>( "filterSet" );
-    QColor foreColor, backColor;
 
     auto &colorScheme = StructConfigStore::get().colorScheme();
 
