@@ -298,7 +298,7 @@ void MainWindow::createActions()
     closeAction = new QAction(tr("&Close"), this);
     closeAction->setShortcut(tr("Ctrl+W"));
     closeAction->setStatusTip(tr("Close document"));
-    CONNECT(closeAction, triggered, this, closeTab);
+    CONNECT(closeAction, triggered, this, closeCurrentTab);
 
     closeAllAction = new QAction(tr("Close &All"), this);
     closeAllAction->setStatusTip(tr("Close all documents"));
