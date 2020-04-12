@@ -35,6 +35,9 @@ class TabBar : public QTabBar {
     void setPinned(int index, bool pinned);
     bool isPinned(int index) const;
 
+  public slots:
+    void renameTab(int tab);
+
   signals:
     void dragStarted(int tabIndex);
     void tabCloseRequested(int index);

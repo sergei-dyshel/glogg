@@ -22,7 +22,6 @@
 #include <QKeyEvent>
 #include <QLabel>
 #include <QMenu>
-#include <QInputDialog>
 #include <QWidgetAction>
 #include <QLabel>
 #include <QDrag>
@@ -33,6 +32,7 @@
 #include "crawlerwidget.h"
 #include "externalcom.h"
 #include "tab_info.h"
+#include "signal_slot.h"
 
 #include "log.h"
 #include "qt_utils.h"
@@ -74,6 +74,7 @@ TabbedCrawlerWidget::TabbedCrawlerWidget(QWidget *parent) : QTabWidget(parent),
             &TabbedCrawlerWidget::onTabDragStarted);
     connect(&myTabBar_, &TabBar::dragAndDrop, this,
             &TabbedCrawlerWidget::dragAndDrop);
+    CONNECT(this, tabBarDoubleClicked, &myTabBar_, renameTab);
 }
 
 // I know hiding non-virtual functions from the base class is bad form
@@ -164,15 +165,7 @@ void TabbedCrawlerWidget::showTabPopupMenu(const QPoint &pos, int tab)
     else
         menu.addAction("Pin", [=]() { myTabBar_.setPinned(tab, true); });
 
-    menu.addAction("Rename", [=]() {
-        auto old_name = myTabBar_.tabText(tab);
-        bool ok;
-        auto new_name
-            = QInputDialog::getText( this, "Rename tab", "Enter new name",
-                                        QLineEdit::Normal, old_name, &ok );
-        if (ok)
-            myTabBar_.setTabText( tab, new_name );
-    });
+    menu.addAction("Rename", [=]() { myTabBar_.renameTab(tab); });
 
     menu.addAction("Duplicate", [=]() { emit duplicateTab(tab); });
 

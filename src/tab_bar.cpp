@@ -26,6 +26,7 @@
 #include <QApplication>
 #include <QMimeData>
 #include <QMouseEvent>
+#include <QInputDialog>
 
 TabBar::TabBar(QWidget *parent) : QTabBar(parent) { setAcceptDrops(true); }
 
@@ -214,4 +215,14 @@ void TabBar::setPinned(int index, bool pinned)
 bool TabBar::isPinned(int index) const
 {
     return !tabButton(index, QTabBar::LeftSide)->isVisible();
+}
+
+void TabBar::renameTab(int tab)
+{
+    auto old_name = tabText(tab);
+    bool ok;
+    auto new_name = QInputDialog::getText(this, "Rename tab", "Enter new name",
+                                          QLineEdit::Normal, old_name, &ok);
+    if (ok)
+        setTabText(tab, new_name);
 }
