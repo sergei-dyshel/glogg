@@ -19,5 +19,6 @@
         "*.json": "json"
     },
     "workbench.colorTheme": "Solarized Dark",
-    "cmake.configureOnOpen": false
+    "cmake.configureOnOpen": false,
+    "tabnine.positionInList": "bottom"
 }
