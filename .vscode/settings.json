@@ -20,5 +20,12 @@
     },
     "workbench.colorTheme": "Solarized Dark",
     "cmake.configureOnOpen": false,
-    "tabnine.positionInList": "bottom"
+    "tabnine.positionInList": "bottom",
+    "search.exclude": {
+        "**/node_modules": true,
+        "**/bower_components": true,
+        "**/*.code-search": true,
+        "3rdparty": true,
+        "tests/googletest": true
+    }
 }
