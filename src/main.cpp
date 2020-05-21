@@ -25,6 +25,8 @@
 #include <boost/program_options.hpp>
 namespace po = boost::program_options;
 
+#include <signal.h>
+
 #include <iostream>
 #include <iomanip>
 using namespace std;
@@ -55,8 +57,14 @@ using namespace std;
 
 static void print_version();
 
+static void sigabrt_handler(int) {
+    exit(1);
+}
+
 int main(int argc, char *argv[])
 {
+    signal(SIGABRT, sigabrt_handler);
+
     GloggApp app(argc, argv);
 
     QStringList filenames;
