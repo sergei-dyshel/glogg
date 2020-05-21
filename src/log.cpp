@@ -22,6 +22,7 @@
 #include "utils.h"
 
 #include <stdio.h>
+#include <unistd.h>
 
 #include <QFileInfo>
 #include <QTextStream>
@@ -30,6 +31,14 @@ const char *LogContext::levelNames_[] = {"", "ERROR", "WARNING", "INFO", "DEBUG"
                                        "TRACE"};
 const char *LogStream::QT_PATTERN = "- %{time hh:mm:ss.zzz} %{category} "
                               "%{file}:%{line}: [%{function}] %{message}";
+
+static const char *COLOR_RESET = "\x1B[0m";
+static const char *COLOR_RED = "\x1B[31m";
+static const char *COLOR_YELLOW = "\x1B[33m";
+static const char *COLOR_WHITE = "\x1B[37m";
+
+const char *levelColors[]
+    = {nullptr, COLOR_RED, COLOR_YELLOW, COLOR_WHITE, nullptr, nullptr};
 
 LogContext::LogContext(const char *file, unsigned line, const char *func,
                        TLogLevel level)
@@ -112,6 +121,17 @@ void Log::configure(TLogLevel level, const QString &fileName)
     isConfigured_ = true;
 }
 
+QString Log::coloredMessage() const
+{
+    if (isatty(file_->handle())) {
+        auto color = levelColors[context_.level];
+        if (color) {
+            return color + fullMessage() + COLOR_RESET;
+        }
+    }
+    return fullMessage();
+}
+
 Log::~Log()
 {
     QMutexLocker locker(&mutex_);
@@ -122,7 +142,7 @@ Log::~Log()
     if (context_.level > level_)
         return;
     QTextStream stream(file_);
-    stream << fullMessage() << '\n';
+    stream << coloredMessage() << '\n';
     stream.flush();
     file_->flush();
 }

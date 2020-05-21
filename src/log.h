@@ -192,6 +192,8 @@ class Log final : public LogStream {
     template <typename T> Log &operator<<(const T &val);
 
   private:
+    QString coloredMessage() const;
+
     static TLogLevel level_;
     static QFile *file_;
     static std::unique_ptr<QTextStream> stream_;
