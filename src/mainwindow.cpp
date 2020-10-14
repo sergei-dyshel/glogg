@@ -179,6 +179,7 @@ void MainWindow::handleCrawlerAdded(CrawlerWidget *crawler)
     // Register for checkbox changes
     CONNECT(crawler, searchRefreshChanged, this, handleSearchRefreshChanged);
     CONNECT(crawler, ignoreCaseChanged, this, handleIgnoreCaseChanged);
+    CONNECT(crawler, regexSearchChanged, this, handleRegexSearchChanged);
 }
 
 void MainWindow::reloadStructConfig()
@@ -793,12 +794,22 @@ void MainWindow::handleSearchRefreshChanged( int state )
 {
     auto config = Persistent<Configuration>( "settings" );
     config->setSearchAutoRefreshDefault( state == Qt::Checked );
+    writeSettings();
 }
 
 void MainWindow::handleIgnoreCaseChanged( int state )
 {
     auto config = Persistent<Configuration>( "settings" );
     config->setSearchIgnoreCaseDefault( state == Qt::Checked );
+    writeSettings();
+}
+
+void MainWindow::handleRegexSearchChanged( int state )
+{
+    auto config = Persistent<Configuration>( "settings" );
+    config->setMainRegexpType(state == Qt::Checked ? ExtendedRegexp
+                                                   : FixedString);
+    writeSettings();
 }
 
 void MainWindow::closeTab( int index )
@@ -806,12 +817,14 @@ void MainWindow::closeTab( int index )
     auto widget = dynamic_cast<CrawlerWidget*>(
             mainTabWidget_.widget( index ) );
 
+    LOG(logDEBUG) << "Closing tab " << mainTabWidget_.tabText(index);
     assert( widget );
 
     widget->stopLoading();
     mainTabWidget_.removeTab( index );
     session_->close( widget );
     delete widget;
+    saveSession();
 }
 
 void MainWindow::currentTabChanged( int index )
@@ -1001,6 +1014,7 @@ bool MainWindow::loadFile(const QString& fileName, const QString& tabName,
         recentFiles_->addRecent( fileName );
         GetPersistentInfo().save( "recentFiles" );
         updateRecentFileActions();
+        saveSession();
     }
     catch ( FileUnreadableErr ) {
         LOG(logDEBUG) << "Can't open file " << fileName.toStdString();
@@ -1104,9 +1118,9 @@ void MainWindow::updateInfoLine()
     }
 }
 
-// Write settings to permanent storage
-void MainWindow::writeSettings()
+void MainWindow::saveSession()
 {
+    LOG(logDEBUG) << "Saving session";
     // Save the session
     // Generate the ordered list of widgets and their topLine
     std::vector<
@@ -1122,7 +1136,12 @@ void MainWindow::writeSettings()
                 view->context() ) );
     }
     session_->save( widget_list, saveGeometry() );
+}
 
+// Write settings to permanent storage
+void MainWindow::writeSettings()
+{
+    LOG(logDEBUG) << "Saving settings";
     // User settings
     GetPersistentInfo().save( QString( "settings" ) );
     StructConfigStore::get().saveSettings();

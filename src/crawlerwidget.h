@@ -140,6 +140,7 @@ class CrawlerWidget : public QSplitter,
     void searchRefreshChanged( int state );
     // "ignore case" check has been changed
     void ignoreCaseChanged( int state );
+    void regexSearchChanged( int state );
 
     // Sent when the data status (whether new not seen data are
     // available) has changed

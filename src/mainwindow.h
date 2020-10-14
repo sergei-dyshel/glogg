@@ -121,6 +121,7 @@ class MainWindow : public QMainWindow
     // is changing their view options.
     void handleSearchRefreshChanged( int state );
     void handleIgnoreCaseChanged( int state );
+    void handleRegexSearchChanged(int state);
 
     // Close the tab with the passed index
     void closeTab( int index );
@@ -166,6 +167,7 @@ class MainWindow : public QMainWindow
     void createStatusBar();
     void createRecentFileToolTipTimer();
     void readSettings();
+    void saveSession();
     void writeSettings();
     bool loadFile(const QString &fileName, const QString &tabName = QString(),
                   int tabIndex = -1, bool allowDuplicate = false);

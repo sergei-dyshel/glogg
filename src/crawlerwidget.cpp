@@ -902,9 +902,7 @@ void CrawlerWidget::setup()
     } );
 
     connect(regexSearchCheck, &QPushButton::toggled, [=](bool checked) {
-        static std::shared_ptr<Configuration> config
-            = Persistent<Configuration>("settings");
-        config->setMainRegexpType(checked ? ExtendedRegexp : FixedString);
+        emit regexSearchChanged( checked ? Qt::Checked : Qt::Unchecked );
     });
 
     // Switch between views
