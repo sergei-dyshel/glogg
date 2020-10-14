@@ -54,7 +54,7 @@ void QuickFindPattern::changeSearchPattern( const QString& pattern )
     else
         active_ = false;
 
-    emit patternUpdated();
+    emit patternUpdated(pattern);
 }
 
 void QuickFindPattern::changeSearchPattern( const QString& pattern, bool ignoreCase )

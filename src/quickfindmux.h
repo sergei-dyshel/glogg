@@ -121,7 +121,7 @@ class QuickFindMux : public QObject
   private slots:
     void changeQuickFind( const QString& new_pattern,
             QuickFindMux::QFDirection new_direction );
-    void notifyPatternChanged();
+    void notifyPatternChanged(const QString &pattern);
 
   private:
     const QuickFindMuxSelectorInterface* selector_;

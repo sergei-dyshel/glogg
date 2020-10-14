@@ -84,7 +84,7 @@ class QuickFindPattern : public QObject
 
   signals:
     // Sent when the pattern is changed
-    void patternUpdated();
+    void patternUpdated(const QString &pattern);
 
   private:
     bool active_;

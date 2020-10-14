@@ -168,9 +168,9 @@ void QuickFindMux::changeQuickFind(
     setDirection( new_direction );
 }
 
-void QuickFindMux::notifyPatternChanged()
+void QuickFindMux::notifyPatternChanged(const QString &pattern)
 {
-    emit patternChanged( pattern_->getPattern() );
+    emit patternChanged(pattern);
 }
 
 //
