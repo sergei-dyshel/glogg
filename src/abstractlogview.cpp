@@ -662,7 +662,7 @@ void AbstractLogView::keyPressEvent( QKeyEvent* keyEvent )
     else {
         // Only pass bare keys to the superclass this is so that
         // shortcuts such as Ctrl+Alt+Arrow are handled by the parent.
-        LOG(logDEBUG) << hex << keyEvent->modifiers();
+        LOG(logDEBUG) << Qt::hex << keyEvent->modifiers();
         if ( keyEvent->modifiers() == Qt::NoModifier ||
                 keyEvent->modifiers() == Qt::KeypadModifier ) {
             QAbstractScrollArea::keyPressEvent( keyEvent );
