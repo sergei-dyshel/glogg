@@ -45,6 +45,9 @@ class GloggApp : public QApplication
     void loadFile( const QString& file_name );
     void settingsChanged();
 
+  private slots:
+    void setAppStyle(const QString &style, const QString &stylesheet);
+
   protected:
 #ifdef __APPLE__
     virtual bool event( QEvent* event );
@@ -52,6 +55,7 @@ class GloggApp : public QApplication
 
   private:
     void onWindowActivated(MainWindow &window);
+    void setDarkPalette();
 
     std::shared_ptr<Session> session_;
     std::list<MainWindow> windows_;

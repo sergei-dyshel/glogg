@@ -156,7 +156,7 @@ class MainWindow : public QMainWindow
     void newWindow();
     void windowActivated();
     void exitRequested();
-    void setAppStyleSheet(const QString &stylesheet);
+    void setAppStyle(const QString &style, const QString &stylesheet);
 
   private:
     void createActions();
@@ -181,7 +181,6 @@ class MainWindow : public QMainWindow
     void reloadStructConfig();
     void repaintLogViews();
 
-    void setAppStyle(const QString &style, const QString &styleSheet);
     void addStyleAction(const QString &label, const QString &conf,
                         const QString &style, const QString &styleSheet);
 

@@ -21,6 +21,7 @@
 #include "signal_slot.h"
 
 #include <QFileOpenEvent>
+#include <QStyleFactory>
 
 #ifdef __APPLE__
 bool GloggApp::event( QEvent *event )
@@ -44,8 +45,7 @@ MainWindow &GloggApp::newWindow()
     connect(&window, &MainWindow::windowActivated,
             [=, &window]() { onWindowActivated(window); });
     connect(&window, &MainWindow::exitRequested, this, &QCoreApplication::quit);
-    connect(&window, &MainWindow::setAppStyleSheet,
-            [=](const QString &styleSheet) { setStyleSheet(styleSheet); });
+    CONNECT(&window, setAppStyle, this, setAppStyle);
     connect(&window, &MainWindow::optionsChanged, this,
             &GloggApp::settingsChanged);
     connect(this, &GloggApp::settingsChanged, &window,
@@ -64,4 +64,46 @@ void GloggApp::onWindowActivated(MainWindow &window)
 void GloggApp::loadFileInActiveWindow(const QString &filename)
 {
     lastActiveWindow_->loadFileNonInteractive(filename);
+}
+
+void GloggApp::setDarkPalette()
+{
+    // taken from https://gist.github.com/QuantumCD/6245215
+    QColor darkGray(53, 53, 53);
+    QColor gray(128, 128, 128);
+    QColor black(25, 25, 25);
+    QColor blue(42, 130, 218);
+
+    QPalette darkPalette;
+    darkPalette.setColor(QPalette::Window, darkGray);
+    darkPalette.setColor(QPalette::WindowText, Qt::white);
+    darkPalette.setColor(QPalette::Base, black);
+    darkPalette.setColor(QPalette::AlternateBase, darkGray);
+    darkPalette.setColor(QPalette::ToolTipBase, blue);
+    darkPalette.setColor(QPalette::ToolTipText, Qt::white);
+    darkPalette.setColor(QPalette::Text, Qt::white);
+    darkPalette.setColor(QPalette::Button, darkGray);
+    darkPalette.setColor(QPalette::ButtonText, Qt::white);
+    darkPalette.setColor(QPalette::Link, blue);
+    darkPalette.setColor(QPalette::Highlight, blue);
+    darkPalette.setColor(QPalette::HighlightedText, Qt::black);
+
+    darkPalette.setColor(QPalette::Active, QPalette::Button, gray.darker());
+    darkPalette.setColor(QPalette::Disabled, QPalette::ButtonText, gray);
+    darkPalette.setColor(QPalette::Disabled, QPalette::WindowText, gray);
+    darkPalette.setColor(QPalette::Disabled, QPalette::Text, gray);
+    darkPalette.setColor(QPalette::Disabled, QPalette::Light, darkGray);
+    setPalette(darkPalette);
+}
+
+void GloggApp::setAppStyle(const QString &styleName, const QString &stylesheet)
+{
+    auto style = QStyleFactory::create(styleName);
+    setStyle(style);
+    setStyleSheet(stylesheet);
+    if (stylesheet == "") {
+        setPalette(style->standardPalette());
+    } else {
+        setDarkPalette();
+    }
 }

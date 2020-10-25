@@ -492,12 +492,6 @@ void MainWindow::createMenus()
     helpMenu->addAction( aboutAction );
 }
 
-void MainWindow::setAppStyle(const QString& style, const QString& styleSheet)
-{
-    emit setAppStyleSheet(styleSheet);
-    QApplication::setStyle(style);
-}
-
 void MainWindow::addStyleAction(const QString& label, const QString& conf,
                                 const QString& style, const QString& styleSheet)
 {
@@ -509,7 +503,7 @@ void MainWindow::addStyleAction(const QString& label, const QString& conf,
     stylesGroup->addAction(action);
     connect(action, &QAction::triggered, [=]() {
         INFO << "Setting style" << style;
-        setAppStyle(style, styleSheet);
+        emit setAppStyle(style, styleSheet);
         config->style = conf;
         emit optionsChanged();
     });
