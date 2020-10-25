@@ -18,19 +18,19 @@
  */
 
 #include "log.h"
+#include "exception.h"
 
 #include "utils.h"
 
 #include <stdio.h>
 #include <unistd.h>
+#include <assert.h>
 
 #include <QFileInfo>
 #include <QTextStream>
 
 const char *LogContext::levelNames_[] = {"", "ERROR", "WARNING", "INFO", "DEBUG",
                                        "TRACE"};
-const char *LogStream::QT_PATTERN = "- %{time hh:mm:ss.zzz} %{category} "
-                              "%{file}:%{line}: [%{function}] %{message}";
 
 static const char *COLOR_RESET = "\x1B[0m";
 static const char *COLOR_RED = "\x1B[31m";
@@ -68,8 +68,6 @@ LogStream &LogStream::compat()
     return *this;
 }
 
-bool LogStream::isPatternSet_ = false;
-
 LogStream::LogStream(const LogStream &other)
     : context_(other.context_), stateStack(), str_(other.str_), d(other.d)
 {}
@@ -89,10 +87,6 @@ LogStream &LogStream::operator<<(LogStreamManip manip)
 
 QString LogStream::fullMessage() const
 {
-    if (!isPatternSet_) {
-        qSetMessagePattern(QT_PATTERN);
-        isPatternSet_ = true;
-    }
     return qFormatLogMessage(QtDebugMsg, context_.qtContext(), str_);
 }
 
@@ -102,11 +96,12 @@ Log::Log(const LogContext &context, bool oldCompat) : LogStream(context)
         compat();
 }
 
+const char *Log::QT_PATTERN = "- %{time hh:mm:ss.zzz} %{category} "
+                              "%{file}:%{line}: [%{function}] %{message}";
 TLogLevel Log::level_;
-QFile *Log::file_;
 std::unique_ptr<QTextStream> Log::stream_;
 QMutex Log::mutex_;
-bool Log::isConfigured_ = false;
+QFile *Log::file_;
 
 void Log::configure(TLogLevel level, const QString &fileName)
 {
@@ -118,7 +113,7 @@ void Log::configure(TLogLevel level, const QString &fileName)
         file_ = new QFile();
         file_->open(stderr, QIODevice::WriteOnly);
     }
-    isConfigured_ = true;
+    qSetMessagePattern(QT_PATTERN);
 }
 
 QString Log::coloredMessage() const
@@ -135,12 +130,9 @@ QString Log::coloredMessage() const
 Log::~Log()
 {
     QMutexLocker locker(&mutex_);
-    if (!isConfigured_) {
-        configure(logTRACE);
-        isConfigured_ = true;
-    }
     if (context_.level > level_)
         return;
+    // TODO: create stream one time, together with file_
     QTextStream stream(file_);
     stream << coloredMessage() << '\n';
     stream.flush();
@@ -172,3 +164,9 @@ QDebug &operator<<(QDebug &debug, QDebugManip manip)
     }
     return debug;
 }
+
+// static constructor
+static bool _initialized = [] {
+    Log::configure(logWARNING);
+    return _initialized;
+}();

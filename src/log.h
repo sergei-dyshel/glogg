@@ -173,9 +173,6 @@ class LogStream {
     LogContext context_;
 
   private:
-    static bool isPatternSet_;
-    static const char *QT_PATTERN;
-
     std::stack<std::shared_ptr<QDebugStateSaver>> stateStack;
 
     QString str_;
@@ -194,11 +191,11 @@ class Log final : public LogStream {
   private:
     QString coloredMessage() const;
 
+    static const char *QT_PATTERN;
     static TLogLevel level_;
     static QFile *file_;
     static std::unique_ptr<QTextStream> stream_;
     static QMutex mutex_;
-    static bool isConfigured_;
 };
 
 struct NoLog final {
