@@ -101,7 +101,7 @@ int TabbedCrawlerWidget::insertTab(int tabIndex, CrawlerWidget* crawler,
     closeButton->setIcon(loadSvgAndAdjustColor(":images/close.svg"));
     closeButton->setIconSize(QSize(11, 12));
     connect(closeButton, &QToolButton::clicked, [=] {
-        emit tabCloseRequested(index);
+        emit tabCloseRequested(indexOf(crawler));
     });
     myTabBar_.setTabButton( index, QTabBar::LeftSide, closeButton);
 
