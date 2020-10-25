@@ -41,6 +41,10 @@ set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
+if(APPLE)
+    set(CMAKE_OSX_DEPLOYMENT_TARGET "10.14")
+endif()
+
 # Boost
 # TEMPORARY: see https://github.com/boostorg/boost_install/issues/13
 set(Boost_NO_BOOST_CMAKE ON)
