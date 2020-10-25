@@ -181,7 +181,9 @@ int main(int argc, char *argv[])
         cerr << "Exception of unknown type!\n";
     }
 
-    Log::configure(logLevel, logFile);
+    if (multi_instance || check_config) {
+        Log::configure(logLevel, logFile);
+    }
 
     if (check_config){
         StructConfigFiles configFiles;
@@ -212,6 +214,7 @@ int main(int argc, char *argv[])
         }
         catch(CantCreateExternalErr& e) {
             LOG(logWARNING) << "Cannot initialise external communication.";
+            Log::configure(logLevel, logFile);
         }
     }
 
@@ -234,6 +237,7 @@ int main(int argc, char *argv[])
             // FIXME: there is a race condition here. One glogg could start
             // between the declaration of externalInstance and here,
             // is it a problem?
+            Log::configure(logLevel, logFile);
             externalCommunicator->startListening();
         }
     }
