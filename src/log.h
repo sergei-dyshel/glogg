@@ -190,6 +190,8 @@ class Log final : public LogStream {
 
   private:
     QString coloredMessage() const;
+    static void qtLogHandler(QtMsgType, const QMessageLogContext &,
+                             const QString &msg);
 
     static const char *QT_PATTERN;
     static TLogLevel level_;

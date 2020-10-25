@@ -103,6 +103,17 @@ std::unique_ptr<QTextStream> Log::stream_;
 QMutex Log::mutex_;
 QFile *Log::file_;
 
+// break on this function to get stacktrace
+void Log::qtLogHandler(QtMsgType type, const QMessageLogContext &context,
+                       const QString &msg)
+{
+    file_->write(qFormatLogMessage(type, context, msg).toLocal8Bit());
+    file_->flush();
+#ifndef NDEBUG
+    throw ASSERT_HERE << "Asserting on QT message:" << msg;
+#endif
+}
+
 void Log::configure(TLogLevel level, const QString &fileName)
 {
     level_ = level;
@@ -114,6 +125,7 @@ void Log::configure(TLogLevel level, const QString &fileName)
         file_->open(stderr, QIODevice::WriteOnly);
     }
     qSetMessagePattern(QT_PATTERN);
+    qInstallMessageHandler(qtLogHandler);
 }
 
 QString Log::coloredMessage() const
