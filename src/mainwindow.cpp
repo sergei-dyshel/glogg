@@ -825,7 +825,7 @@ void MainWindow::closeTab( int index )
     auto widget = dynamic_cast<CrawlerWidget*>(
             mainTabWidget_.widget( index ) );
 
-    LOG(logDEBUG) << "Closing tab " << mainTabWidget_.tabText(index);
+    DEBUG << "Closing tab" << mainTabWidget_.tabText(index) << "index" << index;
     assert( widget );
 
     widget->stopLoading();
@@ -837,7 +837,7 @@ void MainWindow::closeTab( int index )
 
 void MainWindow::currentTabChanged( int index )
 {
-    LOG(logDEBUG) << "currentTabChanged";
+    DEBUG << "currentTabChanged to index" << index;
 
     if ( index >= 0 )
     {

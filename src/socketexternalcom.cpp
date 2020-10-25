@@ -44,7 +44,7 @@ SocketExternalInstance::SocketExternalInstance(const QString &name)
 {
     socket_.connectToServer(ExternalCommunicator::fullServerName(name));
     if (!socket_.waitForConnected(1000)) {
-        LOG( logERROR ) << "Failed to connect to socket";
+        LOG( logWARNING ) << "Failed to connect to socket";
         throw CantCreateExternalErr();
     }
 }
