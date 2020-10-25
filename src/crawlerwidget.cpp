@@ -180,7 +180,7 @@ void CrawlerWidget::keyPressEvent( QKeyEvent* keyEvent )
               && lastFocusedLogView != nullptr ) {
         lastFocusedLogView->setFocus();
     }
-    else {
+    else if (!keyEvent->text().isEmpty()) {
         const char character = (keyEvent->text())[0].toLatin1();
 
         if ( character == '=' )

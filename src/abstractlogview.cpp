@@ -568,7 +568,7 @@ void AbstractLogView::keyPressEvent( QKeyEvent* keyEvent )
         verticalScrollBar()->triggerAction(QScrollBar::SliderPageStepSub);
     else if (keyEvent->key() == Qt::Key_Down && controlModifier)
         verticalScrollBar()->triggerAction(QScrollBar::SliderPageStepAdd);
-    else {
+    else if (!keyEvent->text().isEmpty()) {
         const char character = (keyEvent->text())[0].toLatin1();
 
         if ( keyEvent->modifiers() == Qt::NoModifier &&
@@ -577,7 +577,7 @@ void AbstractLogView::keyPressEvent( QKeyEvent* keyEvent )
             digitsBuffer_.add( character );
         }
         else {
-            switch ( (keyEvent->text())[0].toLatin1() ) {
+            switch ( character ) {
                 case 'j':
                     {
                         int delta = qMax( 1, digitsBuffer_.content() );
@@ -1418,8 +1418,9 @@ void AbstractLogView::updateGlobalSelection()
     // Updating it only for "non-trivial" (range or portion) selections
     if ( ! selection_.isSingleLine() ) {
         clipboard->setText( selection_.getSelectedText( logData ) );
-        clipboard->setText( selection_.getSelectedText( logData ),
-                            QClipboard::Selection );
+        if (clipboard->supportsSelection())
+            clipboard->setText( selection_.getSelectedText( logData ),
+                                QClipboard::Selection );
     }
 }
 

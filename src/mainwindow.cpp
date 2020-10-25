@@ -369,12 +369,20 @@ void MainWindow::createActions()
     reloadAction = new QAction( tr("&Reload"), this );
     reloadAction->setShortcut(QKeySequence::Refresh);
     reloadAction->setIcon( QIcon(":/images/reload14.png") );
-    CONNECT(reloadAction, triggered, currentCrawlerWidget(), reload);
+    CONNECT_FUNC(reloadAction, triggered, [=]() {
+        auto crawler = currentCrawlerWidget();
+        if (crawler)
+            crawler->reload();
+    });
 
     stopAction = new QAction( tr("&Stop"), this );
     stopAction->setIcon( QIcon(":/images/stop14.png") );
     stopAction->setEnabled( true );
-    CONNECT(stopAction, triggered, currentCrawlerWidget(), stopLoading);
+    CONNECT_FUNC(stopAction, triggered, [=]() {
+        auto crawler = currentCrawlerWidget();
+        if (crawler)
+            crawler->stopLoading();
+    });
 
     filtersAction = new QAction(tr("&Filters..."), this);
     filtersAction->setStatusTip(tr("Show the Filters box"));
@@ -946,16 +954,17 @@ void MainWindow::keyPressEvent( QKeyEvent* keyEvent )
 
     if ( keyEvent->key() == Qt::Key_Escape && !quickFindWidget_.isHidden() ) {
         quickFindWidget_.closeHandler();
-    }
-    switch ( (keyEvent->text())[0].toLatin1() ) {
-        case '/':
-            displayQuickFindBar( QFDirection::Forward );
-            break;
-        case '?':
-            displayQuickFindBar( QFDirection::Forward );
-            break;
-        default:
-            keyEvent->ignore();
+    } else if (!keyEvent->text().isEmpty()) {
+        switch ( (keyEvent->text())[0].toLatin1() ) {
+            case '/':
+                displayQuickFindBar( QFDirection::Forward );
+                break;
+            case '?':
+                displayQuickFindBar( QFDirection::Forward );
+                break;
+            default:
+                keyEvent->ignore();
+        }
     }
 
     if ( !keyEvent->isAccepted() )
