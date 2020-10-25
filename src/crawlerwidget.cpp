@@ -1218,7 +1218,7 @@ CrawlerWidgetContext::CrawlerWidgetContext( const char* string )
         sizes_ = { 100, 400 };
     }
 
-    QRegularExpression case_refresh_regex( "IC(\\d+):RS(\\d+):AR(\\d+)" );
+    QRegularExpression case_refresh_regex( "IC(\\d+):AR(\\d+):RS(\\d+)" );
     match = case_refresh_regex.match( string );
     if ( match.hasMatch() ) {
         ignore_case_ = ( match.captured(1).toInt() == 1 );
