@@ -1250,6 +1250,7 @@ void MainWindow::onTabDragAndDrop(int dropTabIndex, const TabInfo &tab)
     ASSERT(crawler);
     mainTabWidget_.insertTab(dropTabIndex, crawler, tab.tabText,
                              true /* setCurrent */);
+    saveSession();
 }
 
 void MainWindow::onDuplicateTab(int tabIndex)
