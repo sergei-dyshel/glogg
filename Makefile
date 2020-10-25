@@ -22,6 +22,10 @@ ifdef g
 GDB_PREFIX := gdb -ex run --args
 endif
 
+ifeq ($(shell uname -s),Darwin)
+MAC_OS := yes
+endif
+
 MAKE := $(MAKE) --no-print-directory -j$(shell nproc)
 
 submodule_update:
@@ -72,7 +76,11 @@ syntax_tests:
 	$(DEBUG)/tests/glogg_syntax_tests --gtest_filter="*$(f)*" -ddd
 
 build_release:
+ifdef MAC_OS
+	$(MAKE) -C $(RELEASE) install
+else
 	$(MAKE) -C $(RELEASE)
+endif
 
 distclean_debug:
 	rm -rf $(DEBUG)
@@ -81,8 +89,11 @@ distclean_release:
 	rm -rf $(RELEASE)
 
 install:
-	$(MAKE) -C $(RELEASE) install
+ifdef MAC_OS
 	[[ "$$OSTYPE" == "darwin"* ]] && rm -rf /Applications/glogg.app && cp -r build/release/output/glogg.app /Applications
+else
+	$(MAKE) -C $(RELEASE) install
+endif
 
 cpack: install
 	cd $(RELEASE) && cpack $(if $(VERBOSE),--verbose)
