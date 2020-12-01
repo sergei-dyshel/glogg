@@ -28,6 +28,9 @@ endif
 
 MAKE := $(MAKE) --no-print-directory -j$(shell nproc)
 
+
+export CMAKE_PREFIX_PATH = $(HOME)/Qt5.14.2/5.14.2/clang_64
+
 submodule_update:
 	git submodule update --init --recursive
 
